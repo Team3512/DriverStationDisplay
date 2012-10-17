@@ -15,7 +15,7 @@
  * is handled in a spawned thread
  *
  * Call startStream() to start the MJPEG stream or stopStream() to stop it
- * manually.
+ * manually. This won't open or close the window.
  *
  * startStream() and stopStream() are called automatically in the constructor
  * and destructor respectively, but they can be called manually if desired.
@@ -54,10 +54,10 @@ public:
 	sf::Vector2u getSize() const;
 	void setSize( const sf::Vector2u size );
 
-	// Starts Kinect stream (doesn't reopen window)
+	// Starts Kinect stream
 	void startStream();
 
-	// Stops Kinect stream (doesn't close window)
+	// Stops Kinect stream
 	void stopStream();
 
 private:
