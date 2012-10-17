@@ -10,7 +10,7 @@
 
 #include <SFML/Window/Context.hpp>
 
-#include "KinectStream.hpp"
+#include "MjpegStream.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream> // FIXME
@@ -22,7 +22,7 @@ int stringToNumber( std::string str ) {
 	return num;
 }
 
-KinectStream::KinectStream( const std::string& hostName ,
+MjpegStream::MjpegStream( const std::string& hostName ,
 		unsigned short port ,
 		HWND parentWin ,
 		int xPosition ,
@@ -36,7 +36,7 @@ KinectStream::KinectStream( const std::string& hostName ,
 		m_httpStream( m_hostName , m_port ) ,
 		m_imageRequest( "/mjpg/video.mjpg" , sf::ContHttp::Request::Get ) ,
 		m_recvStatus( sf::ContHttp::Response::Ok ) ,
-		m_receiveThread( &KinectStream::receive , this ) ,
+		m_receiveThread( &MjpegStream::receive , this ) ,
 		m_closeThread( true ) {
 
 	m_parentWin = parentWin;
@@ -58,43 +58,43 @@ KinectStream::KinectStream( const std::string& hostName ,
 	startStream();
 }
 
-KinectStream::~KinectStream() {
+MjpegStream::~MjpegStream() {
 	stopStream();
 
 	DestroyWindow( m_streamWin );
 }
 
-void KinectStream::bringToTop() {
+void MjpegStream::bringToTop() {
 	// if top child window isn't stream display
 	if ( GetTopWindow( m_parentWin ) != m_streamWin ) {
 		BringWindowToTop( m_streamWin );
 	}
 }
 
-sf::Vector2i KinectStream::getPosition() const {
+sf::Vector2i MjpegStream::getPosition() const {
 	return m_streamDisplay.getPosition();
 }
 
-void KinectStream::setPosition( const sf::Vector2i& position ) {
+void MjpegStream::setPosition( const sf::Vector2i& position ) {
 	m_streamDisplay.setPosition( position );
 }
 
-sf::Vector2u KinectStream::getSize() const {
+sf::Vector2u MjpegStream::getSize() const {
 	return m_streamDisplay.getSize();
 }
 
-void KinectStream::setSize( const sf::Vector2u size ) {
+void MjpegStream::setSize( const sf::Vector2u size ) {
 	m_streamDisplay.setSize( size );
 }
 
-void KinectStream::startStream() {
+void MjpegStream::startStream() {
 	if ( m_closeThread == true ) { // if stream is closed, reopen it
 		m_closeThread = false;
 		m_receiveThread.launch();
 	}
 }
 
-void KinectStream::stopStream() {
+void MjpegStream::stopStream() {
 	if ( m_closeThread == false ) { // if stream is open, close it
 		m_closeThread = true;
 
@@ -102,7 +102,7 @@ void KinectStream::stopStream() {
 	}
 }
 
-void KinectStream::receive() {
+void MjpegStream::receive() {
 	sf::Context context;
 
 	sf::Sprite imageSprite;

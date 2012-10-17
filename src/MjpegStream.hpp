@@ -5,8 +5,8 @@
 //Author: Tyler Veness
 //=============================================================================
 
-#ifndef KINECT_STREAM_HPP
-#define KINECT_STREAM_HPP
+#ifndef MJPEG_STREAM_HPP
+#define MJPEG_STREAM_HPP
 
 /* This class creates a child window that receives MJPEG images and displays
  * them from a separate thread.
@@ -32,9 +32,9 @@
 
 #include "ModSFML/ContHttp.hpp"
 
-class KinectStream {
+class MjpegStream {
 public:
-	KinectStream( const std::string& hostName ,
+	MjpegStream( const std::string& hostName ,
 			unsigned short port ,
 			HWND parentWin ,
 			int xPosition ,
@@ -43,7 +43,7 @@ public:
 			int height ,
 			HINSTANCE appInstance
 			);
-	~KinectStream();
+	virtual ~MjpegStream();
 
 	// Puts this window in the foreground in case there are other child windows
 	void bringToTop();
@@ -87,4 +87,4 @@ private:
 	void receive();
 };
 
-#endif // KINECT_STREAM_HPP
+#endif // MJPEG_STREAM_HPP

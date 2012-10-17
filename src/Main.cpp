@@ -14,12 +14,13 @@
 
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
-#include "KinectStream.hpp"
+#include "MjpegStream.hpp"
 
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+// Define child-window identifiers for catching their window events
 #define IDC_EXIT_BUTTON 101
 
 // global because the drawing is set up to be continuous in CALLBACK OnEvent
@@ -83,7 +84,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			NULL );
 	drawWin.create( drawWindow );
 
-	KinectStream streamWin( "http://eastentrance.tps.ucsb.edu" ,//"tcp://10.35.12.6" ,
+	MjpegStream streamWin( "http://eastentrance.tps.ucsb.edu" ,//"tcp://10.35.12.6" ,
 			80 ,
 			mainWindow ,
 			( drawWin.getSize().x - 320 ) / 2 ,
