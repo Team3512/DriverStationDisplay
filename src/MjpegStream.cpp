@@ -14,6 +14,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream> // FIXME
+#include <fstream>
 #include <SFML/System/Sleep.hpp>
 
 int stringToNumber( std::string str ) {
@@ -114,15 +115,10 @@ void MjpegStream::receive() {
 		m_httpStream.startStream( m_imageRequest );
 
 		if ( m_serverResponse.getStatus() == sf::ContHttp::Response::Ok ) {
-			std::fstream saveStream( "img.jpg" , std::fstream::in );
-			if ( saveStream.is_open() ) {
-				// Sends "Content-Length" number of bytes into stream for saving jpeg
-				saveStream << m_serverResponse.getBody().substr( 0 ,
-						stringToNumber( m_serverResponse.getField( "Content-Length" ) ) );
-				saveStream.close();
-			}
+			const void* imageBuffer = static_cast<const void*>( m_serverResponse.getBody().substr( 0 ,
+				stringToNumber( m_serverResponse.getField( "Content-Length" ) ) ).c_str() );
 
-			kinectTexture.loadFromFile( "img.jpg" );
+			kinectTexture.loadFromMemory( imageBuffer , stringToNumber( m_serverResponse.getField( "Content-Length" ) ) );
 			imageSprite.setTexture( kinectTexture );
 		}
 
