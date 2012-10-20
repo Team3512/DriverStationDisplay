@@ -35,7 +35,9 @@
 #include <SFML/System/Mutex.hpp>
 #include <SFML/System/Thread.hpp>
 
-#include "ModSFML/ContHttp.hpp"
+extern "C" {
+#include "mjpegrx.h"
+}
 
 class MjpegStream {
 public:
@@ -71,6 +73,10 @@ public:
 	// Displays the stream or a message if the stream isn't working
 	void display();
 
+protected:
+	static void doneCallback( void* optarg );
+	static void readCallback( char* buf , int bufsize , void* optarg );
+
 private:
 	std::string m_hostName;
 	unsigned short m_port;
@@ -92,21 +98,9 @@ private:
 	sf::Sprite m_imageSprite;
 	sf::Mutex m_imageMutex;
 
-	// New HTTP client
-	sf::ContHttp m_httpStream;
-
-	// Request for the Kinect's image in "/"
-	sf::ContHttp::Request m_imageRequest;
-
-	// Stores the status of the request in "response"
-	sf::ContHttp::Response m_serverResponse;
-
-	// Stores the status of the image receive
-	sf::ContHttp::Response::Status m_recvStatus;
-
-	// Receives images from host and displays them
-	sf::Thread m_receiveThread;
-	void receive();
+	// Used for streaming MJPEG frames from host
+	struct mjpeg_callbacks_t m_callbacks;
+	struct mjpeg_inst_t* m_streamInst;
 
 	// Determines when a video frame is old
 	sf::Clock m_imageAge;

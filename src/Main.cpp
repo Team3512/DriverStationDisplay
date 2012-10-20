@@ -14,11 +14,12 @@
 
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
-#include "MjpegStream.hpp"
+#include "MJPEG/MjpegStream.hpp"
 
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <cstring>
 
 // Define child-window identifiers for catching their window events
 enum {
@@ -62,6 +63,21 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
 	MSG Message;
 
+	char name[256];
+	DWORD size = 256;
+	GetUserNameA( name , &size );
+
+	int mainWinHeight;
+
+	if ( std::strcmp( name , "Driver" ) == 0 ) {
+		// There is no task bar in the "Driver" profile
+		mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 200;
+	}
+	else {
+		// We need to make room for a task bar
+		mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 229;
+	}
+
 	// Create a new window to be used for the lifetime of the application
 	HWND mainWindow = CreateWindowEx( 0 ,
 			mainClassName ,
@@ -70,7 +86,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			0 ,
 			0 ,
 			GetSystemMetrics(SM_CXSCREEN) ,
-			GetSystemMetrics(SM_CYSCREEN) - 199 ,
+			mainWinHeight ,
 			NULL ,
 			NULL ,
 			Instance ,
@@ -83,15 +99,15 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			0 ,
 			0 ,
 			GetSystemMetrics(SM_CXSCREEN) ,
-			GetSystemMetrics(SM_CYSCREEN) - 199 ,
+			mainWinHeight ,
 			mainWindow ,
 			NULL ,
 			Instance ,
 			NULL );
 	drawWin.create( drawWindow );
 
-	MjpegStream streamWin( "http://eastentrance.tps.ucsb.edu" ,//"tcp://10.35.12.6" ,
-			80 ,
+	MjpegStream streamWin( "10.35.12.6" ,
+			8080 ,
 			mainWindow ,
 			( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
 			60 ,
