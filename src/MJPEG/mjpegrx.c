@@ -1,14 +1,33 @@
-/* mjpeg HTTP stream decoder example */
+/* mjpeg HTTP stream decoder */
 
-#include <unistd.h>
+#ifdef WIN32
 
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/types.h>
 #include <winsock2.h>
 #include <signal.h>
-
 #define socklen_t int
+#define MSG_WAITALL 0x8 // do not complete until packet is completely filled
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <assert.h>
+
+#else
+
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,27 +35,35 @@
 #include <string.h>
 
 #include <pthread.h>
+#include <assert.h>
+
+#endif
 
 #include "mjpegrx.h"
 
+#ifdef WIN32
 void
-_sck_wsainit() {
-	WORD vs;
-	WSADATA wsadata;
+_sck_wsainit(){
+    WORD vs;
+    WSADATA wsadata;
 
-	vs = MAKEWORD( 2 , 2 );
-	WSAStartup( vs , &wsadata );
+    vs = MAKEWORD(2, 2);
+    WSAStartup(vs, &wsadata);
+
+    return;
 }
+#endif
 
 int
 mjpeg_rxbyte(char **buf, int *bufpos, int *bufsize, int sd){
     int bytesread;
 
-    bytesread = recv(sd, (*buf)+*bufpos, 1, 0);
+    bytesread = recv(sd, (*buf)+*bufpos, 1, MSG_WAITALL);
+    assert(bytesread == 1);
     if(bytesread < 1) return 1;
     (*bufpos)++;
 
-    if(*bufpos == 1024){
+    if(*bufpos == 1023){
         *bufsize += 1024;
         *buf = realloc(*buf, *bufsize);
     }
@@ -56,7 +83,7 @@ mjpeg_rxheaders(char **buf_out, int *bufsize_out, int sd){
 
     while(1){
         if(mjpeg_rxbyte(&buf, &bufpos, &allocsize, sd) != 0) return -1;
-        if(buf[bufpos-3] == '\r' && buf[bufpos-2] == '\n' && buf[bufpos-1] == '\r' && buf[bufpos] == '\n'){
+        if(bufpos >= 4 && buf[bufpos-4] == '\r' && buf[bufpos-3] == '\n' && buf[bufpos-2] == '\r' && buf[bufpos-1] == '\n'){
             break;
         }
     }
@@ -76,7 +103,9 @@ mjpeg_sck_connect(char *host, int port)
     struct hostent *hp;
     struct sockaddr_in pin;
 
+    #ifdef WIN32
     _sck_wsainit();
+    #endif
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if(sd < 0) return -1;
@@ -147,14 +176,19 @@ mjpeg_process_header(char *header)
 {
     char *strtoksave;
     struct keyvalue_t *list = NULL;
-    struct keyvalue_t *start;
+    struct keyvalue_t *start = NULL;
     char *key;
     char *value;
     char used;
 
     header = strdup(header);
+    if(header == NULL) return NULL;
 
     key = strtok_r_n(header, ":\n", &strtoksave, &used);
+    if(key == NULL){
+        return NULL;
+    }
+
     while(1){ /* we break out inside */
         /* if no ':' exists on the line, ignore it */
         if(used == '\n'){
@@ -210,6 +244,7 @@ mjpeg_freelist(struct keyvalue_t *list){
         free(c->key);
         free(c->value);
     }
+    if(tmp != NULL) free(tmp);
 
     return;
 }
@@ -265,6 +300,10 @@ mjpeg_stopthread(struct mjpeg_inst_t *inst)
 
     free(inst);
 
+#ifdef WIN32
+    WSACleanup();
+#endif
+
     return;
 }
 
@@ -277,11 +316,13 @@ mjpeg_threadmain(void *optarg)
 
     char *asciisize;
     int datasize;
-    char *buf;
+    char *buf; 
 
     char *headerbuf;
     int headerbufsize;
     struct keyvalue_t *headerlist;
+
+    int bytesread;
 
     /* connect */
     sd = mjpeg_sck_connect(args->host, args->port);
@@ -300,12 +341,15 @@ mjpeg_threadmain(void *optarg)
         return NULL;
     }
 
+    /* sends some bogus data so that we'll get a response */
     send(sd, "U\r\n", 3, 0);
 
     while(args->inst->threadrunning > 0){
         /* Read and parse incoming HTTP response headers */
         mjpeg_rxheaders(&headerbuf, &headerbufsize, sd);
+        printf("%s\n", headerbuf);
         headerlist = mjpeg_process_header(headerbuf);
+	free(headerbuf);
         if(headerlist == NULL) break;
 
         /* Read the Content-Length header to determine the
@@ -319,7 +363,9 @@ mjpeg_threadmain(void *optarg)
 
         /* read the data */
         buf = malloc(datasize);
-        recv(sd, buf, datasize, 0);
+        bytesread = recv(sd, buf, datasize, MSG_WAITALL);
+	assert(bytesread == datasize);
+
         if(args->callbacks->readcallback != NULL){
             args->callbacks->readcallback(
                 buf,
@@ -330,7 +376,11 @@ mjpeg_threadmain(void *optarg)
 
         mjpeg_freelist(headerlist);
     }
+    #ifdef WIN32
     closesocket(sd);
+    #else
+    close(sd);
+    #endif
 
     if(args->callbacks->donecallback != NULL){
         args->callbacks->donecallback(args->callbacks->optarg);

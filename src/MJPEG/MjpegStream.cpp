@@ -9,9 +9,9 @@
 
 #include "../UIFont.hpp"
 #include "MjpegStream.hpp"
-#include <iostream> // TODO Remove me
 #include <fstream>
 #include <sstream>
+#include <iostream> // FIXME
 
 int stringToNumber( std::string str ) {
 	int num;
@@ -32,6 +32,10 @@ MjpegStream::MjpegStream( const std::string& hostName ,
 		m_port( port ) ,
 		m_connectMsg( "Connecting..." , UIFont::getInstance()->segoeUI() , 18 ) ,
 		m_disconnectMsg( "Disconnected" , UIFont::getInstance()->segoeUI() , 18 ) ,
+		// Makes stream display "Connecting..." until at least one image has been received from the host
+		m_imageTxtr( m_connectTxtr.getTexture() ) ,
+
+		m_firstImage( true ) ,
 
 		m_stopReceive( true ) {
 
@@ -67,10 +71,8 @@ MjpegStream::MjpegStream( const std::string& hostName ,
 	m_disconnectTxtr.display();
 	/* ===================================================== */
 
-	/* Makes stream display "Connecting..." until at least one image has been received from the host
-	 * No mutexes used here because receive thread hasn't started yet
-	 */
-	m_imageSprite.setTexture( m_connectTxtr.getTexture() );
+	// make m_imageTxtr display with m_imageSprite
+	m_imageSprite.setTexture( m_imageTxtr );
 
 	// Set up the callback description structure
 	ZeroMemory( &m_callbacks , sizeof(struct mjpeg_callbacks_t) );
@@ -148,6 +150,8 @@ void MjpegStream::startStream() {
 	if ( m_stopReceive == true ) { // if stream is closed, reopen it
 		m_stopReceive = false;
 
+		m_imageAge.restart();
+
 		// Launch the mjpeg recieving/processing thread
 		m_streamInst = mjpeg_launchthread( const_cast<char*>( m_hostName.c_str() ) , m_port , &m_callbacks );
 	}
@@ -159,6 +163,8 @@ void MjpegStream::stopStream() {
 
 		// Close the receive thread
 		mjpeg_stopthread( m_streamInst );
+
+		m_firstImage = true;
 	}
 }
 
@@ -170,12 +176,12 @@ void MjpegStream::display() {
 	m_displayMutex.lock();
 
 	if ( isStreaming() ) {
-		if ( m_imageAge.getElapsedTime().asMilliseconds() > 1000 ) {
+		if ( m_imageAge.getElapsedTime().asMilliseconds() > 1000 || m_firstImage ) {
 			m_streamDisplay.draw( sf::Sprite( m_connectTxtr.getTexture() ) );
 		}
 		else {
 			m_imageMutex.lock();
-			m_streamDisplay.draw( m_imageSprite );
+			m_streamDisplay.draw( sf::Sprite( m_imageTxtr ) );
 			m_imageMutex.unlock();
 		}
 	}
@@ -193,23 +199,32 @@ void MjpegStream::doneCallback( void* optarg ) {
 }
 
 void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
-	// Store JPEG image to buffer
-	sf::Texture streamTexture;
+	// Create pointer to stream to make it easier to access the instance later
+	MjpegStream* streamPtr = static_cast<MjpegStream*>( optarg );
 
-	// If the image loaded successfully, display it
-	if ( streamTexture.loadFromMemory( static_cast<void*>(buf) , bufsize ) ) {
-		// Create pointer to stream to make it easier to access the instance later
-		MjpegStream* streamPtr = static_cast<MjpegStream*>( optarg );
-		std::cout << "streamPtr=" << streamPtr << "\n";
+	// Load the image received
+	streamPtr->m_imageMutex.lock();
+	bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( static_cast<void*>(buf) , bufsize );
+	if ( loadedCorrectly ) {
+		loadedCorrectly = streamPtr->m_imageTxtr.loadFromImage( streamPtr->m_tempImage );
+	}
+	streamPtr->m_imageMutex.unlock();
+
+	// If the image loaded successfully, update the sprite which displays it
+	if ( loadedCorrectly ) {
+		// If that was the first image streamed
+		if ( streamPtr->m_firstImage ) {
+			streamPtr->m_firstImage = false;
+		}
+
+		streamPtr->m_imageMutex.lock();
 
 		// Set up image for drawing
-		streamPtr->m_imageMutex.lock();
-		streamPtr->m_imageSprite.setTexture( streamTexture );
-		streamPtr->m_imageMutex.unlock();
+		streamPtr->m_imageSprite.setTexture( streamPtr->m_imageTxtr );
 
 		// Reset the image age timer
 		streamPtr->m_imageAge.restart();
 
-		std::cout << "Got image\n";
+		streamPtr->m_imageMutex.unlock();
 	}
 }

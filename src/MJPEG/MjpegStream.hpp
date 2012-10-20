@@ -96,7 +96,14 @@ private:
 
 	// Holds image most recently received from the host
 	sf::Sprite m_imageSprite;
+	sf::Texture m_imageTxtr;
+	sf::Image m_tempImage;
 	sf::Mutex m_imageMutex;
+
+	/* Used to determine when to draw the "Connecting..." message
+	 * (when the stream first starts)
+	 */
+	bool m_firstImage;
 
 	// Used for streaming MJPEG frames from host
 	struct mjpeg_callbacks_t m_callbacks;

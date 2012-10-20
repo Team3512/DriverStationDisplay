@@ -106,7 +106,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			NULL );
 	drawWin.create( drawWindow );
 
-	MjpegStream streamWin( "10.35.12.6" ,
+	MjpegStream streamWin( "germany.acfsys.net" , //"10.35.12.6" ,
 			8080 ,
 			mainWindow ,
 			( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,

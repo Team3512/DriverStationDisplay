@@ -36,7 +36,7 @@ struct mjpeg_inst_t *
 mjpeg_launchthread(
 		char *host,
 		int port,
-		struct mjpeg_callbacks_t *callback
+		struct mjpeg_callbacks_t *callbacks
 		);
 
 void mjpeg_stopthread(struct mjpeg_inst_t *inst);
