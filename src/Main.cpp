@@ -21,10 +21,16 @@
 #include <windows.h>
 
 // Define child-window identifiers for catching their window events
-#define IDC_EXIT_BUTTON 101
+enum {
+	IDC_EXIT_BUTTON = 101,
+	IDC_STREAM_BUTTON = 102
+};
 
-// global because the drawing is set up to be continuous in CALLBACK OnEvent
+// Global because the window is closed by a button in CALLBACK OnEvent
 sf::RenderWindow drawWin;
+
+// Allows manipulation of MjpegStream in CALLBACK OnEvent
+MjpegStream* streamWinPtr;
 
 template <class T>
 std::wstring numberToString( T number ) {
@@ -87,11 +93,12 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 	MjpegStream streamWin( "http://eastentrance.tps.ucsb.edu" ,//"tcp://10.35.12.6" ,
 			80 ,
 			mainWindow ,
-			( drawWin.getSize().x - 320 ) / 2 ,
+			( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
 			60 ,
 			320 ,
 			240 ,
 			Instance );
+	streamWinPtr = &streamWin;
 
 	sf::UdpSocket robotData;
 	robotData.bind( 5615 );
@@ -280,23 +287,41 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 	case WM_CREATE: {
 		HGDIOBJ hfDefault = GetStockObject( DEFAULT_GUI_FONT );
 
-		HWND hWndButton = CreateWindowEx( 0,
-				"BUTTON",
-				"Exit",
-				WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-				GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-				5,
-				100,
-				24,
-				Handle,
-				reinterpret_cast<HMENU>( IDC_EXIT_BUTTON ),
-				GetModuleHandle( NULL ),
-				NULL);
+		HWND exitButton = CreateWindowEx( 0,
+			"BUTTON",
+			"Exit",
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+			5,
+			100,
+			24,
+			Handle,
+			reinterpret_cast<HMENU>( IDC_EXIT_BUTTON ),
+			GetModuleHandle( NULL ),
+			NULL);
 
-		SendMessage(hWndButton,
-					WM_SETFONT,
-					reinterpret_cast<WPARAM>( hfDefault ),
-					MAKELPARAM( FALSE , 0 ) );
+		SendMessage(exitButton,
+			WM_SETFONT,
+			reinterpret_cast<WPARAM>( hfDefault ),
+			MAKELPARAM( FALSE , 0 ) );
+
+		HWND streamButton = CreateWindowEx( 0,
+			"BUTTON",
+			"Toggle Stream",
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
+			305,
+			100,
+			24,
+			Handle,
+			reinterpret_cast<HMENU>( IDC_STREAM_BUTTON ),
+			GetModuleHandle( NULL ),
+			NULL);
+
+		SendMessage(streamButton,
+			WM_SETFONT,
+			reinterpret_cast<WPARAM>( hfDefault ),
+			MAKELPARAM( FALSE , 0 ) );
 
 		break;
 	}
@@ -309,6 +334,18 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 				break;
 			}
 			break;
+
+			case IDC_STREAM_BUTTON: {
+				if ( streamWinPtr->isStreaming() ) {
+					// Stop streaming
+					streamWinPtr->stopStream();
+				}
+				else {
+					// Start streaming
+					streamWinPtr->startStream();
+				}
+				break;
+			}
 
 			case WM_DESTROY: {
 				PostQuitMessage(0);
