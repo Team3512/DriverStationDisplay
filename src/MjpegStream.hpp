@@ -26,8 +26,13 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/Text.hpp>
 
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Mutex.hpp>
 #include <SFML/System/Thread.hpp>
 
 #include "ModSFML/ContHttp.hpp"
@@ -48,10 +53,10 @@ public:
 	// Puts this window in the foreground in case there are other child windows
 	void bringToTop();
 
-	sf::Vector2i getPosition() const;
+	sf::Vector2i getPosition();
 	void setPosition( const sf::Vector2i& position );
 
-	sf::Vector2u getSize() const;
+	sf::Vector2u getSize();
 	void setSize( const sf::Vector2u size );
 
 	// Starts Kinect stream
@@ -59,6 +64,12 @@ public:
 
 	// Stops Kinect stream
 	void stopStream();
+
+	// Returns true if streaming is on
+	bool isStreaming();
+
+	// Displays the stream or a message if the stream isn't working
+	void display();
 
 private:
 	std::string m_hostName;
@@ -68,6 +79,18 @@ private:
 
 	HWND m_streamWin;
 	sf::RenderWindow m_streamDisplay;
+
+	// Contains "Connecting" message
+	sf::RenderTexture m_connectTxtr;
+	sf::Text m_connectMsg;
+
+	// Contains "Disconnected" message
+	sf::RenderTexture m_disconnectTxtr;
+	sf::Text m_disconnectMsg;
+
+	// Holds image most recently received from the host
+	sf::Sprite m_imageSprite;
+	sf::Mutex m_imageMutex;
 
 	// New HTTP client
 	sf::ContHttp m_httpStream;
@@ -81,10 +104,22 @@ private:
 	// Stores the status of the image receive
 	sf::ContHttp::Response::Status m_recvStatus;
 
+	// Receives images from host and displays them
 	sf::Thread m_receiveThread;
-	volatile bool m_closeThread;
-
 	void receive();
+
+	// Determines when a video frame is old
+	sf::Clock m_imageAge;
+
+	// Locks display so only one thread can access or draw to it at a time
+	sf::Mutex m_displayMutex;
+
+	/* If true:
+	 *     Lets receive threads run and closes disconnect display thread
+	 * If false:
+	 *     Lets disconnect display thread run and closes receive threads
+	 */
+	volatile bool m_stopReceive;
 };
 
 #endif // MJPEG_STREAM_HPP

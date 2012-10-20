@@ -9,14 +9,14 @@
 
 #include <SFML/Graphics/RenderTarget.hpp>
 
-StatusLight::StatusLight( const sf::Vector2f& position , std::string message , Status currentStatus  ) : sf::CircleShape( 10 ) , m_status( currentStatus ) {
+StatusLight::StatusLight( const sf::Vector2f& position , std::string message , Status currentStatus  ) :
+		sf::CircleShape( 10 ) ,
+		m_status( currentStatus ) ,
+		m_sfText( message , UIFont::getInstance()->segoeUI() , 14 ) {
 	setOrigin( 5.f , 5.f );
 	setOutlineThickness( 2.f );
 	setOutlineColor( sf::Color( 50 , 50 , 50 ) );
 
-	m_sfText.setFont( UIFont::getInstance()->segoeUI() );
-	m_sfText.setCharacterSize( 14 );
-	m_sfText.setString( message );
 	m_sfText.setColor( sf::Color( 255 , 255 , 255 ) );
 
 	setPosition( position );

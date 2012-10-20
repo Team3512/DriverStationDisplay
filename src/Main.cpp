@@ -262,6 +262,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			drawWin.draw( distanceText );
 
 			drawWin.display();
+			streamWin.display();
 
 			Sleep( 50 );
 		}
