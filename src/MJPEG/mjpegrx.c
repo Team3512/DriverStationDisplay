@@ -215,7 +215,11 @@ mjpeg_process_header(char *header)
         list->key = strdup(key);
 
         /* get the value */
+#ifdef WIN32
         value = strtok_r_n(NULL, "\n", &strtoksave, NULL);
+#else
+        value = strtok_r(NULL, "\n", &strtoksave);
+#endif
         if(value == NULL) break;
         value++;
         if(value[strlen(value)-1] == '\r'){
