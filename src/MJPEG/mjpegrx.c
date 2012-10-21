@@ -347,7 +347,9 @@ mjpeg_threadmain(void *optarg)
     while(args->inst->threadrunning > 0){
         /* Read and parse incoming HTTP response headers */
         mjpeg_rxheaders(&headerbuf, &headerbufsize, sd);
+#ifdef DEBUG
         printf("%s\n", headerbuf);
+#endif
         headerlist = mjpeg_process_header(headerbuf);
 	free(headerbuf);
         if(headerlist == NULL) break;

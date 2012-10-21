@@ -4,6 +4,7 @@
 #define _MJPEGRX_H
 
 #include <pthread.h>
+//#define DEBUG
 
 struct keyvalue_t {
 	char *key;

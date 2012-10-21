@@ -11,7 +11,6 @@
 #include "MjpegStream.hpp"
 #include <fstream>
 #include <sstream>
-#include <iostream> // FIXME
 
 int stringToNumber( std::string str ) {
 	int num;

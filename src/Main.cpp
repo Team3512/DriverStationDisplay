@@ -65,7 +65,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
 	char name[256];
 	DWORD size = 256;
-	GetUserNameA( name , &size );
+	GetUserName( name , &size );
 
 	int mainWinHeight;
 
