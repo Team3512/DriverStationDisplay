@@ -94,8 +94,11 @@ private:
 	sf::RenderTexture m_disconnectTxtr;
 	sf::Text m_disconnectMsg;
 
+	// Contains "Waiting..." message
+	sf::RenderTexture m_waitTxtr;
+	sf::Text m_waitMsg;
+
 	// Holds image most recently received from the host
-	sf::Sprite m_imageSprite;
 	sf::Texture m_imageTxtr;
 	sf::Image m_tempImage;
 	sf::Mutex m_imageMutex;
@@ -121,6 +124,11 @@ private:
 	 *     Lets disconnect display thread run and closes receive threads
 	 */
 	volatile bool m_stopReceive;
+
+	/* Recreates the textures that display messages in the stream window
+	 * (Resizes them and recenters the text in the window)
+	 */
+	void recreateTextures( const sf::Vector2u windowSize );
 };
 
 #endif // MJPEG_STREAM_HPP

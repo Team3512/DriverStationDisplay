@@ -5,12 +5,14 @@
 //Author: Tyler Veness
 //=============================================================================
 
+#include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
 #include "../UIFont.hpp"
 #include "MjpegStream.hpp"
 #include <fstream>
 #include <sstream>
+#include <iostream> // TODO Remove me
 
 int stringToNumber( std::string str ) {
 	int num;
@@ -31,8 +33,7 @@ MjpegStream::MjpegStream( const std::string& hostName ,
 		m_port( port ) ,
 		m_connectMsg( "Connecting..." , UIFont::getInstance()->segoeUI() , 18 ) ,
 		m_disconnectMsg( "Disconnected" , UIFont::getInstance()->segoeUI() , 18 ) ,
-		// Makes stream display "Connecting..." until at least one image has been received from the host
-		m_imageTxtr( m_connectTxtr.getTexture() ) ,
+		m_waitMsg( "Waiting..." , UIFont::getInstance()->segoeUI() , 18 ) ,
 
 		m_firstImage( true ) ,
 
@@ -54,32 +55,13 @@ MjpegStream::MjpegStream( const std::string& hostName ,
 		NULL );
 	m_streamDisplay.create( m_streamWin );
 
-	/* ===== Fill RenderTextures with special messages ===== */
-	m_connectMsg.setPosition( sf::Vector2f( ( m_streamDisplay.getSize().x - m_connectMsg.findCharacterPos( 13 ).x ) / 2.f , ( m_streamDisplay.getSize().y - m_connectMsg.getCharacterSize() - 6.f ) / 2.f ) );
-
-	m_connectTxtr.create( m_streamDisplay.getSize().x , m_streamDisplay.getSize().y );
-	m_connectTxtr.clear( sf::Color( 40 , 40 , 40 ) );
-	m_connectTxtr.draw( m_connectMsg );
-	m_connectTxtr.display();
-
-	m_disconnectMsg.setPosition( sf::Vector2f( ( m_streamDisplay.getSize().x - m_disconnectMsg.findCharacterPos( 12 ).x ) / 2.f , ( m_streamDisplay.getSize().y - m_disconnectMsg.getCharacterSize() - 6.f ) / 2.f ) );
-
-	m_disconnectTxtr.create( m_streamDisplay.getSize().x , m_streamDisplay.getSize().y );
-	m_disconnectTxtr.clear( sf::Color( 40 , 40 , 40 ) );
-	m_disconnectTxtr.draw( m_disconnectMsg );
-	m_disconnectTxtr.display();
-	/* ===================================================== */
-
-	// make m_imageTxtr display with m_imageSprite
-	m_imageSprite.setTexture( m_imageTxtr );
+	recreateTextures( m_streamDisplay.getSize() );
 
 	// Set up the callback description structure
 	ZeroMemory( &m_callbacks , sizeof(struct mjpeg_callbacks_t) );
 	m_callbacks.readcallback = readCallback;
 	m_callbacks.donecallback = doneCallback;
 	m_callbacks.optarg = this;
-
-	startStream();
 }
 
 MjpegStream::~MjpegStream() {
@@ -122,27 +104,10 @@ sf::Vector2u MjpegStream::getSize() {
 
 void MjpegStream::setSize( const sf::Vector2u size ) {
 	m_displayMutex.lock();
-
 	m_streamDisplay.setSize( size );
-
-	m_connectTxtr.create( m_streamDisplay.getSize().x , m_streamDisplay.getSize().y );
-	m_connectMsg.setPosition( sf::Vector2f( ( m_streamDisplay.getSize().x - m_connectMsg.findCharacterPos( 13 ).x ) / 2.f , ( m_streamDisplay.getSize().y - m_connectMsg.getCharacterSize() - 6.f ) / 2.f ) );
-
-	m_disconnectTxtr.create( m_streamDisplay.getSize().x , m_streamDisplay.getSize().y );
-	m_disconnectMsg.setPosition( sf::Vector2f( ( m_streamDisplay.getSize().x - m_disconnectMsg.findCharacterPos( 12 ).x ) / 2.f , ( m_streamDisplay.getSize().y - m_disconnectMsg.getCharacterSize() - 6.f ) / 2.f ) );
-
 	m_displayMutex.unlock();
 
-	/* ===== Fill RenderTextures with messages ===== */
-	m_connectTxtr.clear( sf::Color( 40 , 40 , 40 ) );
-	m_connectTxtr.draw( m_connectMsg );
-	m_connectTxtr.display();
-
-
-	m_disconnectTxtr.clear( sf::Color( 40 , 40 , 40 ) );
-	m_disconnectTxtr.draw( m_disconnectMsg );
-	m_disconnectTxtr.display();
-	/* ============================================= */
+	recreateTextures( size );
 }
 
 void MjpegStream::startStream() {
@@ -160,8 +125,12 @@ void MjpegStream::stopStream() {
 	if ( m_stopReceive == false ) { // if stream is open, close it
 		m_stopReceive = true;
 
+		std::cout << "Closing network thread... ";
+
 		// Close the receive thread
 		mjpeg_stopthread( m_streamInst );
+
+		std::cout << "closeDone\n";
 
 		m_firstImage = true;
 	}
@@ -172,24 +141,67 @@ bool MjpegStream::isStreaming() {
 }
 
 void MjpegStream::display() {
-	m_displayMutex.lock();
-
+	// If streaming is enabled
 	if ( isStreaming() ) {
-		if ( m_imageAge.getElapsedTime().asMilliseconds() > 1000 || m_firstImage ) {
+		// Create safe versions of variables
+		m_imageMutex.lock();
+
+		bool sFirstImage = m_firstImage;
+		int sImageAge = m_imageAge.getElapsedTime().asMilliseconds();
+
+		m_imageMutex.unlock();
+
+		// If no image has been received yet
+		if ( sFirstImage ) {
+			m_imageMutex.lock();
+			m_displayMutex.lock();
+
 			m_streamDisplay.draw( sf::Sprite( m_connectTxtr.getTexture() ) );
+
+			m_displayMutex.unlock();
+			m_imageMutex.unlock();
 		}
+
+		// If it's been too long since we received our last image
+		else if ( sImageAge > 1000 ) {
+			// Display "Waiting..." over the last image received
+			m_imageMutex.lock();
+			m_displayMutex.lock();
+
+			m_streamDisplay.clear( sf::Color( 40 , 40 , 40 ) );
+			m_streamDisplay.draw( sf::Sprite( m_imageTxtr ) );
+			m_streamDisplay.draw( sf::Sprite( m_waitTxtr.getTexture() ) );
+
+			m_displayMutex.unlock();
+			m_imageMutex.unlock();
+		}
+
+		// Else display the image last received
 		else {
 			m_imageMutex.lock();
+			m_displayMutex.lock();
+
+			m_streamDisplay.clear( sf::Color( 40 , 40 , 40 ) );
 			m_streamDisplay.draw( sf::Sprite( m_imageTxtr ) );
+
+			m_displayMutex.unlock();
 			m_imageMutex.unlock();
 		}
 	}
+
+	// Else we aren't connected to the host
 	else {
+		m_imageMutex.lock();
+		m_displayMutex.lock();
+
 		m_streamDisplay.draw( sf::Sprite( m_disconnectTxtr.getTexture() ) );
+
+		m_displayMutex.unlock();
+		m_imageMutex.unlock();
 	}
 
+	m_displayMutex.lock();
 	m_streamDisplay.display();
-
 	m_displayMutex.unlock();
 }
 
@@ -201,13 +213,15 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
 	// Create pointer to stream to make it easier to access the instance later
 	MjpegStream* streamPtr = static_cast<MjpegStream*>( optarg );
 
-	// Load the image received
 	streamPtr->m_imageMutex.lock();
+
+	std::cout << "Loading... ";
+
+	// Load the image received
 	bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( static_cast<void*>(buf) , bufsize );
 	if ( loadedCorrectly ) {
 		loadedCorrectly = streamPtr->m_imageTxtr.loadFromImage( streamPtr->m_tempImage );
 	}
-	streamPtr->m_imageMutex.unlock();
 
 	// If the image loaded successfully, update the sprite which displays it
 	if ( loadedCorrectly ) {
@@ -216,14 +230,52 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
 			streamPtr->m_firstImage = false;
 		}
 
-		streamPtr->m_imageMutex.lock();
-
-		// Set up image for drawing
-		streamPtr->m_imageSprite.setTexture( streamPtr->m_imageTxtr );
-
 		// Reset the image age timer
 		streamPtr->m_imageAge.restart();
-
-		streamPtr->m_imageMutex.unlock();
 	}
+
+	std::cout << "Done: 1stIMG=" << streamPtr->m_firstImage << " && loaded=" << loadedCorrectly << "\n";
+
+	streamPtr->m_imageMutex.unlock();
+}
+
+void MjpegStream::recreateTextures( const sf::Vector2u windowSize ) {
+	/* ===== Recenter the messages ===== */
+	m_connectMsg.setPosition( sf::Vector2f( ( windowSize.x - m_connectMsg.findCharacterPos( 100 ).x ) / 2.f ,
+		( windowSize.y - m_connectMsg.getCharacterSize() - 6.f ) / 2.f ) );
+
+	m_disconnectMsg.setPosition( sf::Vector2f( ( windowSize.x - m_disconnectMsg.findCharacterPos( 100 ).x ) / 2.f ,
+		( windowSize.y - m_disconnectMsg.getCharacterSize() - 6.f ) / 2.f ) );
+
+	m_waitMsg.setPosition( sf::Vector2f( ( windowSize.x - m_waitMsg.findCharacterPos( 100 ).x ) / 2.f ,
+		( windowSize.y - m_waitMsg.getCharacterSize() - 6.f ) / 2.f ) );
+	/* ================================= */
+
+	/* ===== Fill RenderTextures with messages ===== */
+	m_imageMutex.lock();
+
+	m_connectTxtr.create( windowSize.x , windowSize.y );
+	m_connectTxtr.clear( sf::Color( 40 , 40 , 40 ) );
+	m_connectTxtr.draw( m_connectMsg );
+	m_connectTxtr.display();
+
+	m_disconnectTxtr.create( windowSize.x , windowSize.y );
+	m_disconnectTxtr.clear( sf::Color( 40 , 40 , 40 ) );
+	m_disconnectTxtr.draw( m_disconnectMsg );
+	m_disconnectTxtr.display();
+
+	m_waitTxtr.create( windowSize.x , windowSize.y );
+	m_waitTxtr.clear( sf::Color( 40 , 40 , 40 , 0 ) );
+
+	sf::RectangleShape waitBackground( sf::Vector2f( m_waitMsg.findCharacterPos( 100 ).x + 20.f , m_waitMsg.getCharacterSize() + 10.f ) );
+	waitBackground.setPosition( sf::Vector2f( ( windowSize.x - waitBackground.getSize().x ) / 2.f ,
+			( windowSize.y - waitBackground.getSize().y ) / 2.f ) );
+	waitBackground.setFillColor( sf::Color( 120 , 120 , 120 , 70 ) );
+
+	m_waitTxtr.draw( waitBackground );
+	m_waitTxtr.draw( m_waitMsg );
+	m_waitTxtr.display();
+
+	m_imageMutex.unlock();
+	/* ============================================= */
 }
