@@ -86,6 +86,9 @@ private:
 	HWND m_streamWin;
 	sf::RenderWindow m_streamDisplay;
 
+	// Holds pointer to button which toggles streaming
+	HWND m_toggleButton;
+
 	// Contains "Connecting" message
 	sf::RenderTexture m_connectTxtr;
 	sf::Text m_connectMsg;

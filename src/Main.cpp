@@ -16,23 +16,18 @@
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
 #include "MJPEG/MjpegStream.hpp"
+#include "ButtonID.hpp"
 
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <cstring>
 
-// Define child-window identifiers for catching their window events
-enum {
-	IDC_EXIT_BUTTON = 101,
-	IDC_STREAM_BUTTON = 102
-};
-
 // Global because the window is closed by a button in CALLBACK OnEvent
 sf::RenderWindow drawWin;
 
 // Allows manipulation of MjpegStream in CALLBACK OnEvent
-MjpegStream* streamWinPtr;
+MjpegStream* streamWinPtr = NULL;
 
 template <class T>
 std::wstring numberToString( T number ) {
@@ -322,24 +317,6 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 			reinterpret_cast<WPARAM>( hfDefault ),
 			MAKELPARAM( FALSE , 0 ) );
 
-		HWND streamButton = CreateWindowEx( 0,
-			"BUTTON",
-			"Start Stream",
-			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-			( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
-			305,
-			100,
-			24,
-			Handle,
-			reinterpret_cast<HMENU>( IDC_STREAM_BUTTON ),
-			GetModuleHandle( NULL ),
-			NULL);
-
-		SendMessage(streamButton,
-			WM_SETFONT,
-			reinterpret_cast<WPARAM>( hfDefault ),
-			MAKELPARAM( FALSE , 0 ) );
-
 		break;
 	}
 
@@ -353,20 +330,17 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 			break;
 
 			case IDC_STREAM_BUTTON: {
-				if ( streamWinPtr->isStreaming() ) {
-					// Change text displayed on button (LParam is button HWND)
-					SendMessage( reinterpret_cast<HWND>(LParam) , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
-
-					// Stop streaming
-					streamWinPtr->stopStream();
+				if ( streamWinPtr != NULL ) {
+					if ( streamWinPtr->isStreaming() ) {
+						// Stop streaming
+						streamWinPtr->stopStream();
+					}
+					else {
+						// Start streaming
+						streamWinPtr->startStream();
+					}
 				}
-				else {
-					// Change text displayed on button (LParam is button HWND)
-					SendMessage( reinterpret_cast<HWND>(LParam) , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Stop Stream") );
 
-					// Start streaming
-					streamWinPtr->startStream();
-				}
 				break;
 			}
 

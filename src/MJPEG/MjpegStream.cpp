@@ -10,6 +10,8 @@
 
 #include "../UIFont.hpp"
 #include "MjpegStream.hpp"
+#include "../ButtonID.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <iostream> // TODO Remove me
@@ -55,6 +57,29 @@ MjpegStream::MjpegStream( const std::string& hostName ,
 		NULL );
 	m_streamDisplay.create( m_streamWin );
 
+	/* ===== Initialize the stream toggle button ===== */
+	HGDIOBJ hfDefault = GetStockObject( DEFAULT_GUI_FONT );
+
+	m_toggleButton = CreateWindowEx( 0,
+		"BUTTON",
+		"Start Stream",
+		WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+		( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
+		305,
+		100,
+		24,
+		m_parentWin,
+		reinterpret_cast<HMENU>( IDC_STREAM_BUTTON ),
+		GetModuleHandle( NULL ),
+		NULL);
+
+	SendMessage(m_toggleButton,
+		WM_SETFONT,
+		reinterpret_cast<WPARAM>( hfDefault ),
+		MAKELPARAM( FALSE , 0 ) );
+	/* =============================================== */
+
+	// Create the textures that can be displayed in the stream window
 	recreateTextures( m_streamDisplay.getSize() );
 
 	// Set up the callback description structure
@@ -67,12 +92,15 @@ MjpegStream::MjpegStream( const std::string& hostName ,
 MjpegStream::~MjpegStream() {
 	stopStream();
 	DestroyWindow( m_streamWin );
+	DestroyWindow( m_toggleButton );
 }
 
 void MjpegStream::bringToTop() {
-	// if top child window isn't stream display
-	if ( GetTopWindow( m_parentWin ) != m_streamWin ) {
+	// if top child window isn't stream toggle button
+	if ( GetTopWindow( m_parentWin ) != m_toggleButton ) {
+		// Put stream toggle button on top followed by stream window in Z-order
 		BringWindowToTop( m_streamWin );
+		BringWindowToTop( m_toggleButton );
 	}
 }
 
@@ -114,6 +142,9 @@ void MjpegStream::startStream() {
 	if ( m_stopReceive == true ) { // if stream is closed, reopen it
 		m_stopReceive = false;
 
+		// Change text displayed on button (LParam is button HWND)
+		SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Stop Stream") );
+
 		m_imageAge.restart();
 
 		// Launch the mjpeg recieving/processing thread
@@ -124,6 +155,9 @@ void MjpegStream::startStream() {
 void MjpegStream::stopStream() {
 	if ( m_stopReceive == false ) { // if stream is open, close it
 		m_stopReceive = true;
+
+		// Change text displayed on button (LParam is button HWND)
+		SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
 
 		std::cout << "Closing network thread... ";
 
