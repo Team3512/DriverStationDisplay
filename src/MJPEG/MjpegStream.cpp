@@ -234,7 +234,7 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
 		streamPtr->m_imageAge.restart();
 	}
 
-	std::cout << "Done: 1stIMG=" << streamPtr->m_firstImage << " && loaded=" << loadedCorrectly << "\n";
+	std::cout << "done && loaded=" << loadedCorrectly << "\n";
 
 	streamPtr->m_imageMutex.unlock();
 }

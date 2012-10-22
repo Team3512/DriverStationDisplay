@@ -11,6 +11,7 @@
 #include <SFML/Network/UdpSocket.hpp>
 
 #include <sstream>
+#include <iostream> // TODO Remove me
 
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
@@ -323,7 +324,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
 		HWND streamButton = CreateWindowEx( 0,
 			"BUTTON",
-			"Toggle Stream",
+			"Start Stream",
 			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
 			( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
 			305,
@@ -353,10 +354,16 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
 			case IDC_STREAM_BUTTON: {
 				if ( streamWinPtr->isStreaming() ) {
+					// Change text displayed on button (LParam is button HWND)
+					SendMessage( reinterpret_cast<HWND>(LParam) , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
+
 					// Stop streaming
 					streamWinPtr->stopStream();
 				}
 				else {
+					// Change text displayed on button (LParam is button HWND)
+					SendMessage( reinterpret_cast<HWND>(LParam) , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Stop Stream") );
+
 					// Start streaming
 					streamWinPtr->startStream();
 				}
