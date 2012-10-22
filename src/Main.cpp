@@ -142,7 +142,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 	ProgressBar rpmMeter( sf::Vector2f( 100.f , 19.f ) , sf::String( "" ) , sf::Color( 0 , 120 , 0 ) , sf::Color( 40 , 40 , 40 ) , sf::Color( 50 , 50 , 50 ) );
 	rpmMeter.setPosition( streamWin.getPosition().x + streamWin.getSize().x - 100.f /* width of this bar */ , 12.f );
 
-	StatusLight isHighGearLight( sf::Vector2f( 12.f , 129.f ) , "High Gear" );
+	StatusLight isLowGearLight( sf::Vector2f( 12.f , 129.f ) , "Low Gear" );
 	StatusLight isHammerDownLight( sf::Vector2f( 12.f , 169.f ) , "Hammer Down" );
 
 	StatusLight turretLockLight( sf::Vector2f( streamWin.getPosition().x + streamWin.getSize().x + 10.f , 110.f ) , "Lock" );
@@ -211,10 +211,10 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
 				/* ===== Adjust GUI interface to match data from robot ===== */
 				if ( isHighGear ) {
-					isHighGearLight.setActive( StatusLight::active );
+					isLowGearLight.setActive( StatusLight::inactive );
 				}
 				else {
-					isHighGearLight.setActive( StatusLight::inactive );
+					isLowGearLight.setActive( StatusLight::active );
 				}
 
 				if ( isHammerDown ) {
@@ -274,7 +274,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			drawWin.draw( drive1Meter );
 			drawWin.draw( drive2Meter );
 			drawWin.draw( turretMeter );
-			drawWin.draw( isHighGearLight );
+			drawWin.draw( isLowGearLight );
 			drawWin.draw( isHammerDownLight );
 			drawWin.draw( targetRPMMeter );
 			drawWin.draw( rpmMeter );
