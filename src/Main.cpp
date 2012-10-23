@@ -11,7 +11,6 @@
 #include <SFML/Network/UdpSocket.hpp>
 
 #include <sstream>
-#include <iostream> // TODO Remove me
 
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
