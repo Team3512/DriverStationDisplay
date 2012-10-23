@@ -153,8 +153,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 	unsigned int drive1ScaleZ = 0;
 	unsigned int drive2ScaleZ = 0;
 	unsigned int turretScaleZ = 0;
-	bool isHighGear = false;
-	bool isHammerDown = false;
+	bool isLowGear = false;
+	unsigned char isHammerDown = 0;
 	unsigned int shooterRPM = 0;
 	bool shooterIsManual = false;
 	bool isShooting = false;
@@ -179,8 +179,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			     * unsigned int: drive1 ScaleZ
 			     * unsigned int: drive2 ScaleZ
 			     * unsigned int: turret ScaleZ
-			     * bool: drivetrain is in high gear
-			     * bool: is hammer mechanism deployed
+			     * bool: drivetrain is in low gear
+			     * unsigned char: is hammer mechanism deployed
 				 * unsigned int: shooter RPM
 				 * bool: shooter RPM control is manual
 				 * bool: isShooting
@@ -193,7 +193,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 				dataPacket >> drive1ScaleZ
 				>> drive2ScaleZ
 				>> turretScaleZ
-				>> isHighGear
+				>> isLowGear
 				>> isHammerDown
 				>> shooterRPM
 				>> shooterIsManual
@@ -204,17 +204,20 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 				>> distanceToTarget;
 
 				/* ===== Adjust GUI interface to match data from robot ===== */
-				if ( isHighGear ) {
-					isLowGearLight.setActive( StatusLight::inactive );
-				}
-				else {
+				if ( isLowGear ) {
 					isLowGearLight.setActive( StatusLight::active );
 				}
+				else {
+					isLowGearLight.setActive( StatusLight::inactive );
+				}
 
-				if ( isHammerDown ) {
+				if ( isHammerDown == 1 ) { // if hammer is deployed
 					isHammerDownLight.setActive( StatusLight::active );
 				}
-				else {
+				else if ( isHammerDown == 2 ) { // if hammer is transitioning between deployed and retracted
+					isHammerDownLight.setActive( StatusLight::standby );
+				}
+				else { // else hammer is retracted
 					isHammerDownLight.setActive( StatusLight::inactive );
 				}
 
