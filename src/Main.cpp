@@ -70,7 +70,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 	}
 	else {
 		// We need to make room for a task bar
-		mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 229;
+		mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 240;
 	}
 
 	// Create a new window to be used for the lifetime of the application
@@ -162,6 +162,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 	bool turretLockedOn = false;
 	unsigned char kinectOnline = sf::Socket::Error;
 	unsigned int distanceToTarget;
+
+	ShowWindow( mainWindow , SW_SHOW ); // Makes sure this window is shown before continuing
 
 	while ( drawWin.isOpen() ) {
 		streamWin.bringToTop(); // bring window to top of other child windows

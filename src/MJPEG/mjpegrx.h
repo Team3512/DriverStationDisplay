@@ -4,7 +4,6 @@
 #define _MJPEGRX_H
 
 #include <pthread.h>
-//#define DEBUG
 
 struct keyvalue_t {
 	char *key;
@@ -31,6 +30,7 @@ struct mjpeg_callbacks_t {
 struct mjpeg_inst_t {
 	int threadrunning;
 	pthread_t *thread;
+	int sd;
 };
 
 struct mjpeg_inst_t *
