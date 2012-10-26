@@ -37,6 +37,7 @@
 
 extern "C" {
 #include "mjpegrx.h"
+#include "jpeg_decode.h"
 }
 
 class MjpegStream {
@@ -114,6 +115,7 @@ private:
 	// Used for streaming MJPEG frames from host
 	struct mjpeg_callbacks_t m_callbacks;
 	struct mjpeg_inst_t* m_streamInst;
+	struct jpeg_decompress_struct* decompressStruct;
 
 	// Determines when a video frame is old
 	sf::Clock m_imageAge;
@@ -122,9 +124,9 @@ private:
 	sf::Mutex m_displayMutex;
 
 	/* If true:
-	 *     Lets receive threads run and closes disconnect display thread
+	 *     Lets receive thread run
 	 * If false:
-	 *     Lets disconnect display thread run and closes receive threads
+	 *     Closes receive thread
 	 */
 	volatile bool m_stopReceive;
 

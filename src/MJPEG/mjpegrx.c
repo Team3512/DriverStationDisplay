@@ -2,10 +2,11 @@
 
 #ifdef WIN32
 
+#define MSG_WAITALL 0x08
+
 #include <winsock2.h>
 #include <signal.h>
 #define socklen_t int
-#define MSG_WAITALL 0x80
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -40,6 +41,7 @@
 #endif
 
 #include "mjpegrx.h"
+char * strtok_r_n(char *str, char *sep, char **last, char *used);
 
 #ifdef WIN32
 void
@@ -317,6 +319,7 @@ mjpeg_threadmain(void *optarg)
     struct mjpeg_threadargs_t* args = optarg;
 
     int sd;
+    int error;
 
     char *asciisize;
     int datasize;
@@ -347,7 +350,8 @@ mjpeg_threadmain(void *optarg)
     }
 
     /* sends some bogus data so that we'll get a response */
-    send(sd, "U\r\n", 3, 0);
+    error = send(sd, "U\r\n", 3, 0);
+    assert(error == 3);
 
     while(args->inst->threadrunning > 0){
         /* Read and parse incoming HTTP response headers */

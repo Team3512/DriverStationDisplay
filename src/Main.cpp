@@ -11,6 +11,7 @@
 #include <SFML/Network/UdpSocket.hpp>
 
 #include <sstream>
+#include <iostream> // TODO Remove me
 
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
@@ -335,6 +336,8 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
 			case IDC_STREAM_BUTTON: {
 				if ( streamWinPtr != NULL ) {
+					std::cout << "\nChanging to " << !streamWinPtr->isStreaming() << "\n";
+
 					if ( streamWinPtr->isStreaming() ) {
 						// Stop streaming
 						streamWinPtr->stopStream();
@@ -343,6 +346,8 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 						// Start streaming
 						streamWinPtr->startStream();
 					}
+
+					std::cout << "Is now " << streamWinPtr->isStreaming() << "\n";
 				}
 
 				break;

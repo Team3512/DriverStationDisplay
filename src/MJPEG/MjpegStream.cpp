@@ -147,7 +147,7 @@ void MjpegStream::startStream() {
 
 		m_imageAge.restart();
 
-		// Launch the mjpeg recieving/processing thread
+		// Launch the mjpeg receiving/processing thread
 		m_streamInst = mjpeg_launchthread( const_cast<char*>( m_hostName.c_str() ) , m_port , &m_callbacks );
 	}
 }
@@ -159,12 +159,8 @@ void MjpegStream::stopStream() {
 		// Change text displayed on button (LParam is button HWND)
 		SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
 
-		std::cout << "Closing network thread... ";
-
 		// Close the receive thread
 		mjpeg_stopthread( m_streamInst );
-
-		std::cout << "closeDone\n";
 
 		m_firstImage = true;
 	}
@@ -251,24 +247,39 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
 
 	std::cout << "Loading... ";
 
-	// Load the image received
-	bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( static_cast<void*>(buf) , bufsize );
-	if ( loadedCorrectly ) {
-		loadedCorrectly = streamPtr->m_imageTxtr.loadFromImage( streamPtr->m_tempImage );
-	}
+	// Decompress JPEG before loading it
+	streamPtr->decompressStruct = jpeg_readheader( buf , bufsize );
 
-	// If the image loaded successfully, update the sprite which displays it
-	if ( loadedCorrectly ) {
-		// If that was the first image streamed
-		if ( streamPtr->m_firstImage ) {
-			streamPtr->m_firstImage = false;
+	if ( streamPtr->decompressStruct->err == 0 ) {
+		char* pxlBuf = NULL;
+		int pxlBufSize = 0;
+
+		int decompressError = jpeg_decode( streamPtr->decompressStruct , pxlBuf , pxlBufSize );
+
+		// Load the image received
+		if ( decompressError == 0 ) {
+			bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( static_cast<void*>(pxlBuf) , pxlBufSize );
+
+			if ( loadedCorrectly ) {
+				loadedCorrectly = streamPtr->m_imageTxtr.loadFromImage( streamPtr->m_tempImage );
+			}
+
+			// If the image loaded successfully, update the sprite which displays it
+			if ( loadedCorrectly ) {
+				// If that was the first image streamed
+				if ( streamPtr->m_firstImage ) {
+					streamPtr->m_firstImage = false;
+				}
+
+				// Reset the image age timer
+				streamPtr->m_imageAge.restart();
+			}
+
+			std::cout << "decompressed && loaded=" << loadedCorrectly << "\n";
 		}
 
-		// Reset the image age timer
-		streamPtr->m_imageAge.restart();
+		std::free( streamPtr->decompressStruct );
 	}
-
-	std::cout << "done && loaded=" << loadedCorrectly << "\n";
 
 	streamPtr->m_imageMutex.unlock();
 }
