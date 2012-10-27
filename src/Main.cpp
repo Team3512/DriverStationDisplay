@@ -11,7 +11,6 @@
 #include <SFML/Network/UdpSocket.hpp>
 
 #include <sstream>
-#include <iostream> // TODO Remove me
 
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
@@ -21,7 +20,6 @@
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <cstring>
 
 // Global because the window is closed by a button in CALLBACK OnEvent
 sf::RenderWindow drawWin;
@@ -63,20 +61,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
 	MSG Message;
 
-	char name[256];
-	DWORD size = 256;
-	GetUserName( name , &size );
-
-	int mainWinHeight;
-
-	if ( std::strcmp( name , "Driver" ) == 0 ) {
-		// There is no task bar in the "Driver" profile
-		mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 200;
-	}
-	else {
-		// We need to make room for a task bar
-		mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 240;
-	}
+	int mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 240;
 
 	// Create a new window to be used for the lifetime of the application
 	HWND mainWindow = CreateWindowEx( 0 ,
@@ -106,7 +91,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 			NULL );
 	drawWin.create( drawWindow );
 
-	MjpegStream streamWin( "germany.acfsys.net" , //"10.35.12.6" ,
+	MjpegStream streamWin( "10.35.12.6" ,
 			8080 ,
 			mainWindow ,
 			( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
@@ -340,8 +325,6 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
 			case IDC_STREAM_BUTTON: {
 				if ( streamWinPtr != NULL ) {
-					std::cout << "\nChanging to " << !streamWinPtr->isStreaming() << "\n";
-
 					if ( streamWinPtr->isStreaming() ) {
 						// Stop streaming
 						streamWinPtr->stopStream();
@@ -350,8 +333,6 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 						// Start streaming
 						streamWinPtr->startStream();
 					}
-
-					std::cout << "Is now " << streamWinPtr->isStreaming() << "\n";
 				}
 
 				break;
