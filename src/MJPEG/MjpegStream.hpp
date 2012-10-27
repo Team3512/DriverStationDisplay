@@ -1,5 +1,5 @@
 //=============================================================================
-//File Name: KinectStream.hpp
+//File Name: MjpegStream.hpp
 //Description: Receives an MJPEG stream and displays it in a child window with
 //             the specified properties
 //Author: Tyler Veness
@@ -20,6 +20,7 @@
  * startStream() and stopStream() are called automatically in the constructor
  * and destructor respectively, but they can be called manually if desired.
  *
+ * FIXME: Stream button message won't change if thread quits on its own
  */
 
 #define _WIN32_WINNT 0x0601
@@ -35,10 +36,9 @@
 #include <SFML/System/Mutex.hpp>
 #include <SFML/System/Thread.hpp>
 
-extern "C" {
 #include "mjpegrx.h"
-#include "jpeg_decode.h"
-}
+
+struct jpeg_decompress_struct;
 
 class MjpegStream {
 public:
@@ -103,9 +103,11 @@ private:
 	sf::Text m_waitMsg;
 
 	// Holds image most recently received from the host
-	sf::Texture m_imageTxtr;
 	sf::Image m_tempImage;
 	sf::Mutex m_imageMutex;
+
+	// Stores image before displaying it on the screen
+	HBITMAP m_imageBuffer;
 
 	/* Used to determine when to draw the "Connecting..." message
 	 * (when the stream first starts)

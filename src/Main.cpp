@@ -36,6 +36,10 @@ std::wstring numberToString( T number ) {
 
 LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LParam );
 
+HBITMAP LoadBitmapFromFile( const char* imageName ) {
+	return static_cast<HBITMAP>( LoadImage( NULL , imageName , IMAGE_BITMAP , 0 , 0 , LR_LOADFROMFILE ) );
+}
+
 INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 	const char* mainClassName = "DriverStationDisplay";
 

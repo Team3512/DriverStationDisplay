@@ -177,7 +177,7 @@ mjpeg_process_header(char *header)
 {
     char *strtoksave;
     struct keyvalue_t *list = NULL;
-    struct keyvalue_t *start;
+    struct keyvalue_t *start = NULL;
     char *key;
     char *value;
     char used;
@@ -319,7 +319,6 @@ mjpeg_threadmain(void *optarg)
     struct mjpeg_threadargs_t* args = optarg;
 
     int sd;
-    int error;
 
     char *asciisize;
     int datasize;
@@ -350,8 +349,7 @@ mjpeg_threadmain(void *optarg)
     }
 
     /* sends some bogus data so that we'll get a response */
-    error = send(sd, "U\r\n", 3, 0);
-    assert(error == 3);
+    send(sd, "U\r\n", 3, 0);
 
     while(args->inst->threadrunning > 0){
         /* Read and parse incoming HTTP response headers */

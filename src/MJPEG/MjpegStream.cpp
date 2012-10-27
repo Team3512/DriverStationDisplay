@@ -1,5 +1,5 @@
 //=============================================================================
-//File Name: KinectStream.cpp
+//File Name: MjpegStream.cpp
 //Description: Receives an MJPEG stream and displays it in a child window with
 //             the specified properties
 //Author: Tyler Veness
@@ -14,7 +14,7 @@
 
 #include <fstream>
 #include <sstream>
-#include <iostream> // TODO Remove me
+#include <gdiplus.h>
 
 int stringToNumber( std::string str ) {
 	int num;
@@ -147,13 +147,13 @@ void MjpegStream::startStream() {
 
 		m_imageAge.restart();
 
-		// Launch the mjpeg receiving/processing thread
+		// Launch the MJPEG receiving/processing thread
 		m_streamInst = mjpeg_launchthread( const_cast<char*>( m_hostName.c_str() ) , m_port , &m_callbacks );
 	}
 }
 
 void MjpegStream::stopStream() {
-	if ( m_stopReceive == false ) { // if stream is open, close it
+	if ( m_streamInst->threadrunning == 1 ) { // if stream is open, close it
 		m_stopReceive = true;
 
 		// Change text displayed on button (LParam is button HWND)
@@ -161,8 +161,6 @@ void MjpegStream::stopStream() {
 
 		// Close the receive thread
 		mjpeg_stopthread( m_streamInst );
-
-		m_firstImage = true;
 	}
 }
 
@@ -198,8 +196,7 @@ void MjpegStream::display() {
 			m_imageMutex.lock();
 			m_displayMutex.lock();
 
-			m_streamDisplay.clear( sf::Color( 40 , 40 , 40 ) );
-			m_streamDisplay.draw( sf::Sprite( m_imageTxtr ) );
+			m_streamDisplay.clear( sf::Color( 0 , 0 , 0 , 0 ) );
 			m_streamDisplay.draw( sf::Sprite( m_waitTxtr.getTexture() ) );
 
 			m_displayMutex.unlock();
@@ -211,8 +208,30 @@ void MjpegStream::display() {
 			m_imageMutex.lock();
 			m_displayMutex.lock();
 
-			m_streamDisplay.clear( sf::Color( 40 , 40 , 40 ) );
-			m_streamDisplay.draw( sf::Sprite( m_imageTxtr ) );
+			// Create offscreen DC for image to go on
+			HDC imageHdc = CreateCompatibleDC( NULL );
+
+			// Put the image into the offscreen DC and save the old one
+			HBITMAP imageBackup = static_cast<HBITMAP>( SelectObject( imageHdc , m_imageBuffer ) );
+
+			// Get DC of window to which to draw
+			HDC windowHdc = GetDC( m_streamWin );
+
+			// Load image to real BITMAP just to retrieve its dimensions
+			BITMAP tempBMP;
+			GetObject( m_imageBuffer , sizeof( BITMAP ) , &tempBMP );
+
+			// Copy image from offscreen DC to window's DC
+			BitBlt( windowHdc , 0 , 0 , tempBMP.bmWidth , tempBMP.bmHeight , imageHdc , 0 , 0 , SRCCOPY );
+
+			// Release window's HDC
+			ReleaseDC( m_streamWin , windowHdc );
+
+			// Restore old image
+			SelectObject( imageHdc , imageBackup );
+
+			// Delete offscreen DC
+			DeleteDC( imageHdc );
 
 			m_displayMutex.unlock();
 			m_imageMutex.unlock();
@@ -230,55 +249,66 @@ void MjpegStream::display() {
 		m_imageMutex.unlock();
 	}
 
+	m_imageMutex.lock();
 	m_displayMutex.lock();
-	m_streamDisplay.display();
+
+	if ( m_firstImage || m_imageAge.getElapsedTime().asMilliseconds() > 1000 ) {
+		m_streamDisplay.display();
+	}
+
 	m_displayMutex.unlock();
+	m_imageMutex.unlock();
 }
 
 void MjpegStream::doneCallback( void* optarg ) {
-	static_cast<MjpegStream*>(optarg)->stopStream();
+	static_cast<MjpegStream*>(optarg)->m_stopReceive = true;
+	static_cast<MjpegStream*>(optarg)->m_firstImage = true;
 }
 
 void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
 	// Create pointer to stream to make it easier to access the instance later
 	MjpegStream* streamPtr = static_cast<MjpegStream*>( optarg );
 
+	// Holds pixel data for decompressed and decoded JPEG
 	streamPtr->m_imageMutex.lock();
 
-	std::cout << "Loading... ";
+	// Load the image received (converts from JPEG to pixel array)
+	bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( static_cast<void*>(buf) , bufsize );
 
-	// Decompress JPEG before loading it
-	streamPtr->decompressStruct = jpeg_readheader( buf , bufsize );
+	if ( loadedCorrectly ) {
+		/* ===== Reverse RGBA to BGRA before displaying the image ===== */
+		/* Swap R and B because Win32 expects the color components in the
+		 * opposite order they are currently in
+		 */
+		char* pxlBuf = static_cast<char*>( malloc( streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 ) );
+		memcpy( pxlBuf , streamPtr->m_tempImage.getPixelsPtr() , streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 );
 
-	if ( streamPtr->decompressStruct->err == 0 ) {
-		char* pxlBuf = NULL;
-		int pxlBufSize = 0;
+		char blueTemp;
+		char redTemp;
 
-		int decompressError = jpeg_decode( streamPtr->decompressStruct , pxlBuf , pxlBufSize );
+		for( unsigned int i = 0 ; i < streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 ; i += 4 ) {
+			redTemp = pxlBuf[i];
+			blueTemp = pxlBuf[i+2];
+			pxlBuf[i] = blueTemp;
+			pxlBuf[i+2] = redTemp;
+		}
+		/* ============================================================ */
 
-		// Load the image received
-		if ( decompressError == 0 ) {
-			bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( static_cast<void*>(pxlBuf) , pxlBufSize );
+		// Make HBITMAP from pixel array
+		streamPtr->m_imageBuffer = CreateBitmap( streamPtr->m_tempImage.getSize().x , streamPtr->m_tempImage.getSize().y , 1 , 32 , pxlBuf );
 
-			if ( loadedCorrectly ) {
-				loadedCorrectly = streamPtr->m_imageTxtr.loadFromImage( streamPtr->m_tempImage );
-			}
+		free( pxlBuf );
+	}
 
-			// If the image loaded successfully, update the sprite which displays it
-			if ( loadedCorrectly ) {
-				// If that was the first image streamed
-				if ( streamPtr->m_firstImage ) {
-					streamPtr->m_firstImage = false;
-				}
-
-				// Reset the image age timer
-				streamPtr->m_imageAge.restart();
-			}
-
-			std::cout << "decompressed && loaded=" << loadedCorrectly << "\n";
+	// If HBITMAP was created successfully, set a flag and reset the timer
+	if ( streamPtr->m_imageBuffer != NULL  ) {
+		// If that was the first image streamed
+		if ( streamPtr->m_firstImage ) {
+			streamPtr->m_firstImage = false;
 		}
 
-		std::free( streamPtr->decompressStruct );
+		// Reset the image age timer
+		streamPtr->m_imageAge.restart();
 	}
 
 	streamPtr->m_imageMutex.unlock();
@@ -310,7 +340,7 @@ void MjpegStream::recreateTextures( const sf::Vector2u windowSize ) {
 	m_disconnectTxtr.display();
 
 	m_waitTxtr.create( windowSize.x , windowSize.y );
-	m_waitTxtr.clear( sf::Color( 40 , 40 , 40 , 0 ) );
+	m_waitTxtr.clear( sf::Color( 40 , 40 , 40 , 0 ) ); // fully transparent
 
 	sf::RectangleShape waitBackground( sf::Vector2f( m_waitMsg.findCharacterPos( 100 ).x + 20.f , m_waitMsg.getCharacterSize() + 10.f ) );
 	waitBackground.setPosition( sf::Vector2f( ( windowSize.x - waitBackground.getSize().x ) / 2.f ,
