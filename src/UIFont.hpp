@@ -11,20 +11,20 @@
 
 class UIFont {
 public:
-	// @return a global instance of the resources available
-	static UIFont* getInstance();
+    // @return a global instance of the resources available
+    static UIFont* getInstance();
 
-	sf::Font& segoeUI();
+    sf::Font& segoeUI();
 
 protected:
-	UIFont();
+    UIFont();
 
 private:
-	static UIFont* m_instance;
+    static UIFont* m_instance;
 
-	static sf::Font m_segoeUI;
+    static sf::Font m_segoeUI;
 
-	// disallow copy and assignment
+    // disallow copy and assignment
     UIFont ( const UIFont& );
     void operator=( const UIFont& );
 };

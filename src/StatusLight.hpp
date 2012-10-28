@@ -12,29 +12,29 @@
 
 class StatusLight : public sf::CircleShape {
 public:
-	enum Status {
-		active,
-		standby,
-		inactive
-	};
+    enum Status {
+        active,
+        standby,
+        inactive
+    };
 
-	StatusLight( const sf::Vector2f& position , std::string message , Status currentStatus = StatusLight::inactive );
+    StatusLight( const sf::Vector2f& position , std::string message , Status currentStatus = StatusLight::inactive );
 
-	void setActive( Status newStatus );
-	Status getActive();
+    void setActive( Status newStatus );
+    Status getActive();
 
-	void setPosition( const sf::Vector2f& position );
-	void setPosition( float x , float y );
+    void setPosition( const sf::Vector2f& position );
+    void setPosition( float x , float y );
 
-	void setString( const std::string& message );
-	const sf::String& getString();
+    void setString( const std::string& message );
+    const sf::String& getString();
 
 private:
-	Status m_status;
+    Status m_status;
 
-	sf::Text m_sfText;
+    sf::Text m_sfText;
 
-	void draw( sf::RenderTarget& target , sf::RenderStates states = sf::RenderStates::Default ) const;
+    void draw( sf::RenderTarget& target , sf::RenderStates states = sf::RenderStates::Default ) const;
 };
 
 #endif // STATUS_LIGHT_HPP

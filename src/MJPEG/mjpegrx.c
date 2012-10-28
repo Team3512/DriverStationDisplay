@@ -44,15 +44,11 @@
 char * strtok_r_n(char *str, char *sep, char **last, char *used);
 
 #ifdef WIN32
-void
-_sck_wsainit(){
-    WORD vs;
+void WSAInit() {
     WSADATA wsadata;
 
-    vs = MAKEWORD(2, 2);
-    WSAStartup(vs, &wsadata);
-
-    return;
+    WORD vs = MAKEWORD( 2 , 2 );
+    WSAStartup( vs , &wsadata );
 }
 #endif
 
@@ -105,7 +101,7 @@ mjpeg_sck_connect(char *host, int port)
     struct sockaddr_in pin;
 
     #ifdef WIN32
-    _sck_wsainit();
+    WSAInit();
     #endif
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
@@ -165,7 +161,7 @@ strtok_r_n(char *str, char *sep, char **last, char *used)
     return ret;
 }
 
-/* Processes the HTTP response headers, seperating them into key-value
+/* Processes the HTTP response headers, separating them into key-value
    pairs. These are then stored in a linked list. The "header" argument
    should point to a block of HTTP response headers in the standard ':'
    and '\n' seperated format. The key is the text on a line before the
@@ -218,7 +214,7 @@ mjpeg_process_header(char *header)
         /* get the value */
         value = strtok_r_n(NULL, "\n", &strtoksave, NULL);
         if(value == NULL){
-	    list->value = strdup("");
+            list->value = strdup("");
             break;
         }
         value++;
@@ -249,8 +245,6 @@ mjpeg_freelist(struct keyvalue_t *list){
         free(c->value);
     }
     if(tmp != NULL) free(tmp);
-
-    return;
 }
 
 char *
@@ -272,14 +266,11 @@ mjpeg_launchthread(
         )
 {
     struct mjpeg_threadargs_t *args;
-    struct mjpeg_inst_t *inst;
-
-    inst = malloc(sizeof(struct mjpeg_inst_t));
 
     args = malloc(sizeof(struct mjpeg_threadargs_t));
     args->host = strdup(host);
     args->port = port;
-    args->inst = inst;
+    args->inst = malloc(sizeof(struct mjpeg_inst_t));
 
     args->callbacks = malloc(sizeof(struct mjpeg_callbacks_t));
     memcpy(
@@ -288,12 +279,12 @@ mjpeg_launchthread(
         sizeof(struct mjpeg_callbacks_t)
     );
 
-    inst->threadrunning = 1;
+    args->inst->thread = malloc(sizeof(pthread_t));
+    args->inst->threadrunning = 1;
 
-    pthread_create(&args->thread, NULL, mjpeg_threadmain, args);
-    inst->thread = &args->thread;
+    pthread_create(args->inst->thread, NULL, mjpeg_threadmain, args);
 
-    return inst;
+    return args->inst;
 }
 
 void
@@ -308,9 +299,9 @@ mjpeg_stopthread(struct mjpeg_inst_t *inst)
     inst->threadrunning = 0;
     pthread_join(*inst->thread, NULL);
 
+    free(inst->thread);
     free(inst);
-
-    return;
+    inst = NULL;
 }
 
 void *
@@ -333,8 +324,8 @@ mjpeg_threadmain(void *optarg)
     /* connect */
     sd = mjpeg_sck_connect(args->host, args->port);
     args->inst->sd = sd;
-    if(sd < 0){
 
+    if(sd < 0){
         /* call the thread finished callback */
         if(args->callbacks->donecallback != NULL){
             args->callbacks->donecallback(
@@ -355,7 +346,7 @@ mjpeg_threadmain(void *optarg)
         /* Read and parse incoming HTTP response headers */
         if(mjpeg_rxheaders(&headerbuf, &headerbufsize, sd) == -1) break;
         headerlist = mjpeg_process_header(headerbuf);
-	free(headerbuf);
+        free(headerbuf);
         if(headerlist == NULL) break;
 
         /* Read the Content-Length header to determine the
@@ -375,10 +366,10 @@ mjpeg_threadmain(void *optarg)
         /* read the data */
         buf = malloc(datasize);
         bytesread = recv(sd, buf, datasize, MSG_WAITALL);
-	if(bytesread != datasize){
-		free(buf);
-		break;
-	}
+        if(bytesread != datasize){
+            free(buf);
+            break;
+        }
 
         if(args->callbacks->readcallback != NULL){
             args->callbacks->readcallback(
@@ -402,8 +393,8 @@ mjpeg_threadmain(void *optarg)
     free(args->host);
     free(args->callbacks);
     free(args);
+    // args->inst is still alive after here because we don't free it
 
     pthread_exit(NULL);
     return NULL;
 }
-

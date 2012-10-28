@@ -38,8 +38,6 @@
 
 #include "mjpegrx.h"
 
-struct jpeg_decompress_struct;
-
 class MjpegStream {
 public:
 	MjpegStream( const std::string& hostName ,
@@ -117,7 +115,6 @@ private:
 	// Used for streaming MJPEG frames from host
 	struct mjpeg_callbacks_t m_callbacks;
 	struct mjpeg_inst_t* m_streamInst;
-	struct jpeg_decompress_struct* decompressStruct;
 
 	// Determines when a video frame is old
 	sf::Clock m_imageAge;

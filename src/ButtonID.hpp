@@ -9,8 +9,8 @@
 
 // Define child-window identifiers for catching their window events
 enum {
-	IDC_EXIT_BUTTON = 101,
-	IDC_STREAM_BUTTON = 102
+    IDC_EXIT_BUTTON = 101,
+    IDC_STREAM_BUTTON = 102
 };
 
 #endif // BUTTON_ID_HPP
