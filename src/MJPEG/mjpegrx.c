@@ -279,10 +279,9 @@ mjpeg_launchthread(
         sizeof(struct mjpeg_callbacks_t)
     );
 
-    args->inst->thread = malloc(sizeof(pthread_t));
     args->inst->threadrunning = 1;
 
-    pthread_create(args->inst->thread, NULL, mjpeg_threadmain, args);
+    pthread_create(&args->inst->thread, NULL, mjpeg_threadmain, args);
 
     return args->inst;
 }
@@ -297,9 +296,8 @@ mjpeg_stopthread(struct mjpeg_inst_t *inst)
     #endif
 
     inst->threadrunning = 0;
-    pthread_join(*inst->thread, NULL);
+    pthread_join(inst->thread, NULL);
 
-    free(inst->thread);
     free(inst);
     inst = NULL;
 }

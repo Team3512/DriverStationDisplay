@@ -12,7 +12,6 @@
 #include "MjpegStream.hpp"
 #include "../ButtonID.hpp"
 
-#include <fstream>
 #include <sstream>
 #include <gdiplus.h>
 

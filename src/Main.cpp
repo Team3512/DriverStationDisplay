@@ -90,7 +90,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     drawWin.create( drawWindow );
     drawWinPtr = &drawWin;
 
-    MjpegStream streamWin( "10.35.12.6" ,
+    MjpegStream streamWin( "germany.acfsys.net" ,//"10.35.12.6" ,
             8080 ,
             mainWindow ,
             ( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
@@ -276,7 +276,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             drawWin.display();
             streamWin.display();
 
-            Sleep( 50 );
+            Sleep( 30 );
         }
     }
 

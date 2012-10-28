@@ -31,7 +31,7 @@ struct mjpeg_callbacks_t {
 
 struct mjpeg_inst_t {
     int threadrunning;
-    pthread_t *thread;
+    pthread_t thread;
     int sd;
 };
 
