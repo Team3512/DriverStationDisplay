@@ -147,9 +147,6 @@ void MjpegStream::startStream() {
     if ( m_stopReceive == true ) { // if stream is closed, reopen it
         m_stopReceive = false;
 
-        // Change text displayed on button (LParam is button HWND)
-        SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Stop Stream") );
-
         m_imageAge.restart();
 
         // Launch the MJPEG receiving/processing thread
@@ -262,14 +259,28 @@ void MjpegStream::display() {
 
     m_displayMutex.unlock();
     m_imageMutex.unlock();
+
+    char* buttonText = static_cast<char*>( std::malloc( 13 ) );
+    GetWindowText( m_toggleButton , buttonText , 13 );
+
+    // If running and button displays "Start"
+    if ( !m_stopReceive && strcmp( buttonText , "Start Stream" ) == 0 ) {
+        // Change text displayed on button (LParam is button HWND)
+        SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Stop Stream") );
+    }
+
+    // If not running and button displays "Stop"
+    else if ( m_stopReceive && strcmp( buttonText , "Stop Stream" ) == 0 ) {
+        // Change text displayed on button (LParam is button HWND)
+        SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
+    }
+
+    std::free( buttonText );
 }
 
 void MjpegStream::doneCallback( void* optarg ) {
     static_cast<MjpegStream*>(optarg)->m_stopReceive = true;
     static_cast<MjpegStream*>(optarg)->m_firstImage = true;
-
-    // Change text displayed on button (LParam is button HWND)
-    PostMessage( static_cast<MjpegStream*>(optarg)->m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
 }
 
 void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {

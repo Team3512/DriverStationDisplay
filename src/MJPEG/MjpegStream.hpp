@@ -20,7 +20,7 @@
  * startStream() and stopStream() are called automatically in the constructor
  * and destructor respectively, but they can be called manually if desired.
  *
- * FIXME: Stream button message won't change if thread quits on its own
+ * TODO Add buttons for rebooting robot and reloading robot's settings file
  */
 
 #define _WIN32_WINNT 0x0601
