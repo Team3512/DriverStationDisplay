@@ -15,6 +15,7 @@
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
 #include "MJPEG/MjpegStream.hpp"
+#include "SettingsExtractor.hpp"
 #include "ButtonID.hpp"
 
 #define _WIN32_WINNT 0x0601
@@ -90,8 +91,10 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     drawWin.create( drawWindow );
     drawWinPtr = &drawWin;
 
-    MjpegStream streamWin( "germany.acfsys.net" ,//"10.35.12.6" ,
-            8080 ,
+    SettingsExtractor settings( "IPsettings.txt" );
+
+    MjpegStream streamWin( settings.getValueFor( "streamHost" ) ,
+            std::atoi( settings.getValueFor( "streamPort" ).c_str() ) ,
             mainWindow ,
             ( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
             60 ,
@@ -101,7 +104,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     streamWinPtr = &streamWin;
 
     sf::UdpSocket robotData;
-    robotData.bind( 5615 );
+    robotData.bind( std::atoi( settings.getValueFor( "robotDataPort" ).c_str() ) );
     robotData.setBlocking( false );
 
     sf::IpAddress receiveIP;
