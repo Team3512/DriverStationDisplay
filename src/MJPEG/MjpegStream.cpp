@@ -63,8 +63,8 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         "BUTTON",
         "Start Stream",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-        ( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
-        305,
+        xPosition ,
+        yPosition + height + 5,
         100,
         24,
         m_parentWin,
@@ -115,8 +115,13 @@ sf::Vector2i MjpegStream::getPosition() {
 
 void MjpegStream::setPosition( const sf::Vector2i& position ) {
     m_displayMutex.lock();
+
+    // Set position of stream window
     m_streamDisplay.setPosition( position );
-    // FIXME doesn't set position of stream button
+
+    // Set position of stream button below it
+    SetWindowPos( m_toggleButton , NULL , position.x , position.y + 240 + 5 , 100 , 24 , SWP_NOZORDER );
+
     m_displayMutex.unlock();
 }
 
@@ -155,9 +160,6 @@ void MjpegStream::startStream() {
 void MjpegStream::stopStream() {
     if ( m_stopReceive == false ) { // if stream is open, close it
         m_stopReceive = true;
-
-        // Change text displayed on button (LParam is button HWND)
-        SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
 
         // Close the receive thread
         if ( m_streamInst != NULL ) {
@@ -265,6 +267,9 @@ void MjpegStream::display() {
 void MjpegStream::doneCallback( void* optarg ) {
     static_cast<MjpegStream*>(optarg)->m_stopReceive = true;
     static_cast<MjpegStream*>(optarg)->m_firstImage = true;
+
+    // Change text displayed on button (LParam is button HWND)
+    PostMessage( static_cast<MjpegStream*>(optarg)->m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
 }
 
 void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
