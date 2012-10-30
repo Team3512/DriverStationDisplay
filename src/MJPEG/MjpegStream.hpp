@@ -20,7 +20,8 @@
  * startStream() and stopStream() are called automatically in the constructor
  * and destructor respectively, but they can be called manually if desired.
  *
- * TODO Add buttons for rebooting robot and reloading robot's settings file
+ * Change the button ID from IDC_STREAM_BUTTON to another ID if you want to
+ * process more than one stream at once in WndProc
  */
 
 #define _WIN32_WINNT 0x0601
@@ -36,7 +37,9 @@
 #include <SFML/System/Mutex.hpp>
 #include <SFML/System/Thread.hpp>
 
+extern "C" {
 #include "mjpegrx.h"
+}
 
 class MjpegStream {
 public:

@@ -4,6 +4,11 @@
 //Author: Tyler Veness
 //=============================================================================
 
+/* TODO Get position of "DriverStation" window and adjust main window height
+ * based upon that. Use a default height if not found.
+ * TODO Add buttons for rebooting robot and reloading robot's settings file
+ */
+
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include <SFML/Network/IpAddress.hpp>
@@ -313,6 +318,24 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
                 reinterpret_cast<WPARAM>( hfDefault ),
                 MAKELPARAM( FALSE , 0 ) );
 
+        HWND reloadButton = CreateWindowEx( 0,
+            "BUTTON",
+            "Reload Settings",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+            5 + 24/* height of previous button */ + 5,
+            100,
+            24,
+            Handle,
+            reinterpret_cast<HMENU>( IDC_RELOAD_BUTTON ),
+            GetModuleHandle( NULL ),
+            NULL);
+
+        SendMessage(reloadButton,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
         break;
     }
 
@@ -339,6 +362,12 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
                         streamWinPtr->startStream();
                     }
                 }
+
+                break;
+            }
+
+            case IDC_RELOAD_BUTTON: {
+
 
                 break;
             }

@@ -281,6 +281,8 @@ void MjpegStream::display() {
 void MjpegStream::doneCallback( void* optarg ) {
     static_cast<MjpegStream*>(optarg)->m_stopReceive = true;
     static_cast<MjpegStream*>(optarg)->m_firstImage = true;
+
+    static_cast<MjpegStream*>(optarg)->m_streamInst = NULL;
 }
 
 void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {

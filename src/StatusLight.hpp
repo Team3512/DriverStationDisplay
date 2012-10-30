@@ -1,8 +1,11 @@
 //=============================================================================
 //File Name: StatusLight.hpp
-//Description:
+//Description: Shows green, yellow, or red circle depending on its internal
+//             state
 //Author: Tyler Veness
 //=============================================================================
+
+// TODO Add color-blind mode
 
 #ifndef STATUS_LIGHT_HPP
 #define STATUS_LIGHT_HPP

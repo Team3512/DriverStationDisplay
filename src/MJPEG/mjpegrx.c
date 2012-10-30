@@ -44,11 +44,15 @@
 char * strtok_r_n(char *str, char *sep, char **last, char *used);
 
 #ifdef WIN32
-void WSAInit() {
+void
+_sck_wsainit(){
+    WORD vs;
     WSADATA wsadata;
 
-    WORD vs = MAKEWORD( 2 , 2 );
-    WSAStartup( vs , &wsadata );
+    vs = MAKEWORD(2, 2);
+    WSAStartup(vs, &wsadata);
+
+    return;
 }
 #endif
 
@@ -79,7 +83,10 @@ mjpeg_rxheaders(char **buf_out, int *bufsize_out, int sd){
     buf = malloc(allocsize);
 
     while(1){
-        if(mjpeg_rxbyte(&buf, &bufpos, &allocsize, sd) != 0) return -1;
+        if(mjpeg_rxbyte(&buf, &bufpos, &allocsize, sd) != 0){
+            free(buf);
+            return -1;
+        }
         if(bufpos >= 4 && buf[bufpos-4] == '\r' && buf[bufpos-3] == '\n' && buf[bufpos-2] == '\r' && buf[bufpos-1] == '\n'){
             break;
         }
@@ -101,7 +108,7 @@ mjpeg_sck_connect(char *host, int port)
     struct sockaddr_in pin;
 
     #ifdef WIN32
-    WSAInit();
+    _sck_wsainit();
     #endif
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
@@ -164,7 +171,7 @@ strtok_r_n(char *str, char *sep, char **last, char *used)
 /* Processes the HTTP response headers, separating them into key-value
    pairs. These are then stored in a linked list. The "header" argument
    should point to a block of HTTP response headers in the standard ':'
-   and '\n' seperated format. The key is the text on a line before the
+   and '\n' separated format. The key is the text on a line before the
    ':', the value is the text after the ':', but before the '\n'. Any
    line without a ':' is ignored. a pointer to the first element in a
    linked list is returned. */
@@ -202,7 +209,8 @@ mjpeg_process_header(char *header)
         if(list == NULL){
             list = malloc(sizeof(struct keyvalue_t));
             start = list;
-        }else{
+        }
+        else{
             list->next = malloc(sizeof(struct keyvalue_t));
             list = list->next;
         }
@@ -245,6 +253,8 @@ mjpeg_freelist(struct keyvalue_t *list){
         free(c->value);
     }
     if(tmp != NULL) free(tmp);
+
+    return;
 }
 
 char *
@@ -266,11 +276,14 @@ mjpeg_launchthread(
         )
 {
     struct mjpeg_threadargs_t *args;
+    struct mjpeg_inst_t *inst;
+
+    inst = malloc(sizeof(struct mjpeg_inst_t));
 
     args = malloc(sizeof(struct mjpeg_threadargs_t));
     args->host = strdup(host);
     args->port = port;
-    args->inst = malloc(sizeof(struct mjpeg_inst_t));
+    args->inst = inst;
 
     args->callbacks = malloc(sizeof(struct mjpeg_callbacks_t));
     memcpy(
@@ -279,11 +292,11 @@ mjpeg_launchthread(
         sizeof(struct mjpeg_callbacks_t)
     );
 
-    args->inst->threadrunning = 1;
+    inst->threadrunning = 1;
 
-    pthread_create(&args->inst->thread, NULL, mjpeg_threadmain, args);
+    pthread_create(&inst->thread, NULL, mjpeg_threadmain, args);
 
-    return args->inst;
+    return inst;
 }
 
 void
@@ -299,7 +312,8 @@ mjpeg_stopthread(struct mjpeg_inst_t *inst)
     pthread_join(inst->thread, NULL);
 
     free(inst);
-    inst = NULL;
+
+    return;
 }
 
 void *
@@ -322,7 +336,6 @@ mjpeg_threadmain(void *optarg)
     /* connect */
     sd = mjpeg_sck_connect(args->host, args->port);
     args->inst->sd = sd;
-
     if(sd < 0){
         /* call the thread finished callback */
         if(args->callbacks->donecallback != NULL){
@@ -338,7 +351,7 @@ mjpeg_threadmain(void *optarg)
     }
 
     /* sends some bogus data so that we'll get a response */
-    send(sd, "U\r\n", 3, 0);
+    send(sd, "GET / HTTP/1.0\r\n\r\n", 18, 0);
 
     while(args->inst->threadrunning > 0){
         /* Read and parse incoming HTTP response headers */
@@ -376,7 +389,6 @@ mjpeg_threadmain(void *optarg)
                 args->callbacks->optarg);
         }
         free(buf);
-
     }
     #ifdef WIN32
     closesocket(sd);

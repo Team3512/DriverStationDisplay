@@ -1,6 +1,7 @@
 //=============================================================================
 //File Name: StatusLight.cpp
-//Description: 
+//Description: Shows green, yellow, or red circle depending on its internal
+//             state
 //Author: Tyler Veness
 //=============================================================================
 
