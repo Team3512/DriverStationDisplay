@@ -26,12 +26,16 @@
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <cstring>
 
 // Global because the window is closed by a button in CALLBACK OnEvent
 sf::RenderWindow* drawWinPtr = NULL;
 
 // Allows manipulation of MjpegStream in CALLBACK OnEvent
 MjpegStream* streamWinPtr = NULL;
+
+// Allows usage of socket in CALLBACK OnEvent
+sf::UdpSocket* socketPtr = NULL;
 
 template <class T>
 std::wstring numberToString( T number ) {
@@ -111,6 +115,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     sf::UdpSocket robotData;
     robotData.bind( std::atoi( settings.getValueFor( "robotDataPort" ).c_str() ) );
     robotData.setBlocking( false );
+    socketPtr = &robotData;
 
     sf::IpAddress receiveIP;
     unsigned short receivePort;
@@ -300,30 +305,31 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
     case WM_CREATE: {
         HGDIOBJ hfDefault = GetStockObject( DEFAULT_GUI_FONT );
 
-        HWND exitButton = CreateWindowEx( 0,
+        HWND connectButton = CreateWindowEx( 0,
             "BUTTON",
-            "Exit",
+            "Connect DS",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            5,
+            0 * ( 5 + 24 ) + 5,
             100,
             24,
             Handle,
-            reinterpret_cast<HMENU>( IDC_EXIT_BUTTON ),
+            reinterpret_cast<HMENU>( IDC_CONNECT_BUTTON ),
             GetModuleHandle( NULL ),
             NULL);
 
-        SendMessage(exitButton,
-                WM_SETFONT,
-                reinterpret_cast<WPARAM>( hfDefault ),
-                MAKELPARAM( FALSE , 0 ) );
+        SendMessage(connectButton,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
 
         HWND reloadButton = CreateWindowEx( 0,
             "BUTTON",
-            "Reload Settings",
+            "Reload Code",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            5 + 24/* height of previous button */ + 5,
+            1 * ( 5 + 24 ) + 5,
             100,
             24,
             Handle,
@@ -336,11 +342,121 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
 
+
+        HWND newsettingsButton = CreateWindowEx( 0,
+            "BUTTON",
+            "Reload Settings",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+            2 * ( 5 + 24 ) + 5,
+            100,
+            24,
+            Handle,
+            reinterpret_cast<HMENU>( IDC_NEWSETTINGS_BUTTON ),
+            GetModuleHandle( NULL ),
+            NULL);
+
+        SendMessage(newsettingsButton,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
+
+        HWND rebootButton = CreateWindowEx( 0,
+            "BUTTON",
+            "Reboot Robot",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+            3 * ( 5 + 24 ) + 5,
+            100,
+            24,
+            Handle,
+            reinterpret_cast<HMENU>( IDC_REBOOT_BUTTON ),
+            GetModuleHandle( NULL ),
+            NULL);
+
+        SendMessage(rebootButton,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
+
+        HWND exitButton = CreateWindowEx( 0,
+            "BUTTON",
+            "Exit",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+            4 * ( 5 + 24 ) + 5,
+            100,
+            24,
+            Handle,
+            reinterpret_cast<HMENU>( IDC_EXIT_BUTTON ),
+            GetModuleHandle( NULL ),
+            NULL);
+
+        SendMessage(exitButton,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
         break;
     }
 
     case WM_COMMAND: {
+        char* data = static_cast<char*>( std::malloc( 16 ) );
+
+        sf::IpAddress remoteIP( 10 , 35 , 12 , 2 );
+        unsigned short remotePort = 5615;
+
+
         switch( LOWORD(WParam) ) {
+            case IDC_STREAM_BUTTON: {
+                 if ( streamWinPtr != NULL ) {
+                     if ( streamWinPtr->isStreaming() ) {
+                         // Stop streaming
+                         streamWinPtr->stopStream();
+                     }
+                     else {
+                         // Start streaming
+                         streamWinPtr->startStream();
+                     }
+                 }
+
+                 break;
+            }
+
+            case IDC_CONNECT_BUTTON: {
+                std::strcpy( data , "connect" );
+
+                socketPtr->send( data , 16 , remoteIP , remotePort );
+
+                break;
+            }
+
+            case IDC_RELOAD_BUTTON: {
+                std::strcpy( data , "reload" );
+
+                socketPtr->send( data , 16 , remoteIP , remotePort );
+
+                break;
+            }
+
+            case IDC_NEWSETTINGS_BUTTON: {
+                std::strcpy( data , "newsettings" );
+
+                socketPtr->send( data , 16 , remoteIP , remotePort );
+
+                break;
+            }
+
+            case IDC_REBOOT_BUTTON: {
+                std::strcpy( data , "reboot" );
+
+                socketPtr->send( data , 16 , remoteIP , remotePort );
+
+                break;
+            }
+
             case IDC_EXIT_BUTTON: {
                 if ( drawWinPtr != NULL ) {
                     drawWinPtr->close();
@@ -349,35 +465,15 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
                 PostQuitMessage(0);
                 break;
             }
-            break;
-
-            case IDC_STREAM_BUTTON: {
-                if ( streamWinPtr != NULL ) {
-                    if ( streamWinPtr->isStreaming() ) {
-                        // Stop streaming
-                        streamWinPtr->stopStream();
-                    }
-                    else {
-                        // Start streaming
-                        streamWinPtr->startStream();
-                    }
-                }
-
-                break;
-            }
-
-            case IDC_RELOAD_BUTTON: {
-
-
-                break;
-            }
 
             case WM_DESTROY: {
                 PostQuitMessage(0);
-                return 0;
             }
             break;
         }
+
+        free( data );
+
         break;
     }
 

@@ -76,6 +76,8 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         WM_SETFONT,
         reinterpret_cast<WPARAM>( hfDefault ),
         MAKELPARAM( FALSE , 0 ) );
+
+    m_imageBuffer = NULL;
     /* =============================================== */
 
     // Create the textures that can be displayed in the stream window
