@@ -20,7 +20,7 @@
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
 #include "MJPEG/MjpegStream.hpp"
-#include "SettingsExtractor.hpp"
+#include "Settings.hpp"
 #include "ButtonID.hpp"
 
 #define _WIN32_WINNT 0x0601
@@ -100,7 +100,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     drawWin.create( drawWindow );
     drawWinPtr = &drawWin;
 
-    SettingsExtractor settings( "IPsettings.txt" );
+    Settings settings( "IPsettings.txt" );
 
     MjpegStream streamWin( settings.getValueFor( "streamHost" ) ,
             std::atoi( settings.getValueFor( "streamPort" ).c_str() ) ,

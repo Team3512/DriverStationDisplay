@@ -1,23 +1,23 @@
 //=============================================================================
-//File Name: SettingsExtractor.cpp
+//File Name: Settings.cpp
 //Description: Opens a given file and creates an STL map of its name-value
 //             pairs
 //Author: Tyler Veness
 //=============================================================================
 
-#include "SettingsExtractor.hpp"
+#include "Settings.hpp"
 #include <fstream>
 
-SettingsExtractor::SettingsExtractor( std::string fileName ) :
+Settings::Settings( std::string fileName ) :
         m_fileName( fileName ) ,
         m_index( 0 ) {
-    updateSettings();
+    update();
 }
 
-SettingsExtractor::~SettingsExtractor() {
+Settings::~Settings() {
 }
 
-void SettingsExtractor::updateSettings() {
+void Settings::update() {
     std::string name;
     std::string value;
 
@@ -42,7 +42,7 @@ void SettingsExtractor::updateSettings() {
     settings.close();
 }
 
-std::string SettingsExtractor::getValueFor( const std::string& key ) {
+std::string Settings::getValueFor( const std::string& key ) {
     std::map<std::string , std::string>::iterator index = m_values.find( key );
 
     // If the element wasn't found
@@ -54,7 +54,7 @@ std::string SettingsExtractor::getValueFor( const std::string& key ) {
     return index->second;
 }
 
-void SettingsExtractor::saveToFile( const std::string& fileName ) {
+void Settings::saveToFile( const std::string& fileName ) {
     std::ofstream outFile( fileName.c_str() , std::ios_base::out | std::ios_base::trunc );
     if ( outFile.is_open() ) {
         for ( std::map<std::string , std::string>::iterator index = m_values.begin() ; index != m_values.end() ; index++ ) {
@@ -65,7 +65,7 @@ void SettingsExtractor::saveToFile( const std::string& fileName ) {
     }
 }
 
-std::string SettingsExtractor::extractDataFromString( const bool& isName ) {
+std::string Settings::extractDataFromString( const bool& isName ) {
     std::string value;
     bool hasEquals = false;
 

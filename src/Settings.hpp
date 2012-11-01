@@ -1,5 +1,5 @@
 //=============================================================================
-//File Name: SettingsExtractor.hpp
+//File Name: Settings.hpp
 //Description: Opens a given file and creates an STL map of its name-value
 //             pairs
 //Author: Tyler Veness
@@ -8,13 +8,13 @@
 #include <map>
 #include <string>
 
-class SettingsExtractor {
+class Settings {
 public:
-    SettingsExtractor( std::string fileName );
-    virtual ~SettingsExtractor();
+    Settings( std::string fileName );
+    virtual ~Settings();
 
     // Updates list of values from given file
-    void updateSettings();
+    void update();
 
     /* Returns value associated with the given key
      * Returns "NOT_FOUND" if there is no entry for that name-value pair
