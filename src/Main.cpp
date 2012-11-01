@@ -343,31 +343,12 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             MAKELPARAM( FALSE , 0 ) );
 
 
-        HWND newsettingsButton = CreateWindowEx( 0,
-            "BUTTON",
-            "Reload Settings",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            2 * ( 5 + 24 ) + 5,
-            100,
-            24,
-            Handle,
-            reinterpret_cast<HMENU>( IDC_NEWSETTINGS_BUTTON ),
-            GetModuleHandle( NULL ),
-            NULL);
-
-        SendMessage(newsettingsButton,
-            WM_SETFONT,
-            reinterpret_cast<WPARAM>( hfDefault ),
-            MAKELPARAM( FALSE , 0 ) );
-
-
         HWND rebootButton = CreateWindowEx( 0,
             "BUTTON",
             "Reboot Robot",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            3 * ( 5 + 24 ) + 5,
+            2 * ( 5 + 24 ) + 5,
             100,
             24,
             Handle,
@@ -386,7 +367,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             "Exit",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            4 * ( 5 + 24 ) + 5,
+            3 * ( 5 + 24 ) + 5,
             100,
             24,
             Handle,
@@ -435,14 +416,6 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
             case IDC_RELOAD_BUTTON: {
                 std::strcpy( data , "reload" );
-
-                socketPtr->send( data , 16 , remoteIP , remotePort );
-
-                break;
-            }
-
-            case IDC_NEWSETTINGS_BUTTON: {
-                std::strcpy( data , "newsettings" );
 
                 socketPtr->send( data , 16 , remoteIP , remotePort );
 
