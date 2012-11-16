@@ -14,6 +14,7 @@
 
 #include <sstream>
 #include <gdiplus.h>
+#include <cstring>
 
 int stringToNumber( std::string str ) {
     int num;
@@ -266,13 +267,13 @@ void MjpegStream::display() {
     GetWindowText( m_toggleButton , buttonText , 13 );
 
     // If running and button displays "Start"
-    if ( !m_stopReceive && strcmp( buttonText , "Start Stream" ) == 0 ) {
+    if ( !m_stopReceive && std::strcmp( buttonText , "Start Stream" ) == 0 ) {
         // Change text displayed on button (LParam is button HWND)
         SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Stop Stream") );
     }
 
     // If not running and button displays "Stop"
-    else if ( m_stopReceive && strcmp( buttonText , "Stop Stream" ) == 0 ) {
+    else if ( m_stopReceive && std::strcmp( buttonText , "Stop Stream" ) == 0 ) {
         // Change text displayed on button (LParam is button HWND)
         SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
     }
@@ -302,24 +303,24 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
         /* Swap R and B because Win32 expects the color components in the
          * opposite order they are currently in
          */
-        char* pxlBuf = static_cast<char*>( malloc( streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 ) );
-        memcpy( pxlBuf , streamPtr->m_tempImage.getPixelsPtr() , streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 );
+        streamPtr->m_pxlBuf = static_cast<char*>( malloc( streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 ) );
+        std::memcpy( streamPtr->m_pxlBuf , streamPtr->m_tempImage.getPixelsPtr() , streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 );
 
         char blueTemp;
         char redTemp;
 
         for ( unsigned int i = 0 ; i < streamPtr->m_tempImage.getSize().x * streamPtr->m_tempImage.getSize().y * 4 ; i += 4 ) {
-            redTemp = pxlBuf[i];
-            blueTemp = pxlBuf[i+2];
-            pxlBuf[i] = blueTemp;
-            pxlBuf[i+2] = redTemp;
+            redTemp = streamPtr->m_pxlBuf[i];
+            blueTemp = streamPtr->m_pxlBuf[i+2];
+            streamPtr->m_pxlBuf[i] = blueTemp;
+            streamPtr->m_pxlBuf[i+2] = redTemp;
         }
         /* ============================================================ */
 
         // Make HBITMAP from pixel array
-        streamPtr->m_imageBuffer = CreateBitmap( streamPtr->m_tempImage.getSize().x , streamPtr->m_tempImage.getSize().y , 1 , 32 , pxlBuf );
+        streamPtr->m_imageBuffer = CreateBitmap( streamPtr->m_tempImage.getSize().x , streamPtr->m_tempImage.getSize().y , 1 , 32 , streamPtr->m_pxlBuf );
 
-        free( pxlBuf );
+        std::free( streamPtr->m_pxlBuf );
 	}
 
     // If HBITMAP was created successfully, set a flag and reset the timer

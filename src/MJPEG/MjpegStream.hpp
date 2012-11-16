@@ -109,6 +109,7 @@ private:
 
 	// Stores image before displaying it on the screen
 	HBITMAP m_imageBuffer;
+	char* m_pxlBuf;
 
 	/* Used to determine when to draw the "Connecting..." message
 	 * (when the stream first starts)
