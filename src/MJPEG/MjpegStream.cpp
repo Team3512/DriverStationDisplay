@@ -93,6 +93,7 @@ MjpegStream::MjpegStream( const std::string& hostName ,
 
 MjpegStream::~MjpegStream() {
     stopStream();
+    DeleteObject( m_imageBuffer );
     DestroyWindow( m_streamWin );
     DestroyWindow( m_toggleButton );
 }
@@ -318,6 +319,7 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
         /* ============================================================ */
 
         // Make HBITMAP from pixel array
+        DeleteObject( streamPtr->m_imageBuffer ); // free previous image if there is one
         streamPtr->m_imageBuffer = CreateBitmap( streamPtr->m_tempImage.getSize().x , streamPtr->m_tempImage.getSize().y , 1 , 32 , streamPtr->m_pxlBuf );
 
         std::free( streamPtr->m_pxlBuf );
