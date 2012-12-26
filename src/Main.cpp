@@ -14,6 +14,7 @@
 #include <SFML/Network/IpAddress.hpp>
 #include <SFML/Network/Packet.hpp>
 #include <SFML/Network/UdpSocket.hpp>
+#include <SFML/Network/TcpSocket.hpp>
 
 #include <sstream>
 
@@ -29,13 +30,14 @@
 #include <cstring>
 
 // Global because the window is closed by a button in CALLBACK OnEvent
-sf::RenderWindow* drawWinPtr = NULL;
+sf::RenderWindow* gDrawWinPtr = NULL;
 
 // Allows manipulation of MjpegStream in CALLBACK OnEvent
-MjpegStream* streamWinPtr = NULL;
+MjpegStream* gStreamWinPtr = NULL;
 
 // Allows usage of socket in CALLBACK OnEvent
-sf::UdpSocket* socketPtr = NULL;
+sf::UdpSocket* gDataSocketPtr = NULL;
+sf::TcpSocket* gCmdSocketPtr = NULL;
 
 template <class T>
 std::wstring numberToString( T number ) {
@@ -98,7 +100,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             Instance ,
             NULL );
     drawWin.create( drawWindow );
-    drawWinPtr = &drawWin;
+    gDrawWinPtr = &drawWin;
 
     Settings settings( "IPsettings.txt" );
 
@@ -110,17 +112,22 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             320 ,
             240 ,
             Instance );
-    streamWinPtr = &streamWin;
+    gStreamWinPtr = &streamWin;
 
+    /* ===== Robot Data Sending Variables ===== */
     sf::UdpSocket robotData;
     robotData.bind( std::atoi( settings.getValueFor( "robotDataPort" ).c_str() ) );
     robotData.setBlocking( false );
-    socketPtr = &robotData;
+    gDataSocketPtr = &robotData;
 
     sf::IpAddress receiveIP;
     unsigned short receivePort;
 
     sf::Packet dataPacket;
+    /* ======================================== */
+
+    sf::TcpSocket robotCmd;
+    gCmdSocketPtr = &robotCmd;
 
     /* ===== GUI elements ===== */
     ProgressBar drive1Meter( sf::Vector2f( 100.f , 19.f ) , sf::String( "" ) , sf::Color( 0 , 120 , 0 ) , sf::Color( 40 , 40 , 40 ) , sf::Color( 50 , 50 , 50 ) );
@@ -392,14 +399,14 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
         switch( LOWORD(WParam) ) {
             case IDC_STREAM_BUTTON: {
-                 if ( streamWinPtr != NULL ) {
-                     if ( streamWinPtr->isStreaming() ) {
+                 if ( gStreamWinPtr != NULL ) {
+                     if ( gStreamWinPtr->isStreaming() ) {
                          // Stop streaming
-                         streamWinPtr->stopStream();
+                         gStreamWinPtr->stopStream();
                      }
                      else {
                          // Start streaming
-                         streamWinPtr->startStream();
+                         gStreamWinPtr->startStream();
                      }
                  }
 
@@ -409,30 +416,41 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             case IDC_CONNECT_BUTTON: {
                 std::strcpy( data , "connect" );
 
-                socketPtr->send( data , 16 , remoteIP , remotePort );
+                if ( gDataSocketPtr != NULL ) {
+                    gDataSocketPtr->send( data , 16 , remoteIP , remotePort );
+                }
 
                 break;
             }
 
+            // These other commands get sent to ALF rather than the robot
             case IDC_RELOAD_BUTTON: {
-                std::strcpy( data , "reload" );
+                std::strcpy( data , "reload\r\n" );
 
-                socketPtr->send( data , 16 , remoteIP , remotePort );
+                if ( gCmdSocketPtr != NULL ) {
+                    gCmdSocketPtr->connect( remoteIP , 3512 );
+                    gCmdSocketPtr->send( data , 16 );
+                    gCmdSocketPtr->disconnect();
+                }
 
                 break;
             }
 
             case IDC_REBOOT_BUTTON: {
-                std::strcpy( data , "reboot" );
+                std::strcpy( data , "reboot\r\n" );
 
-                socketPtr->send( data , 16 , remoteIP , remotePort );
+                if ( gCmdSocketPtr != NULL ) {
+                    gCmdSocketPtr->connect( remoteIP , 3512 );
+                    gCmdSocketPtr->send( data , 16 );
+                    gCmdSocketPtr->disconnect();
+                }
 
                 break;
             }
 
             case IDC_EXIT_BUTTON: {
-                if ( drawWinPtr != NULL ) {
-                    drawWinPtr->close();
+                if ( gDrawWinPtr != NULL ) {
+                    gDrawWinPtr->close();
                 }
 
                 PostQuitMessage(0);
@@ -452,8 +470,8 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
     // Quit when we close the main window
     case WM_CLOSE: {
-        if ( drawWinPtr != NULL ) {
-            drawWinPtr->close();
+        if ( gDrawWinPtr != NULL ) {
+            gDrawWinPtr->close();
         }
 
         PostQuitMessage(0);
