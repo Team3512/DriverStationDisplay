@@ -17,16 +17,22 @@
 #include <SFML/Network/TcpSocket.hpp>
 
 #include <sstream>
+#include <vector>
+#include <string>
 
 #include "ProgressBar.hpp"
 #include "StatusLight.hpp"
 #include "MJPEG/MjpegStream.hpp"
 #include "Settings.hpp"
-#include "ButtonID.hpp"
+#include "Resource.h"
 
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+#define _WIN32_IE 0x0400
+#include <commctrl.h>
+
 #include <cstring>
 
 // Global because the window is closed by a button in CALLBACK OnEvent
@@ -47,6 +53,13 @@ std::wstring numberToString( T number ) {
 LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LParam );
 
 INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
+    INITCOMMONCONTROLSEX icc;
+
+    // Initialise common controls.
+    icc.dwSize = sizeof(icc);
+    icc.dwICC = ICC_WIN95_CLASSES;
+    InitCommonControlsEx(&icc);
+
     const char* mainClassName = "DriverStationDisplay";
 
     HBRUSH mainBrush = CreateSolidBrush( RGB( 87 , 87 , 87 ) );
@@ -102,7 +115,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     drawWin.create( drawWindow );
     gDrawWinPtr = &drawWin;
 
-    Settings settings( "IPsettings.txt" );
+    Settings settings( "IPSettings.txt" );
 
     MjpegStream streamWin( settings.getValueFor( "streamHost" ) ,
             std::atoi( settings.getValueFor( "streamPort" ).c_str() ) ,
@@ -171,6 +184,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     bool turretLockedOn = false;
     unsigned char kinectOnline = sf::Socket::Error;
     unsigned int distanceToTarget;
+    std::string tempAutonName;
+    std::vector<std::string> autonNames;
 
     ShowWindow( mainWindow , SW_SHOW ); // Makes sure this window is shown before continuing
 
@@ -199,6 +214,10 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                  * bool: turret is locked on
                  * unsigned char: Kinect is online
                  * unsigned int: distance to target
+                 *
+                 * Autonomous Modes (contained in rest of packet):
+                 * std::string: autonomous routine name
+                 * ...
                  */
 
                 dataPacket >> drive1ScaleZ
@@ -213,6 +232,12 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 >> turretLockedOn
                 >> kinectOnline
                 >> distanceToTarget;
+
+                autonNames.clear();
+                while ( !dataPacket.endOfPacket() ) {
+                    dataPacket >> tempAutonName;
+                    autonNames.push_back( tempAutonName );
+                }
 
                 /* ===== Adjust GUI interface to match data from robot ===== */
                 if ( isLowGear ) {
@@ -278,6 +303,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             rpmMeter.setString( L"RPM: " + numberToString( static_cast<float>(shooterRPM) / 100000.f ) );
 
             drawWin.clear( sf::Color( 87 , 87 , 87 ) );
+            //drawWin.clear( sf::Color( 240 , 240 , 240 ) );
 
             drawWin.draw( drive1Meter );
             drawWin.draw( drive2Meter );
@@ -317,9 +343,9 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             "Connect DS",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            0 * ( 5 + 24 ) + 5,
+            0 * ( 5 + 28 ) + 5,
             100,
-            24,
+            28,
             Handle,
             reinterpret_cast<HMENU>( IDC_CONNECT_BUTTON ),
             GetModuleHandle( NULL ),
@@ -336,9 +362,9 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             "Reload Code",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            1 * ( 5 + 24 ) + 5,
+            1 * ( 5 + 28 ) + 5,
             100,
-            24,
+            28,
             Handle,
             reinterpret_cast<HMENU>( IDC_RELOAD_BUTTON ),
             GetModuleHandle( NULL ),
@@ -355,9 +381,9 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             "Reboot Robot",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            2 * ( 5 + 24 ) + 5,
+            2 * ( 5 + 28 ) + 5,
             100,
-            24,
+            28,
             Handle,
             reinterpret_cast<HMENU>( IDC_REBOOT_BUTTON ),
             GetModuleHandle( NULL ),
@@ -374,9 +400,9 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             "Exit",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            3 * ( 5 + 24 ) + 5,
+            3 * ( 5 + 28 ) + 5,
             100,
-            24,
+            28,
             Handle,
             reinterpret_cast<HMENU>( IDC_EXIT_BUTTON ),
             GetModuleHandle( NULL ),
@@ -386,6 +412,35 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             WM_SETFONT,
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
+
+        HWND comboBox = CreateWindowEx( 0,
+            "COMBOBOX",
+            "Autonomous Mode",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWN,
+            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+            4 * ( 5 + 28 ) + 5,
+            100,
+            GetSystemMetrics(SM_CYSCREEN) - 240,
+            Handle,
+            reinterpret_cast<HMENU>( IDC_AUTON_COMBOBOX ),
+            GetModuleHandle( NULL ),
+            NULL );
+
+        SendMessage(comboBox,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
+        const char* comboBoxItems[] = { "AutonShoot" , "AutonBridge" , "AutonFeed" };
+
+        for ( unsigned int i = 0 ; i < 3 ; i++ ) {
+            SendMessage(comboBox,
+                CB_ADDSTRING,
+                0,
+                reinterpret_cast<LPARAM>( (LPCTSTR)comboBoxItems[i] ));
+        }
+
+        SendMessage( comboBox , CB_SETCURSEL , 0 , 0 );
 
         break;
     }
@@ -414,7 +469,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             }
 
             case IDC_CONNECT_BUTTON: {
-                std::strcpy( data , "connect" );
+                std::strcpy( data , "connect\r\n" );
 
                 if ( gDataSocketPtr != NULL ) {
                     gDataSocketPtr->send( data , 16 , remoteIP , remotePort );
@@ -428,7 +483,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
                 std::strcpy( data , "reload\r\n" );
 
                 if ( gCmdSocketPtr != NULL ) {
-                    gCmdSocketPtr->connect( remoteIP , 3512 );
+                    gCmdSocketPtr->connect( remoteIP , 3512 , sf::milliseconds( 500 ) );
                     gCmdSocketPtr->send( data , 16 );
                     gCmdSocketPtr->disconnect();
                 }
@@ -440,7 +495,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
                 std::strcpy( data , "reboot\r\n" );
 
                 if ( gCmdSocketPtr != NULL ) {
-                    gCmdSocketPtr->connect( remoteIP , 3512 );
+                    gCmdSocketPtr->connect( remoteIP , 3512 , sf::milliseconds( 500 ) );
                     gCmdSocketPtr->send( data , 16 );
                     gCmdSocketPtr->disconnect();
                 }
@@ -457,13 +512,35 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
                 break;
             }
 
+            case IDC_AUTON_COMBOBOX: {
+                switch ( HIWORD(WParam) ) {
+                case CBN_SELCHANGE: {
+                    // Get new Auton selection since it changed
+                    int selection = SendMessage( (HWND)LParam , CB_GETCURSEL , 0 , 0 );
+
+                    // If it's really a selection, tell the robot to change Autonomous
+                    if ( selection != CB_ERR ) {
+                        std::strcpy( data , "autonSelect\r\n" );
+                        data[13] = 0;
+
+                        if ( gDataSocketPtr != NULL ) {
+                            gDataSocketPtr->send( data , 16 , remoteIP , remotePort );
+                        }
+                    }
+                }
+                }
+
+                break;
+            }
+
             case WM_DESTROY: {
                 PostQuitMessage(0);
+
+                break;
             }
-            break;
         }
 
-        free( data );
+        std::free( data );
 
         break;
     }

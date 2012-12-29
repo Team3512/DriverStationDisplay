@@ -43,9 +43,13 @@
 									<listOptionValue builtIn="false" value="sfml-system-s"/>
 									<listOptionValue builtIn="false" value="sfml-network-s"/>
 									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="comctl32"/>
 								</option>
 								<option id="gnu.cpp.link.option.other.1505969586" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other"/>
 								<option id="gnu.cpp.link.option.paths.2004872512" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
+								<option id="gnu.cpp.link.option.userobjs.1876954166" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+									<listOptionValue builtIn="false" value="src/Resources.res"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1070698999" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -101,12 +105,16 @@
 									<listOptionValue builtIn="false" value="sfml-system-s"/>
 									<listOptionValue builtIn="false" value="sfml-network-s"/>
 									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="comctl32"/>
 								</option>
 								<option id="gnu.cpp.link.option.other.421814598" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">
 									<listOptionValue builtIn="false" value="-subsystem"/>
 									<listOptionValue builtIn="false" value="windows"/>
 								</option>
 								<option id="gnu.cpp.link.option.strip.471833360" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.link.option.userobjs.463098976" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+									<listOptionValue builtIn="false" value="src/Resources.res"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.345907294" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

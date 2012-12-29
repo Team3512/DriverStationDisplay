@@ -1,0 +1,45 @@
+#include "Resource.h"
+#include <windows.h>
+
+//mainIcon ICON "Spartatroniks.ico"
+
+////////// Process Manifest
+//CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "DriverStationDisplay.manifest"
+
+////////// About Dialog
+IDD_ABOUTBOX DIALOGEX (320 - 85) / 2 - 18, (240 - 31) / 2 - 22, 170, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+CAPTION "About KinectBoard"
+FONT 10, "MS Shell Dlg"
+BEGIN
+    ICON             mainIcon,                               IDC_STATIC, 30, 8,  32,  32
+    LTEXT            "DriverStationDisplay, Version 1.0",    IDC_STATIC, 55, 12, 114, 10
+    LTEXT            "Copyright (c) 2012 FRC Team 3512",     IDC_STATIC, 30, 30, 159, 10
+    LTEXT            "FRC Team 3512, Spartatroniks",          IDC_STATIC, 30, 39, 96,  10
+    LTEXT            "All Rights Reserved",                  IDC_STATIC, 30, 48, 63,  10
+END
+
+////////// Properties
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "FRC Team 3512, Spartatroniks"
+      VALUE "FileVersion", "1,0,0,0"
+      VALUE "InternalName", "DriverStationDisplay"
+      VALUE "LegalCopyright", "(c) 2012 FRC Team 3512"
+      VALUE "OriginalFilename", "DriverStationDisplay.exe"
+      VALUE "ProductName", "DriverStationDisplay"
+      VALUE "ProductVersion", "1.0"
+    END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END

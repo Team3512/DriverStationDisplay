@@ -10,7 +10,7 @@
 
 #include "../UIFont.hpp"
 #include "MjpegStream.hpp"
-#include "../ButtonID.hpp"
+#include "../Resource.h"
 
 #include <sstream>
 #include <gdiplus.h>
@@ -67,7 +67,7 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         xPosition ,
         yPosition + height + 5,
         100,
-        24,
+        28,
         m_parentWin,
         reinterpret_cast<HMENU>( IDC_STREAM_BUTTON ),
         GetModuleHandle( NULL ),
