@@ -37,6 +37,7 @@
 
 // Global because the window is closed by a button in CALLBACK OnEvent
 sf::RenderWindow* gDrawWinPtr = NULL;
+HWND gAutonComboBox = NULL;
 
 // Allows manipulation of MjpegStream in CALLBACK OnEvent
 MjpegStream* gStreamWinPtr = NULL;
@@ -172,6 +173,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     /* ======================== */
 
     // Packet data
+    std::string header;
     unsigned int drive1ScaleZ = 0;
     unsigned int drive2ScaleZ = 0;
     unsigned int turretScaleZ = 0;
@@ -200,43 +202,71 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
         else {
             // Retrieve data sent from robot and unpack it
             if ( robotData.receive( dataPacket , receiveIP , receivePort ) == sf::Socket::Done ) {
-                /* Unpacks the following variables:
-                 *
-                 * unsigned int: drive1 ScaleZ
-                 * unsigned int: drive2 ScaleZ
-                 * unsigned int: turret ScaleZ
-                 * bool: drivetrain is in low gear
-                 * unsigned char: is hammer mechanism deployed
-                 * unsigned int: shooter RPM
-                 * bool: shooter RPM control is manual
-                 * bool: isShooting
-                 * bool: isAutoAiming
-                 * bool: turret is locked on
-                 * unsigned char: Kinect is online
-                 * unsigned int: distance to target
-                 *
-                 * Autonomous Modes (contained in rest of packet):
-                 * std::string: autonomous routine name
-                 * ...
-                 */
+                // Unpacks header telling packet type (either "display" or "autonList")
+                dataPacket >> header;
 
-                dataPacket >> drive1ScaleZ
-                >> drive2ScaleZ
-                >> turretScaleZ
-                >> isLowGear
-                >> isHammerDown
-                >> shooterRPM
-                >> shooterIsManual
-                >> isShooting
-                >> isAutoAiming
-                >> turretLockedOn
-                >> kinectOnline
-                >> distanceToTarget;
+                if ( std::strcmp( header.c_str() , "display" ) == 0 ) {
+                    /* Unpacks the following variables:
+                     *
+                     * unsigned int: drive1 ScaleZ
+                     * unsigned int: drive2 ScaleZ
+                     * unsigned int: turret ScaleZ
+                     * bool: drivetrain is in low gear
+                     * unsigned char: is hammer mechanism deployed
+                     * unsigned int: shooter RPM
+                     * bool: shooter RPM control is manual
+                     * bool: isShooting
+                     * bool: isAutoAiming
+                     * bool: turret is locked on
+                     * unsigned char: Kinect is online
+                     * unsigned int: distance to target
+                     */
 
-                autonNames.clear();
-                while ( !dataPacket.endOfPacket() ) {
-                    dataPacket >> tempAutonName;
-                    autonNames.push_back( tempAutonName );
+                    dataPacket >> drive1ScaleZ
+                    >> drive2ScaleZ
+                    >> turretScaleZ
+                    >> isLowGear
+                    >> isHammerDown
+                    >> shooterRPM
+                    >> shooterIsManual
+                    >> isShooting
+                    >> isAutoAiming
+                    >> turretLockedOn
+                    >> kinectOnline
+                    >> distanceToTarget;
+                }
+
+                else if ( std::strcmp( header.c_str() , "autonList" ) == 0 ) {
+                    /* Unpacks the following variables:
+                     *
+                     * Autonomous Modes (contained in rest of packet):
+                     * std::string: autonomous routine name
+                     * ...
+                     */
+
+                    autonNames.clear();
+                    while ( !dataPacket.endOfPacket() ) {
+                        dataPacket >> tempAutonName;
+                        autonNames.push_back( tempAutonName );
+                    }
+
+                    /* Shouldn't be NULL since its parent window was
+                     * initialized long before here, but just to be safe...
+                     */
+                    if ( gAutonComboBox != NULL ) {
+                        /* Remove all items from combo box before adding the
+                         * new ones
+                         */
+                        while ( SendMessage( gAutonComboBox , CB_DELETESTRING , 0 , 0 ) > 0 );
+
+                        for ( unsigned int i = 0 ; i < autonNames.size() ; i++ ) {
+                            SendMessage( gAutonComboBox ,
+                                    CB_ADDSTRING ,
+                                    0 ,
+                                    reinterpret_cast<LPARAM>( autonNames[i].c_str() )
+                            );
+                        }
+                    }
                 }
 
                 /* ===== Adjust GUI interface to match data from robot ===== */
@@ -333,8 +363,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     return EXIT_SUCCESS;
 }
 
-LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LParam ) {
-    switch ( Message ) {
+LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lParam ) {
+    switch ( message ) {
     case WM_CREATE: {
         HGDIOBJ hfDefault = GetStockObject( DEFAULT_GUI_FONT );
 
@@ -346,7 +376,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             0 * ( 5 + 28 ) + 5,
             100,
             28,
-            Handle,
+            handle,
             reinterpret_cast<HMENU>( IDC_CONNECT_BUTTON ),
             GetModuleHandle( NULL ),
             NULL);
@@ -365,7 +395,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             1 * ( 5 + 28 ) + 5,
             100,
             28,
-            Handle,
+            handle,
             reinterpret_cast<HMENU>( IDC_RELOAD_BUTTON ),
             GetModuleHandle( NULL ),
             NULL);
@@ -384,7 +414,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             2 * ( 5 + 28 ) + 5,
             100,
             28,
-            Handle,
+            handle,
             reinterpret_cast<HMENU>( IDC_REBOOT_BUTTON ),
             GetModuleHandle( NULL ),
             NULL);
@@ -403,7 +433,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             3 * ( 5 + 28 ) + 5,
             100,
             28,
-            Handle,
+            handle,
             reinterpret_cast<HMENU>( IDC_EXIT_BUTTON ),
             GetModuleHandle( NULL ),
             NULL);
@@ -413,34 +443,31 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
 
-        HWND comboBox = CreateWindowEx( 0,
+        HWND autonComboBox = CreateWindowEx( 0,
             "COMBOBOX",
             "Autonomous Mode",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWN,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
             4 * ( 5 + 28 ) + 5,
             100,
-            GetSystemMetrics(SM_CYSCREEN) - 240,
-            Handle,
+            GetSystemMetrics(SM_CYSCREEN) - 240 - ( 4 * ( 5 + 28 ) + 5 ),
+            handle,
             reinterpret_cast<HMENU>( IDC_AUTON_COMBOBOX ),
             GetModuleHandle( NULL ),
             NULL );
+        gAutonComboBox = autonComboBox;
 
-        SendMessage(comboBox,
+        SendMessage( autonComboBox,
             WM_SETFONT,
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
 
-        const char* comboBoxItems[] = { "AutonShoot" , "AutonBridge" , "AutonFeed" };
+        SendMessage( autonComboBox,
+            CB_ADDSTRING,
+            0,
+            reinterpret_cast<LPARAM>( "" ));
 
-        for ( unsigned int i = 0 ; i < 3 ; i++ ) {
-            SendMessage(comboBox,
-                CB_ADDSTRING,
-                0,
-                reinterpret_cast<LPARAM>( (LPCTSTR)comboBoxItems[i] ));
-        }
-
-        SendMessage( comboBox , CB_SETCURSEL , 0 , 0 );
+        SendMessage( autonComboBox , CB_SETCURSEL , 0 , 0 );
 
         break;
     }
@@ -451,8 +478,7 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
         sf::IpAddress remoteIP( 10 , 35 , 12 , 2 );
         unsigned short remotePort = 5615;
 
-
-        switch( LOWORD(WParam) ) {
+        switch( LOWORD(wParam) ) {
             case IDC_STREAM_BUTTON: {
                  if ( gStreamWinPtr != NULL ) {
                      if ( gStreamWinPtr->isStreaming() ) {
@@ -509,19 +535,20 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
                 }
 
                 PostQuitMessage(0);
+
                 break;
             }
 
             case IDC_AUTON_COMBOBOX: {
-                switch ( HIWORD(WParam) ) {
+                switch ( HIWORD(wParam) ) {
                 case CBN_SELCHANGE: {
-                    // Get new Auton selection since it changed
-                    int selection = SendMessage( (HWND)LParam , CB_GETCURSEL , 0 , 0 );
+                    // Get new Autonomous selection since it changed
+                    int selection = SendMessage( (HWND)lParam , CB_GETCURSEL , 0 , 0 );
 
                     // If it's really a selection, tell the robot to change Autonomous
                     if ( selection != CB_ERR ) {
                         std::strcpy( data , "autonSelect\r\n" );
-                        data[13] = 0;
+                        data[13] = selection;
 
                         if ( gDataSocketPtr != NULL ) {
                             gDataSocketPtr->send( data , 16 , remoteIP , remotePort );
@@ -552,11 +579,12 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
         }
 
         PostQuitMessage(0);
+
         break;
     }
 
     default: {
-        return DefWindowProc(Handle, Message, WParam, LParam);
+        return DefWindowProc(handle, message, wParam, lParam);
     }
     }
 

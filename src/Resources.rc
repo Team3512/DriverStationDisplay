@@ -15,7 +15,7 @@ BEGIN
     ICON             mainIcon,                               IDC_STATIC, 30, 8,  32,  32
     LTEXT            "DriverStationDisplay, Version 1.0",    IDC_STATIC, 55, 12, 114, 10
     LTEXT            "Copyright (c) 2012 FRC Team 3512",     IDC_STATIC, 30, 30, 159, 10
-    LTEXT            "FRC Team 3512, Spartatroniks",          IDC_STATIC, 30, 39, 96,  10
+    LTEXT            "FRC Team 3512, Spartatroniks",         IDC_STATIC, 30, 39, 96,  10
     LTEXT            "All Rights Reserved",                  IDC_STATIC, 30, 48, 63,  10
 END
 
