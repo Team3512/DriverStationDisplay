@@ -7,9 +7,9 @@
 /* TODO Get position of "DriverStation" window and adjust main window height
  * based upon that. Use a default height if not found.
  * TODO Add buttons for rebooting robot and reloading robot's settings file
+ * TODO Put socket receiving in separate threads with signals and PostThreadMessage
+ * (capture SIGQOUIT or SIGKILL?)
  */
-
-#include <SFML/Graphics/RenderWindow.hpp>
 
 #include <SFML/Network/IpAddress.hpp>
 #include <SFML/Network/Packet.hpp>
@@ -18,8 +18,10 @@
 
 #include <sstream>
 
-#include "ProgressBar.hpp"
-#include "StatusLight.hpp"
+#include "WinGDI/ProgressBar.hpp"
+#include "WinGDI/StatusLight.hpp"
+#include "WinGDI/Text.hpp"
+#include "WinGDI/UIFont.hpp"
 #include "MJPEG/MjpegStream.hpp"
 #include "Settings.hpp"
 #include "ButtonID.hpp"
@@ -27,10 +29,11 @@
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <wingdi.h>
 #include <cstring>
 
 // Global because the window is closed by a button in CALLBACK OnEvent
-sf::RenderWindow* gDrawWinPtr = NULL;
+HWND gMainWinPtr = NULL;
 
 // Allows manipulation of MjpegStream in CALLBACK OnEvent
 MjpegStream* gStreamWinPtr = NULL;
@@ -39,12 +42,15 @@ MjpegStream* gStreamWinPtr = NULL;
 sf::UdpSocket* gDataSocketPtr = NULL;
 sf::TcpSocket* gCmdSocketPtr = NULL;
 
+// Used to tell message loop when to exit
+volatile bool gExit = false;
+
 template <class T>
 std::wstring numberToString( T number ) {
     return static_cast<std::wostringstream*>( &(std::wostringstream() << number) )->str();
 }
 
-LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LParam );
+LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lParam );
 
 INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     const char* mainClassName = "DriverStationDisplay";
@@ -67,7 +73,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     WindowClass.lpszClassName = mainClassName;
     RegisterClassEx(&WindowClass);
 
-    MSG Message;
+    MSG message;
 
     int mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 240;
 
@@ -75,7 +81,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     HWND mainWindow = CreateWindowEx( 0 ,
             mainClassName ,
             "" ,
-            WS_POPUP | WS_VISIBLE ,
+            WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS ,
             0 ,
             0 ,
             GetSystemMetrics(SM_CXSCREEN) ,
@@ -84,23 +90,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             NULL ,
             Instance ,
             NULL );
-
-    sf::RenderWindow drawWin;
-
-    HWND drawWindow = CreateWindowEx( 0 ,
-            "STATIC" ,
-            "" ,
-            WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE ,
-            0 ,
-            0 ,
-            GetSystemMetrics(SM_CXSCREEN) ,
-            mainWinHeight ,
-            mainWindow ,
-            NULL ,
-            Instance ,
-            NULL );
-    drawWin.create( drawWindow );
-    gDrawWinPtr = &drawWin;
+    gMainWinPtr = mainWindow;
 
     Settings settings( "IPsettings.txt" );
 
@@ -129,33 +119,35 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     sf::TcpSocket robotCmd;
     gCmdSocketPtr = &robotCmd;
 
+    // Used for drawing all GUI elements
+    HDC mainDC = NULL;
+
     /* ===== GUI elements ===== */
-    ProgressBar drive1Meter( sf::Vector2f( 100.f , 19.f ) , sf::String( "" ) , sf::Color( 0 , 120 , 0 ) , sf::Color( 40 , 40 , 40 ) , sf::Color( 50 , 50 , 50 ) );
-    drive1Meter.setPosition( 12.f , 12.f );
+    ProgressBar drive1Meter( Vector( 12 , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
 
-    ProgressBar drive2Meter( sf::Vector2f( 100.f , 19.f ) , sf::String( "" ) , sf::Color( 0 , 120 , 0 ) , sf::Color( 40 , 40 , 40 ) , sf::Color( 50 , 50 , 50 ) );
-    drive2Meter.setPosition( 12.f , drive1Meter.getPosition().y + drive1Meter.getSize().y + 14.f + 24.f );
+    ProgressBar drive2Meter( Vector( 12 , drive1Meter.getPosition().Y + drive1Meter.getSize().Y + 14 + 24 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
 
-    ProgressBar turretMeter( sf::Vector2f( 100.f , 19.f ) , sf::String( "" ) , sf::Color( 0 , 120 , 0 ) , sf::Color( 40 , 40 , 40 ) , sf::Color( 50 , 50 , 50 ) );
-    turretMeter.setPosition( streamWin.getPosition().x , 12.f );
+    ProgressBar turretMeter( Vector( streamWin.getPosition().x , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
 
-    ProgressBar targetRPMMeter( sf::Vector2f( 100.f , 19.f ) , sf::String( "" ) , sf::Color( 0 , 120 , 0 ) , sf::Color( 40 , 40 , 40 ) , sf::Color( 50 , 50 , 50 ) );
-    targetRPMMeter.setPosition( streamWin.getPosition().x + 100.f /* width of prev. bar */ + 10.f , 12.f );
+    ProgressBar targetRPMMeter( Vector( streamWin.getPosition().x + 100 /* width of prev. bar */ + 10 , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
 
-    ProgressBar rpmMeter( sf::Vector2f( 100.f , 19.f ) , sf::String( "" ) , sf::Color( 0 , 120 , 0 ) , sf::Color( 40 , 40 , 40 ) , sf::Color( 50 , 50 , 50 ) );
-    rpmMeter.setPosition( streamWin.getPosition().x + streamWin.getSize().x - 100.f /* width of this bar */ , 12.f );
+    ProgressBar rpmMeter( Vector( streamWin.getPosition().x + streamWin.getSize().x - 100 /* width of this bar */ , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
 
-    StatusLight isLowGearLight( sf::Vector2f( 12.f , 129.f ) , "Low Gear" );
-    StatusLight isHammerDownLight( sf::Vector2f( 12.f , 169.f ) , "Hammer Down" );
+    StatusLight isLowGearLight( Vector( 12  , 129 ) , L"Low Gear" );
+    StatusLight isHammerDownLight( Vector( 12 , 169 ) , L"Hammer Down" );
 
-    StatusLight turretLockLight( sf::Vector2f( streamWin.getPosition().x + streamWin.getSize().x + 10.f , 110.f ) , "Lock" );
-    StatusLight isAutoAimingLight( sf::Vector2f( streamWin.getPosition().x + streamWin.getSize().x + 10.f , 150.f ) , "Auto Aim" );
-    StatusLight kinectOnlineLight( sf::Vector2f( streamWin.getPosition().x + streamWin.getSize().x + 10.f , 190.f ) , "Kinect" );
-    StatusLight isShootingLight( sf::Vector2f( streamWin.getPosition().x + streamWin.getSize().x + 10.f , 230.f ) , "Shooter On" );
-    StatusLight shooterManualLight( sf::Vector2f( streamWin.getPosition().x + streamWin.getSize().x + 10.f , 270.f ) , "Manual RPM" );
+    StatusLight turretLockLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 110 ) , L"Lock" );
 
-    sf::Text distanceText( "0 ft" , UIFont::getInstance()->segoeUI() , 14 );
-    distanceText.setPosition( streamWin.getPosition().x + streamWin.getSize().x + 10.f , 66.f );
+    StatusLight isAutoAimingLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 150 ) , L"Auto Aim" );
+
+    StatusLight kinectOnlineLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 190 ) , L"Kinect" );
+
+    StatusLight isShootingLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 230 ) , L"Shooter On" );
+
+    StatusLight shooterManualLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 270 ) , L"Manual RPM" );
+
+    Text distanceText( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 66 ) , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
+    distanceText.setString( L"0 ft" );
     /* ======================== */
 
     // Packet data
@@ -174,13 +166,13 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     ShowWindow( mainWindow , SW_SHOW ); // Makes sure this window is shown before continuing
 
-    while ( drawWin.isOpen() ) {
+    while ( !gExit ) {
         streamWin.bringToTop(); // bring window to top of other child windows
 
-        if ( PeekMessage( &Message , NULL , 0 , 0 , PM_REMOVE ) ) {
+        if ( PeekMessage( &message , NULL , 0 , 0 , PM_REMOVE ) ) {
             // If a message was waiting in the message queue, process it
-            TranslateMessage( &Message );
-            DispatchMessage( &Message );
+            TranslateMessage( &message );
+            DispatchMessage( &message );
         }
         else {
             // Retrieve data sent from robot and unpack it
@@ -277,28 +269,34 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             rpmMeter.setPercent( static_cast<float>(shooterRPM) / 100000.f / 4260.f * 100.f );
             rpmMeter.setString( L"RPM: " + numberToString( static_cast<float>(shooterRPM) / 100000.f ) );
 
-            drawWin.clear( sf::Color( 87 , 87 , 87 ) );
+            mainDC = GetDC( mainWindow );
 
-            drawWin.draw( drive1Meter );
-            drawWin.draw( drive2Meter );
-            drawWin.draw( turretMeter );
-            drawWin.draw( isLowGearLight );
-            drawWin.draw( isHammerDownLight );
-            drawWin.draw( targetRPMMeter );
-            drawWin.draw( rpmMeter );
-            drawWin.draw( shooterManualLight );
-            drawWin.draw( turretLockLight );
-            drawWin.draw( isShootingLight );
-            drawWin.draw( isAutoAimingLight );
-            drawWin.draw( kinectOnlineLight );
-            drawWin.draw( distanceText );
+            // Creates 1:1 relationship between logical units and pixels
+            SetMapMode( mainDC , MM_TEXT );
 
-            drawWin.display();
+            drive1Meter.draw( mainDC );
+            drive2Meter.draw( mainDC );
+            turretMeter.draw( mainDC );
+            isLowGearLight.draw( mainDC );
+            isHammerDownLight.draw( mainDC );
+            targetRPMMeter.draw( mainDC );
+            rpmMeter.draw( mainDC );
+            shooterManualLight.draw( mainDC );
+            turretLockLight.draw( mainDC );
+            isShootingLight.draw( mainDC );
+            isAutoAimingLight.draw( mainDC );
+            kinectOnlineLight.draw( mainDC );
+            distanceText.draw( mainDC );
+
+            DeleteObject( mainDC );
+
             streamWin.display();
 
             Sleep( 30 );
         }
     }
+
+    UIFont::freeInstance();
 
     // Clean up windows
     DestroyWindow( mainWindow );
@@ -449,15 +447,18 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
             }
 
             case IDC_EXIT_BUTTON: {
-                if ( gDrawWinPtr != NULL ) {
-                    gDrawWinPtr->close();
+                if ( gMainWinPtr != NULL ) {
+                    DestroyWindow( gMainWinPtr );
                 }
 
+                gExit = true;
                 PostQuitMessage(0);
+
                 break;
             }
 
             case WM_DESTROY: {
+                gExit = true;
                 PostQuitMessage(0);
             }
             break;
@@ -465,16 +466,6 @@ LRESULT CALLBACK OnEvent( HWND Handle , UINT Message , WPARAM WParam , LPARAM LP
 
         free( data );
 
-        break;
-    }
-
-    // Quit when we close the main window
-    case WM_CLOSE: {
-        if ( gDrawWinPtr != NULL ) {
-            gDrawWinPtr->close();
-        }
-
-        PostQuitMessage(0);
         break;
     }
 

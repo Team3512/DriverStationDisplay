@@ -21,7 +21,7 @@ public:
      */
     std::string getValueFor( const std::string& key );
 
-    // Saves all name-value pairs to external file with the given name
+    // Saves all name-value pairs to an external file with the given name
     void saveToFile( const std::string& fileName );
 
 private:
