@@ -8,12 +8,12 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
-#include "../UIFont.hpp"
+#include "../WinGDI/UIFont.hpp"
 #include "MjpegStream.hpp"
 #include "../Resource.h"
 
 #include <sstream>
-#include <gdiplus.h>
+#include <wingdi.h>
 #include <cstring>
 
 int stringToNumber( std::string str ) {
@@ -33,13 +33,25 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         ) :
         m_hostName( hostName ) ,
         m_port( port ) ,
-        m_connectMsg( "Connecting..." , UIFont::getInstance()->segoeUI() , 18 ) ,
+        /*m_connectMsg( "Connecting..." , UIFont::getInstance()->segoeUI() , 18 ) ,
         m_disconnectMsg( "Disconnected" , UIFont::getInstance()->segoeUI() , 18 ) ,
-        m_waitMsg( "Waiting..." , UIFont::getInstance()->segoeUI() , 18 ) ,
+        m_waitMsg( "Waiting..." , UIFont::getInstance()->segoeUI() , 18 ) ,*/
 
         m_firstImage( true ) ,
 
         m_stopReceive( true ) {
+
+    sf::Font font;
+    font.loadFromFile( "segoeui.ttf" );
+    m_connectMsg.setString( "Connecting..." );
+    m_connectMsg.setFont( font );
+    m_connectMsg.setCharacterSize( 18 );
+    m_disconnectMsg.setString( "Disconnected" );
+    m_disconnectMsg.setFont( font );
+    m_disconnectMsg.setCharacterSize( 18 );
+    m_waitMsg.setString( "Waiting..." );
+    m_waitMsg.setFont( font );
+    m_waitMsg.setCharacterSize( 18 );
 
     m_parentWin = parentWin;
 

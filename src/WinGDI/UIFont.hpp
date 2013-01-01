@@ -7,14 +7,18 @@
 #ifndef UIFONT_HPP
 #define UIFONT_HPP
 
-#include <SFML/Graphics/Font.hpp>
+#define _WIN32_WINNT 0x0601
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 class UIFont {
 public:
-    // @return a global instance of the resources available
+    // @return a global instance of the fonts available
     static UIFont* getInstance();
+    static void freeInstance();
 
-    sf::Font& segoeUI();
+    const HFONT segoeUI14();
+    const HFONT segoeUI18();
 
 protected:
     UIFont();
@@ -22,7 +26,8 @@ protected:
 private:
     static UIFont* m_instance;
 
-    static sf::Font m_segoeUI;
+    HFONT m_segoeUI14;
+    HFONT m_segoeUI18;
 
     // disallow copy and assignment
     UIFont ( const UIFont& );
