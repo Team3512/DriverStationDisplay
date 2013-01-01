@@ -4,6 +4,10 @@
 //Author: Tyler Veness
 //=============================================================================
 
+/* Each font's size assumes a 1:1 relationship between logical units and pixels
+ * in the device context. Use 'SetMapMode( hdc , MM_TEXT )' to achieve this.
+ */
+
 #ifndef UIFONT_HPP
 #define UIFONT_HPP
 

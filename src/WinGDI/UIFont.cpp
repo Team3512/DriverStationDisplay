@@ -25,6 +25,7 @@ void UIFont::freeInstance() {
 }
 
 UIFont::UIFont() {
+    // Font size assumes 1:1 relationship between logical units and pixels
     m_segoeUI14 = CreateFont( -14 ,
             0 ,
             0 ,
