@@ -22,12 +22,12 @@ public:
         inactive
     };
 
-    StatusLight( const Vector& position , std::wstring message , Status currentStatus = StatusLight::inactive );
+    StatusLight( const Vector2i& position , std::wstring message , Status currentStatus = StatusLight::inactive );
 
     void setActive( Status newStatus );
     Status getActive();
 
-    void setPosition( const Vector& position );
+    void setPosition( const Vector2i& position );
     void setPosition( short x , short y );
 
     void setString( const std::wstring& message );

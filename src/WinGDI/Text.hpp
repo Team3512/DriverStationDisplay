@@ -16,7 +16,11 @@
 
 class Text : public Drawable {
 public:
-    Text( const Vector& position , COLORREF fillColor , COLORREF outlineColor );
+    Text( const Vector2i& position , HFONT font , COLORREF fillColor , COLORREF outlineColor );
+
+    void setFont( HFONT font );
+
+    const HFONT getFont() const;
 
     void setString( std::wstring text );
 
@@ -34,6 +38,7 @@ private:
      * void setOutlineThickness( int thickness );
      */
 
+    HFONT m_font;
     std::wstring m_string;
 };
 

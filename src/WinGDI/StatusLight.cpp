@@ -10,10 +10,10 @@
 
 #include <wingdi.h>
 
-StatusLight::StatusLight( const Vector& position , std::wstring message , Status currentStatus  ) :
-        Drawable( position , Vector( 0 , 0 ) , 0 , 0 , 0 ) ,
+StatusLight::StatusLight( const Vector2i& position , std::wstring message , Status currentStatus  ) :
+        Drawable( position , Vector2i( 0 , 0 ) , 0 , 0 , 0 ) ,
         m_status( currentStatus ) ,
-        m_text( position , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) ) {
+        m_text( position , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) ) {
     setOutlineThickness( 2 );
     setOutlineColor( RGB( 50 , 50 , 50 ) );
     setPosition( position );
@@ -61,12 +61,12 @@ StatusLight::Status StatusLight::getActive() {
     return m_status;
 }
 
-void StatusLight::setPosition( const Vector& position ) {
+void StatusLight::setPosition( const Vector2i& position ) {
     // Set position of circle
-    Drawable::setPosition( Vector( position.X - 6 , position.Y - 6 ) );
+    Drawable::setPosition( Vector2i( position.X - 6 , position.Y - 6 ) );
 
     // Set position of text in relation to the circle
-    m_text.setPosition( Vector( position.X + 12 /* radius */ + 10 ,
+    m_text.setPosition( Vector2i( position.X + 12 /* radius */ + 10 ,
             position.Y - 3 ) );
 }
 
@@ -75,7 +75,7 @@ void StatusLight::setPosition( short x , short y ) {
     Drawable::setPosition( x - 6 , y - 6 );
 
     // Set position of text in relation to the circle
-    m_text.setPosition( Vector( x + 12 /* radius */ + 10 ,
+    m_text.setPosition( Vector2i( x + 12 /* radius */ + 10 ,
             y - 3 ) );
 }
 

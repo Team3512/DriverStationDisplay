@@ -11,34 +11,25 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-struct Vector {
-    template<class T , class U>
-    Vector( T x , U y ) {
-        X = x;
-        Y = y;
-    }
-
-    short X;
-    short Y;
-};
+#include "Vector.hpp"
 
 class Drawable {
 public:
-    Drawable( const Vector& position , const Vector& size , COLORREF fillColor , COLORREF outlineColor , int outlineThickness );
+    Drawable( const Vector2i& position , const Vector2i& size , COLORREF fillColor , COLORREF outlineColor , int outlineThickness );
     virtual ~Drawable();
 
     // Draws the drawable to the currently stored device context
     virtual void draw( HDC hdc ) = 0;
 
-    virtual void setPosition( const Vector& position );
+    virtual void setPosition( const Vector2i& position );
     virtual void setPosition( short x , short y );
 
-    const Vector getPosition();
+    const Vector2i getPosition();
 
-    virtual void setSize( const Vector& size );
+    virtual void setSize( const Vector2i& size );
     virtual void setSize( short width , short height );
 
-    const Vector getSize();
+    const Vector2i getSize();
 
     void setFillColor( COLORREF color );
     COLORREF getFillColor();

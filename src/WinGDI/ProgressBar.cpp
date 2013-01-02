@@ -1,6 +1,6 @@
 //=============================================================================
 //File Name: ProgressBar.cpp
-//Description: Holds definitions for ProgressBar class
+//Description: Provides an interface to a progress bar with WinGDI
 //Author: Tyler Veness
 //=============================================================================
 
@@ -9,10 +9,10 @@
 
 #include <wingdi.h>
 
-ProgressBar::ProgressBar( const Vector& position , std::wstring message , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , float percentFull ) :
-        RectangleShape( position , Vector( 100 , 18 ) , emptyFillColor , outlineColor , 1 ) ,
-        m_barFill( Vector( position.X + 1 , position.Y + 1 ) , Vector( 98 , 16 ) , fullFillColor , RGB( 0 , 70 , 0 ) , 0 ) ,
-        m_text( Vector( position.X , position.Y + 18 + 2 ) , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) ) {
+ProgressBar::ProgressBar( const Vector2i& position , std::wstring message , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , float percentFull ) :
+        RectangleShape( position , Vector2i( 100 , 18 ) , emptyFillColor , outlineColor , 1 ) ,
+        m_barFill( Vector2i( position.X + 1 , position.Y + 1 ) , Vector2i( 98 , 16 ) , fullFillColor , RGB( 0 , 70 , 0 ) , 0 ) ,
+        m_text( Vector2i( position.X , position.Y + 18 + 2 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) ) {
 
     setPercent( percentFull );
 
@@ -31,14 +31,14 @@ void ProgressBar::setPercent( float percentFull ) {
     }
 
     percent = percentFull;
-    m_barFill.setSize( Vector( ( Drawable::getSize().X - 2.f ) * percentFull / 100.f , m_barFill.getSize().Y ) );
+    m_barFill.setSize( Vector2i( ( Drawable::getSize().X - 2.f ) * percentFull / 100.f , m_barFill.getSize().Y ) );
 }
 
 float ProgressBar::getPercent() {
     return percent;
 }
 
-void ProgressBar::setPosition( const Vector& position ) {
+void ProgressBar::setPosition( const Vector2i& position ) {
     RectangleShape::setPosition( position );
     m_barFill.setPosition( position.X + 1 , position.Y + 1 );
 
@@ -52,16 +52,16 @@ void ProgressBar::setPosition( short x , short y ) {
     m_text.setPosition( RectangleShape::getPosition().X , RectangleShape::getPosition().Y + RectangleShape::getSize().Y + 2 );
 }
 
-void ProgressBar::setSize( const Vector& size ) {
+void ProgressBar::setSize( const Vector2i& size ) {
     RectangleShape::setSize( size );
-    m_barFill.setSize( Vector( ( size.X - 2 ) * percent , size.Y - 2 ) );
+    m_barFill.setSize( Vector2i( ( size.X - 2 ) * percent , size.Y - 2 ) );
 
     m_text.setPosition( RectangleShape::getPosition().X , RectangleShape::getPosition().Y + RectangleShape::getSize().Y + 2 );
 }
 
 void ProgressBar::setSize( short width , short height ) {
-    RectangleShape::setSize( Vector( width , height ) );
-    m_barFill.setSize( Vector( ( width - 2 ) * percent , height - 2 ) );
+    RectangleShape::setSize( Vector2i( width , height ) );
+    m_barFill.setSize( Vector2i( ( width - 2 ) * percent , height - 2 ) );
 
     m_text.setPosition( RectangleShape::getPosition().X , RectangleShape::getPosition().Y + RectangleShape::getSize().Y + 2 );
 }

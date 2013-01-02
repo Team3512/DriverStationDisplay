@@ -8,8 +8,17 @@
 #include "UIFont.hpp"
 #include <wingdi.h>
 
-Text::Text( const Vector& position , COLORREF fillColor , COLORREF outlineColor ) :
-        Drawable( position , Vector( 0 , 0 ) , fillColor , outlineColor , 0 ) {
+Text::Text( const Vector2i& position , HFONT font , COLORREF fillColor , COLORREF outlineColor ) :
+        Drawable( position , Vector2i( 0 , 0 ) , fillColor , outlineColor , 0 ) ,
+        m_font( font ) {
+}
+
+void Text::setFont( HFONT font ) {
+    m_font = font;
+}
+
+const HFONT Text::getFont() const {
+    return m_font;
 }
 
 void Text::setString( std::wstring text ) {
@@ -22,7 +31,13 @@ const std::wstring& Text::getString() {
 
 void Text::draw( HDC hdc ) {
     // Select font
-    HFONT oldFont = (HFONT)SelectObject( hdc , UIFont::getInstance()->segoeUI14() );
+    HFONT oldFont;
+    if ( m_font != NULL ) {
+        oldFont = (HFONT)SelectObject( hdc , m_font );
+    }
+    else {
+        oldFont = (HFONT)SelectObject( hdc , UIFont::getInstance()->segoeUI14() );
+    }
 
     // Set text color
     COLORREF oldColor = SetTextColor( hdc , Drawable::getFillColor() );

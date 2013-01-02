@@ -8,7 +8,7 @@
 
 #include <wingdi.h>
 
-RectangleShape::RectangleShape( const Vector& position , const Vector& size , COLORREF fillColor , COLORREF outlineColor , int outlineThickness ) :
+RectangleShape::RectangleShape( const Vector2i& position , const Vector2i& size , COLORREF fillColor , COLORREF outlineColor , int outlineThickness ) :
         Drawable( position , size , fillColor , outlineColor , outlineThickness ) {
 }
 

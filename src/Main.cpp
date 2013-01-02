@@ -11,10 +11,10 @@
  * (capture SIGQOUIT or SIGKILL?)
  */
 
-#include <SFML/Network/IpAddress.hpp>
-#include <SFML/Network/Packet.hpp>
-#include <SFML/Network/UdpSocket.hpp>
-#include <SFML/Network/TcpSocket.hpp>
+#include "SFML/Network/IpAddress.hpp"
+#include "SFML/Network/Packet.hpp"
+#include "SFML/Network/UdpSocket.hpp"
+#include "SFML/Network/TcpSocket.hpp"
 
 #include <sstream>
 #include <vector>
@@ -86,7 +86,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     WindowClass.cbWndExtra    = 0;
     WindowClass.hInstance     = Instance;
     WindowClass.hIcon         = NULL;
-    WindowClass.hCursor       = NULL;
+    WindowClass.hCursor       = LoadCursor( NULL , IDC_ARROW );;
     WindowClass.hbrBackground = mainBrush;
     WindowClass.lpszMenuName  = NULL;
     WindowClass.lpszClassName = mainClassName;
@@ -139,42 +139,42 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     gCmdSocketPtr = &robotCmd;
 
     /* ===== GUI elements ===== */
-    ProgressBar drive1Meter( Vector( 12 , 12 ) , L"0% Forward" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar drive1Meter( Vector2i( 12 , 12 ) , L"0% Forward" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
     gDrawables.push_back( &drive1Meter );
 
-    ProgressBar drive2Meter( Vector( 12 , drive1Meter.getPosition().Y + drive1Meter.getSize().Y + 14 + 24 ) , L"0% Turn" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar drive2Meter( Vector2i( 12 , drive1Meter.getPosition().Y + drive1Meter.getSize().Y + 14 + 24 ) , L"0% Turn" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
     gDrawables.push_back( &drive2Meter );
 
-    ProgressBar turretMeter( Vector( streamWin.getPosition().x , 12 ) , L"Manual: 0%" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar turretMeter( Vector2i( streamWin.getPosition().X , 12 ) , L"Manual: 0%" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
     gDrawables.push_back( &turretMeter );
 
-    ProgressBar targetRPMMeter( Vector( streamWin.getPosition().x + 100 /* width of prev. bar */ + 10 , 12 ) , L"RPM \u2192 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar targetRPMMeter( Vector2i( streamWin.getPosition().X + 100 /* width of prev. bar */ + 10 , 12 ) , L"RPM \u2192 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
     gDrawables.push_back( &targetRPMMeter );
 
-    ProgressBar rpmMeter( Vector( streamWin.getPosition().x + streamWin.getSize().x - 100 /* width of this bar */ , 12 ) , L"RPM: 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar rpmMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X - 100 /* width of this bar */ , 12 ) , L"RPM: 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
     gDrawables.push_back( &rpmMeter );
 
-    StatusLight isLowGearLight( Vector( 12  , 129 ) , L"Low Gear" );
+    StatusLight isLowGearLight( Vector2i( 12  , 129 ) , L"Low Gear" );
     gDrawables.push_back( &isLowGearLight );
-    StatusLight isHammerDownLight( Vector( 12 , 169 ) , L"Hammer Down" );
+    StatusLight isHammerDownLight( Vector2i( 12 , 169 ) , L"Hammer Down" );
     gDrawables.push_back( &isHammerDownLight );
 
-    StatusLight turretLockLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 110 ) , L"Lock" );
+    StatusLight turretLockLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 110 ) , L"Lock" );
     gDrawables.push_back( &turretLockLight );
 
-    StatusLight isAutoAimingLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 150 ) , L"Auto Aim" );
+    StatusLight isAutoAimingLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 150 ) , L"Auto Aim" );
     gDrawables.push_back( &isAutoAimingLight );
 
-    StatusLight kinectOnlineLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 190 ) , L"Kinect" );
+    StatusLight kinectOnlineLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 190 ) , L"Kinect" );
     gDrawables.push_back( &kinectOnlineLight );
 
-    StatusLight isShootingLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 230 ) , L"Shooter On" );
+    StatusLight isShootingLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 230 ) , L"Shooter On" );
     gDrawables.push_back( &isShootingLight );
 
-    StatusLight shooterManualLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 270 ) , L"Manual RPM" );
+    StatusLight shooterManualLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 270 ) , L"Manual RPM" );
     gDrawables.push_back( &shooterManualLight );
 
-    Text distanceText( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 66 ) , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
+    Text distanceText( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 66 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
     distanceText.setString( L"0 ft" );
     gDrawables.push_back( &distanceText );
     /* ======================== */
@@ -199,8 +199,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     ShowWindow( mainWindow , SW_SHOW ); // Makes sure this window is shown before continuing
 
     while ( !gExit ) {
-        streamWin.bringToTop(); // bring window to top of other child windows
-
         if ( PeekMessage( &message , NULL , 0 , 0 , PM_REMOVE ) ) {
             // If a message was waiting in the message queue, process it
             TranslateMessage( &message );

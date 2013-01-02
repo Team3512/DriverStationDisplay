@@ -1,6 +1,6 @@
 //=============================================================================
 //File Name: ProgressBar.hpp
-//Description: Holds declarations for ProgressBar class
+//Description: Provides an interface to a progress bar with WinGDI
 //Author: Tyler Veness
 //=============================================================================
 
@@ -13,15 +13,15 @@
 
 class ProgressBar : public RectangleShape {
 public:
-    ProgressBar( const Vector& position , std::wstring message , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , float percentFull = 0.f );
+    ProgressBar( const Vector2i& position , std::wstring message , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , float percentFull = 0.f );
 
     void setPercent( float percentFull );
     float getPercent();
 
-    void setPosition( const Vector& position );
+    void setPosition( const Vector2i& position );
     void setPosition( short x , short y );
 
-    void setSize( const Vector& size );
+    void setSize( const Vector2i& size );
     void setSize( short width , short height );
 
     void setString( const std::wstring& message );

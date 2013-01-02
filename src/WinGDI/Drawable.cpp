@@ -8,8 +8,8 @@
 
 #include <wingdi.h>
 
-Drawable::Drawable( const Vector& position ,
-        const Vector& size ,
+Drawable::Drawable( const Vector2i& position ,
+        const Vector2i& size ,
         COLORREF fillColor ,
         COLORREF outlineColor ,
         int outlineThickness )
@@ -28,7 +28,7 @@ Drawable::~Drawable() {
 
 }
 
-void Drawable::setPosition( const Vector& position ) {
+void Drawable::setPosition( const Vector2i& position ) {
     // Keep width and height the same at the new position
     m_boundingRect.right = position.X + ( m_boundingRect.right - m_boundingRect.left );
     m_boundingRect.bottom = position.Y + ( m_boundingRect.bottom - m_boundingRect.top );
@@ -46,12 +46,12 @@ void Drawable::setPosition( short x , short y ) {
     m_boundingRect.top = y;
 }
 
-const Vector Drawable::getPosition() {
-    return Vector( static_cast<short>(m_boundingRect.left) ,
+const Vector2i Drawable::getPosition() {
+    return Vector2i( static_cast<short>(m_boundingRect.left) ,
         static_cast<short>(m_boundingRect.top) );
 }
 
-void Drawable::setSize( const Vector& size ) {
+void Drawable::setSize( const Vector2i& size ) {
     m_boundingRect.right = m_boundingRect.left + size.X;
     m_boundingRect.bottom = m_boundingRect.top + size.Y;
 }
@@ -61,8 +61,8 @@ void Drawable::setSize( short width , short height ) {
     m_boundingRect.bottom = m_boundingRect.top + height;
 }
 
-const Vector Drawable::getSize() {
-    return Vector( static_cast<short>(m_boundingRect.right - m_boundingRect.left) ,
+const Vector2i Drawable::getSize() {
+    return Vector2i( static_cast<short>(m_boundingRect.right - m_boundingRect.left) ,
         static_cast<short>(m_boundingRect.bottom - m_boundingRect.top) );
 }
 
