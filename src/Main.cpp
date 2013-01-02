@@ -44,6 +44,9 @@ HWND gAutonComboBox = NULL;
 // Global because the window is closed by a button in CALLBACK OnEvent
 HWND gMainWinPtr = NULL;
 
+// Stores all Drawables to be drawn with WM_PAINT message
+std::vector<Drawable*> gDrawables;
+
 // Allows manipulation of MjpegStream in CALLBACK OnEvent
 MjpegStream* gStreamWinPtr = NULL;
 
@@ -135,35 +138,45 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     sf::TcpSocket robotCmd;
     gCmdSocketPtr = &robotCmd;
 
-    // Used for drawing all GUI elements
-    HDC mainDC = NULL;
-
     /* ===== GUI elements ===== */
-    ProgressBar drive1Meter( Vector( 12 , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar drive1Meter( Vector( 12 , 12 ) , L"0% Forward" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    gDrawables.push_back( &drive1Meter );
 
-    ProgressBar drive2Meter( Vector( 12 , drive1Meter.getPosition().Y + drive1Meter.getSize().Y + 14 + 24 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar drive2Meter( Vector( 12 , drive1Meter.getPosition().Y + drive1Meter.getSize().Y + 14 + 24 ) , L"0% Turn" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    gDrawables.push_back( &drive2Meter );
 
-    ProgressBar turretMeter( Vector( streamWin.getPosition().x , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar turretMeter( Vector( streamWin.getPosition().x , 12 ) , L"Manual: 0%" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    gDrawables.push_back( &turretMeter );
 
-    ProgressBar targetRPMMeter( Vector( streamWin.getPosition().x + 100 /* width of prev. bar */ + 10 , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar targetRPMMeter( Vector( streamWin.getPosition().x + 100 /* width of prev. bar */ + 10 , 12 ) , L"RPM \u2192 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    gDrawables.push_back( &targetRPMMeter );
 
-    ProgressBar rpmMeter( Vector( streamWin.getPosition().x + streamWin.getSize().x - 100 /* width of this bar */ , 12 ) , L"" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar rpmMeter( Vector( streamWin.getPosition().x + streamWin.getSize().x - 100 /* width of this bar */ , 12 ) , L"RPM: 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    gDrawables.push_back( &rpmMeter );
 
     StatusLight isLowGearLight( Vector( 12  , 129 ) , L"Low Gear" );
+    gDrawables.push_back( &isLowGearLight );
     StatusLight isHammerDownLight( Vector( 12 , 169 ) , L"Hammer Down" );
+    gDrawables.push_back( &isHammerDownLight );
 
     StatusLight turretLockLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 110 ) , L"Lock" );
+    gDrawables.push_back( &turretLockLight );
 
     StatusLight isAutoAimingLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 150 ) , L"Auto Aim" );
+    gDrawables.push_back( &isAutoAimingLight );
 
     StatusLight kinectOnlineLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 190 ) , L"Kinect" );
+    gDrawables.push_back( &kinectOnlineLight );
 
     StatusLight isShootingLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 230 ) , L"Shooter On" );
+    gDrawables.push_back( &isShootingLight );
 
     StatusLight shooterManualLight( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 270 ) , L"Manual RPM" );
+    gDrawables.push_back( &shooterManualLight );
 
     Text distanceText( Vector( streamWin.getPosition().x + streamWin.getSize().x + 10 , 66 ) , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
     distanceText.setString( L"0 ft" );
+    gDrawables.push_back( &distanceText );
     /* ======================== */
 
     // Packet data
@@ -264,6 +277,18 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 }
 
                 /* ===== Adjust GUI interface to match data from robot ===== */
+                drive1Meter.setPercent( static_cast<float>(drive1ScaleZ) / 100000.f * 100.f );
+                drive1Meter.setString( numberToString( static_cast<float>(drive1ScaleZ) / 1000.f ) + L"%  Forward" );
+
+                drive2Meter.setPercent( static_cast<float>(drive2ScaleZ) / 100000.f * 100.f );
+                drive2Meter.setString( numberToString( static_cast<float>(drive2ScaleZ) / 1000.f ) + L"%  Turn" );
+
+                turretMeter.setPercent( static_cast<float>(turretScaleZ) / 100000.f * 100.f );
+                turretMeter.setString( L"Manual: " + numberToString( static_cast<float>(turretScaleZ) / 1000.f ) + L"%" );
+
+                targetRPMMeter.setPercent( static_cast<float>(turretScaleZ) / 100000.f * 100.f );
+                targetRPMMeter.setString( L"RPM \u2192 " + numberToString( static_cast<float>(turretScaleZ) / 100000.f * 4260.f ) );
+
                 if ( isLowGear ) {
                     isLowGearLight.setActive( StatusLight::active );
                 }
@@ -280,6 +305,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 else { // else hammer is retracted
                     isHammerDownLight.setActive( StatusLight::inactive );
                 }
+
+                rpmMeter.setPercent( static_cast<float>(shooterRPM) / 100000.f / 4260.f * 100.f );
+                rpmMeter.setString( L"RPM: " + numberToString( static_cast<float>(shooterRPM) / 100000.f ) );
 
                 if ( shooterIsManual ) {
                     shooterManualLight.setActive( StatusLight::active );
@@ -311,43 +339,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 /* ========================================================= */
 			}
 
-            drive1Meter.setPercent( static_cast<float>(drive1ScaleZ) / 100000.f * 100.f );
-            drive1Meter.setString( numberToString( static_cast<float>(drive1ScaleZ) / 1000.f ) + L"%  Forward" );
-
-            drive2Meter.setPercent( static_cast<float>(drive2ScaleZ) / 100000.f * 100.f );
-            drive2Meter.setString( numberToString( static_cast<float>(drive2ScaleZ) / 1000.f ) + L"%  Turn" );
-
-            turretMeter.setPercent( static_cast<float>(turretScaleZ) / 100000.f * 100.f );
-            turretMeter.setString( L"Manual: " + numberToString( static_cast<float>(turretScaleZ) / 1000.f ) + L"%" );
-
-            targetRPMMeter.setPercent( static_cast<float>(turretScaleZ) / 100000.f * 100.f );
-            targetRPMMeter.setString( L"RPM \u2192 " + numberToString( static_cast<float>(turretScaleZ) / 100000.f * 4260.f ) );
-
-            rpmMeter.setPercent( static_cast<float>(shooterRPM) / 100000.f / 4260.f * 100.f );
-            rpmMeter.setString( L"RPM: " + numberToString( static_cast<float>(shooterRPM) / 100000.f ) );
-
-            mainDC = GetDC( mainWindow );
-
-            // Creates 1:1 relationship between logical units and pixels
-            SetMapMode( mainDC , MM_TEXT );
-
-            drive1Meter.draw( mainDC );
-            drive2Meter.draw( mainDC );
-            turretMeter.draw( mainDC );
-            isLowGearLight.draw( mainDC );
-            isHammerDownLight.draw( mainDC );
-            targetRPMMeter.draw( mainDC );
-            rpmMeter.draw( mainDC );
-            shooterManualLight.draw( mainDC );
-            turretLockLight.draw( mainDC );
-            isShootingLight.draw( mainDC );
-            isAutoAimingLight.draw( mainDC );
-            kinectOnlineLight.draw( mainDC );
-            distanceText.draw( mainDC );
-
             streamWin.display();
-
-            DeleteObject( mainDC );
 
             Sleep( 30 );
         }
@@ -569,6 +561,25 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         }
 
         std::free( data );
+
+        break;
+    }
+
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint( handle , &ps );
+
+        // Creates 1:1 relationship between logical units and pixels
+        int oldMapMode = SetMapMode( hdc , MM_TEXT );
+
+        for ( unsigned int i = 0 ; i < gDrawables.size() ; i++ ) {
+            gDrawables[i]->draw( hdc );
+        }
+
+        // Restore old DC mapping mode
+        SetMapMode( hdc , oldMapMode );
+
+        EndPaint( handle , &ps );
 
         break;
     }

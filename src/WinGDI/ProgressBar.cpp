@@ -11,10 +11,10 @@
 
 ProgressBar::ProgressBar( const Vector& position , std::wstring message , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , float percentFull ) :
         RectangleShape( position , Vector( 100 , 18 ) , emptyFillColor , outlineColor , 1 ) ,
-        m_barFill( Vector( position.X + 1 , position.Y + 1 ) , Vector( 98 , 16 ) , fullFillColor , RGB( 0 , 0 , 0 ) , 0 ) ,
+        m_barFill( Vector( position.X + 1 , position.Y + 1 ) , Vector( 98 , 16 ) , fullFillColor , RGB( 0 , 70 , 0 ) , 0 ) ,
         m_text( Vector( position.X , position.Y + 18 + 2 ) , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) ) {
 
-    percent = percentFull;
+    setPercent( percentFull );
 
     m_text.setString( message );
 }
@@ -26,8 +26,12 @@ void ProgressBar::draw( HDC hdc ) {
 }
 
 void ProgressBar::setPercent( float percentFull ) {
+    if ( percentFull > 100 ) {
+        percentFull = 100;
+    }
+
     percent = percentFull;
-    m_barFill.setSize( Vector( ( getSize().X - 2.f ) * percentFull / 100.f , m_barFill.getSize().Y ) );
+    m_barFill.setSize( Vector( ( Drawable::getSize().X - 2.f ) * percentFull / 100.f , m_barFill.getSize().Y ) );
 }
 
 float ProgressBar::getPercent() {

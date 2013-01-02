@@ -33,7 +33,7 @@ private:
     HFONT m_segoeUI14;
     HFONT m_segoeUI18;
 
-    // disallow copy and assignment
+    // Disallow copy and assignment
     UIFont ( const UIFont& );
     void operator=( const UIFont& );
 };
