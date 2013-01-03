@@ -90,6 +90,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     WindowClass.hbrBackground = mainBrush;
     WindowClass.lpszMenuName  = NULL;
     WindowClass.lpszClassName = mainClassName;
+    WindowClass.hIconSm       = NULL;
     RegisterClassEx(&WindowClass);
 
     MSG message;
