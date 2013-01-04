@@ -36,8 +36,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include "../Config.hpp"
-#include "SocketHandle.hpp"
 #include "../System/NonCopyable.hpp"
+#include <winsock2.h>
 #include <vector>
 
 
@@ -52,6 +52,10 @@ class SocketSelector;
 class Socket : NonCopyable
 {
 public :
+    ////////////////////////////////////////////////////////////
+    // Types
+    ////////////////////////////////////////////////////////////
+    typedef int AddrLength;
 
     ////////////////////////////////////////////////////////////
     /// \brief Status codes that may be returned by socket functions
@@ -111,6 +115,17 @@ public :
     ////////////////////////////////////////////////////////////
     bool isBlocking() const;
 
+    ////////////////////////////////////////////////////////////
+    /// \brief Create an internal sockaddr_in address
+    ///
+    /// \param address Target address
+    /// \param port    Target port
+    ///
+    /// \return sockaddr_in ready to be used by socket functions
+    ///
+    ////////////////////////////////////////////////////////////
+    static sockaddr_in createAddress(uint32_t address, unsigned short port);
+
 protected :
 
     ////////////////////////////////////////////////////////////
@@ -143,7 +158,7 @@ protected :
     /// \return The internal (OS-specific) handle of the socket
     ///
     ////////////////////////////////////////////////////////////
-    SocketHandle getHandle() const;
+    unsigned int getHandle() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Create the internal representation of the socket
@@ -162,7 +177,7 @@ protected :
     /// \param handle OS-specific handle of the socket to wrap
     ///
     ////////////////////////////////////////////////////////////
-    void create(SocketHandle handle);
+    void create(unsigned int handle);
 
     ////////////////////////////////////////////////////////////
     /// \brief Close the socket gracefully
@@ -172,6 +187,14 @@ protected :
     ////////////////////////////////////////////////////////////
     void close();
 
+    ////////////////////////////////////////////////////////////
+    /// Get the last socket error status
+    ///
+    /// \return Status corresponding to the last socket error
+    ///
+    ////////////////////////////////////////////////////////////
+    static Status getErrorStatus();
+
 private :
 
     friend class SocketSelector;
@@ -180,7 +203,7 @@ private :
     // Member data
     ////////////////////////////////////////////////////////////
     Type         m_type;       ///< Type of the socket (TCP or UDP)
-    SocketHandle m_socket;     ///< Socket descriptor
+    unsigned int m_socket;     ///< Socket descriptor
     bool         m_isBlocking; ///< Current blocking mode of the socket
 };
 

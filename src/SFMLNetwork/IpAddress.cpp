@@ -33,7 +33,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include "../SFML/Network/IpAddress.hpp"
-#include "Win32/SocketImpl.hpp"
+#include "../SFML/Network/Socket.hpp"
 
 
 namespace
@@ -138,28 +138,44 @@ IpAddress IpAddress::getLocalAddress()
     IpAddress localAddress;
 
     // Create the socket
-    SocketHandle sock = socket(PF_INET, SOCK_DGRAM, 0);
-    if (sock == priv::SocketImpl::invalidSocket())
+    unsigned int sock = socket(PF_INET, SOCK_DGRAM, 0);
+    if (sock == INVALID_SOCKET)
         return localAddress;
 
     // Connect the socket to localhost on any port
-    sockaddr_in address = priv::SocketImpl::createAddress(ntohl(INADDR_LOOPBACK), 0);
+    sockaddr_in address = Socket::createAddress(ntohl(INADDR_LOOPBACK), 0);
     if (connect(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1)
     {
-        priv::SocketImpl::close(sock);
+        // Close the socket
+        if (sock != INVALID_SOCKET)
+        {
+            closesocket( sock );
+            sock = INVALID_SOCKET;
+        }
+
         return localAddress;
     }
 
     // Get the local address of the socket connection
-    priv::SocketImpl::AddrLength size = sizeof(address);
+    Socket::AddrLength size = sizeof(address);
     if (getsockname(sock, reinterpret_cast<sockaddr*>(&address), &size) == -1)
     {
-        priv::SocketImpl::close(sock);
+        // Close the socket
+        if (sock != INVALID_SOCKET)
+        {
+            closesocket( sock );
+            sock = INVALID_SOCKET;
+        }
+
         return localAddress;
     }
 
     // Close the socket
-    priv::SocketImpl::close(sock);
+    if (sock != INVALID_SOCKET)
+    {
+        closesocket( sock );
+        sock = INVALID_SOCKET;
+    }
 
     // Finally build the IP address
     localAddress = IpAddress(ntohl(address.sin_addr.s_addr));

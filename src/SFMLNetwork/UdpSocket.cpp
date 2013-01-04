@@ -35,7 +35,6 @@
 #include "../SFML/Network/UdpSocket.hpp"
 #include "../SFML/Network/IpAddress.hpp"
 #include "../SFML/Network/Packet.hpp"
-#include "Win32/SocketImpl.hpp"
 #include "../SFML/System/Err.hpp"
 #include <algorithm>
 
@@ -54,11 +53,11 @@ m_buffer(MaxDatagramSize)
 ////////////////////////////////////////////////////////////
 unsigned short UdpSocket::getLocalPort() const
 {
-    if (getHandle() != priv::SocketImpl::invalidSocket())
+    if (getHandle() != INVALID_SOCKET)
     {
         // Retrieve informations about the local end of the socket
         sockaddr_in address;
-        priv::SocketImpl::AddrLength size = sizeof(address);
+        AddrLength size = sizeof(address);
         if (getsockname(getHandle(), reinterpret_cast<sockaddr*>(&address), &size) != -1)
         {
             return ntohs(address.sin_port);
@@ -77,7 +76,7 @@ Socket::Status UdpSocket::bind(unsigned short port)
     create();
 
     // Bind the socket
-    sockaddr_in address = priv::SocketImpl::createAddress(INADDR_ANY, port);
+    sockaddr_in address = Socket::createAddress(INADDR_ANY, port);
     if (::bind(getHandle(), reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1)
     {
         err() << "Failed to bind socket to port " << port << std::endl;
@@ -111,14 +110,14 @@ Socket::Status UdpSocket::send(const void* data, std::size_t size, const IpAddre
     }
 
     // Build the target address
-    sockaddr_in address = priv::SocketImpl::createAddress(remoteAddress.toInteger(), remotePort);
+    sockaddr_in address = Socket::createAddress(remoteAddress.toInteger(), remotePort);
 
     // Send the data (unlike TCP, all the data is always sent in one call)
     int sent = sendto(getHandle(), static_cast<const char*>(data), static_cast<int>(size), 0, reinterpret_cast<sockaddr*>(&address), sizeof(address));
 
     // Check for errors
     if (sent < 0)
-        return priv::SocketImpl::getErrorStatus();
+        return Socket::getErrorStatus();
 
     return Done;
 }
@@ -140,15 +139,15 @@ Socket::Status UdpSocket::receive(void* data, std::size_t size, std::size_t& rec
     }
 
     // Data that will be filled with the other computer's address
-    sockaddr_in address = priv::SocketImpl::createAddress(INADDR_ANY, 0);
+    sockaddr_in address = Socket::createAddress(INADDR_ANY, 0);
 
     // Receive a chunk of bytes
-    priv::SocketImpl::AddrLength addressSize = sizeof(address);
+    AddrLength addressSize = sizeof(address);
     int sizeReceived = recvfrom(getHandle(), static_cast<char*>(data), static_cast<int>(size), 0, reinterpret_cast<sockaddr*>(&address), &addressSize);
 
     // Check for errors
     if (sizeReceived < 0)
-        return priv::SocketImpl::getErrorStatus();
+        return Socket::getErrorStatus();
 
     // Fill the sender informations
     received      = static_cast<std::size_t>(sizeReceived);

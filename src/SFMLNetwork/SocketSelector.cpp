@@ -34,7 +34,6 @@
 ////////////////////////////////////////////////////////////
 #include "../SFML/Network/SocketSelector.hpp"
 #include "../SFML/Network/Socket.hpp"
-#include "Win32/SocketImpl.hpp"
 #include "../SFML/System/Err.hpp"
 #include <utility>
 
@@ -80,8 +79,8 @@ SocketSelector::~SocketSelector()
 ////////////////////////////////////////////////////////////
 void SocketSelector::add(Socket& socket)
 {
-    SocketHandle handle = socket.getHandle();
-    if (handle != priv::SocketImpl::invalidSocket())
+    unsigned int handle = socket.getHandle();
+    if (handle != INVALID_SOCKET)
     {
         FD_SET(handle, &m_impl->AllSockets);
 

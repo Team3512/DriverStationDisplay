@@ -35,7 +35,6 @@
 #include "../SFML/Network/TcpSocket.hpp"
 #include "../SFML/Network/IpAddress.hpp"
 #include "../SFML/Network/Packet.hpp"
-#include "Win32/SocketImpl.hpp"
 #include "../SFML/System/Err.hpp"
 #include <algorithm>
 #include <cstring>
@@ -58,11 +57,11 @@ Socket(Tcp)
 ////////////////////////////////////////////////////////////
 unsigned short TcpSocket::getLocalPort() const
 {
-    if (getHandle() != priv::SocketImpl::invalidSocket())
+    if (getHandle() != INVALID_SOCKET)
     {
         // Retrieve informations about the local end of the socket
         sockaddr_in address;
-        priv::SocketImpl::AddrLength size = sizeof(address);
+        AddrLength size = sizeof(address);
         if (getsockname(getHandle(), reinterpret_cast<sockaddr*>(&address), &size) != -1)
         {
             return ntohs(address.sin_port);
@@ -77,11 +76,11 @@ unsigned short TcpSocket::getLocalPort() const
 ////////////////////////////////////////////////////////////
 IpAddress TcpSocket::getRemoteAddress() const
 {
-    if (getHandle() != priv::SocketImpl::invalidSocket())
+    if (getHandle() != INVALID_SOCKET)
     {
         // Retrieve informations about the remote end of the socket
         sockaddr_in address;
-        priv::SocketImpl::AddrLength size = sizeof(address);
+        AddrLength size = sizeof(address);
         if (getpeername(getHandle(), reinterpret_cast<sockaddr*>(&address), &size) != -1)
         {
             return IpAddress(ntohl(address.sin_addr.s_addr));
@@ -96,11 +95,11 @@ IpAddress TcpSocket::getRemoteAddress() const
 ////////////////////////////////////////////////////////////
 unsigned short TcpSocket::getRemotePort() const
 {
-    if (getHandle() != priv::SocketImpl::invalidSocket())
+    if (getHandle() != INVALID_SOCKET)
     {
         // Retrieve informations about the remote end of the socket
         sockaddr_in address;
-        priv::SocketImpl::AddrLength size = sizeof(address);
+        AddrLength size = sizeof(address);
         if (getpeername(getHandle(), reinterpret_cast<sockaddr*>(&address), &size) != -1)
         {
             return ntohs(address.sin_port);
@@ -119,7 +118,7 @@ Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short
     create();
 
     // Create the remote address
-    sockaddr_in address = priv::SocketImpl::createAddress(remoteAddress.toInteger(), remotePort);
+    sockaddr_in address = Socket::createAddress(remoteAddress.toInteger(), remotePort);
 
     if (timeout <= Time::Zero)
     {
@@ -127,7 +126,7 @@ Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short
 
         // Connect the socket
         if (::connect(getHandle(), reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1)
-            return priv::SocketImpl::getErrorStatus();
+            return Socket::getErrorStatus();
 
         // Connection succeeded
         return Done;
@@ -151,7 +150,7 @@ Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short
         }
 
         // Get the error status
-        Status status = priv::SocketImpl::getErrorStatus();
+        Status status = Socket::getErrorStatus();
 
         // If we were in non-blocking mode, return immediatly
         if (!blocking)
@@ -183,13 +182,13 @@ Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short
                 else
                 {
                     // Connection refused
-                    status = priv::SocketImpl::getErrorStatus();
+                    status = Socket::getErrorStatus();
                 }
             }
             else
             {
                 // Failed to connect before timeout is over
-                status = priv::SocketImpl::getErrorStatus();
+                status = Socket::getErrorStatus();
             }
         }
 
@@ -232,7 +231,7 @@ Socket::Status TcpSocket::send(const void* data, std::size_t size)
 
         // Check for errors
         if (sent < 0)
-            return priv::SocketImpl::getErrorStatus();
+            return Socket::getErrorStatus();
     }
 
     return Done;
@@ -267,7 +266,7 @@ Socket::Status TcpSocket::receive(void* data, std::size_t size, std::size_t& rec
     }
     else
     {
-        return priv::SocketImpl::getErrorStatus();
+        return Socket::getErrorStatus();
     }
 }
 

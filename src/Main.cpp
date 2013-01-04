@@ -6,7 +6,6 @@
 
 /* TODO Get position of "DriverStation" window and adjust main window height
  * based upon that. Use a default height if not found.
- * TODO Add buttons for rebooting robot and reloading robot's settings file
  * TODO Put socket receiving in separate threads with signals and PostThreadMessage
  * (capture SIGQOUIT or SIGKILL?)
  */
@@ -43,6 +42,9 @@ HWND gAutonComboBox = NULL;
 
 // Global because the window is closed by a button in CALLBACK OnEvent
 HWND gMainWinPtr = NULL;
+
+// Global because IP configuration settings are needed in CALLBACK OnEvent
+Settings gSettings( "IPSettings.txt" );
 
 // Stores all Drawables to be drawn with WM_PAINT message
 std::vector<Drawable*> gDrawables;
@@ -86,7 +88,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     WindowClass.cbWndExtra    = 0;
     WindowClass.hInstance     = Instance;
     WindowClass.hIcon         = NULL;
-    WindowClass.hCursor       = LoadCursor( NULL , IDC_ARROW );;
+    WindowClass.hCursor       = LoadCursor( NULL , IDC_ARROW );
     WindowClass.hbrBackground = mainBrush;
     WindowClass.lpszMenuName  = NULL;
     WindowClass.lpszClassName = mainClassName;
@@ -101,7 +103,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     HWND mainWindow = CreateWindowEx( 0 ,
             mainClassName ,
             "" ,
-            WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS ,
+            WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN ,
             0 ,
             0 ,
             GetSystemMetrics(SM_CXSCREEN) ,
@@ -112,10 +114,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             NULL );
     gMainWinPtr = mainWindow;
 
-    Settings settings( "IPSettings.txt" );
-
-    MjpegStream streamWin( settings.getValueFor( "streamHost" ) ,
-            std::atoi( settings.getValueFor( "streamPort" ).c_str() ) ,
+    MjpegStream streamWin( gSettings.getValueFor( "streamHost" ) ,
+            std::atoi( gSettings.getValueFor( "streamPort" ).c_str() ) ,
             mainWindow ,
             ( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
             60 ,
@@ -126,7 +126,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     /* ===== Robot Data Sending Variables ===== */
     sf::UdpSocket robotData;
-    robotData.bind( std::atoi( settings.getValueFor( "robotDataPort" ).c_str() ) );
+    robotData.bind( std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() ) );
     robotData.setBlocking( false );
     gDataSocketPtr = &robotData;
 
@@ -197,15 +197,23 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     std::string tempAutonName;
     std::vector<std::string> autonNames;
 
-    ShowWindow( mainWindow , SW_SHOW ); // Makes sure this window is shown before continuing
+    // Make sure the main window is shown before continuing
+    ShowWindow( mainWindow , SW_SHOW );
 
     while ( !gExit ) {
-        if ( PeekMessage( &message , NULL , 0 , 0 , PM_REMOVE ) ) {
-            // If a message was waiting in the message queue, process it
-            TranslateMessage( &message );
-            DispatchMessage( &message );
+        if ( PeekMessage( &message , NULL , 0 , 0 , PM_NOREMOVE ) ) {
+            if ( GetMessage( &message , NULL , 0 , 0 ) > 0 ) {
+                // If a message was waiting in the message queue, process it
+                TranslateMessage( &message );
+                DispatchMessage( &message );
+            }
+            else {
+                gExit = true;
+            }
         }
         else {
+            streamWin.display();
+
             // Retrieve data sent from robot and unpack it
             if ( robotData.receive( dataPacket , receiveIP , receivePort ) == sf::Socket::Done ) {
                 // Unpacks header telling packet type (either "display" or "autonList")
@@ -338,8 +346,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 /* ========================================================= */
 			}
 
-            streamWin.display();
-
             Sleep( 30 );
         }
     }
@@ -465,8 +471,9 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
     case WM_COMMAND: {
         char* data = static_cast<char*>( std::malloc( 16 ) );
 
-        sf::IpAddress remoteIP( 10 , 35 , 12 , 2 );
-        unsigned short remotePort = 5615;
+        sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
+        unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
+        unsigned short alfCmdPort = std::atoi( gSettings.getValueFor( "alfCmdPort" ).c_str() );
 
         switch( LOWORD(wParam) ) {
             case IDC_STREAM_BUTTON: {
@@ -488,7 +495,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                 std::strcpy( data , "connect\r\n" );
 
                 if ( gDataSocketPtr != NULL ) {
-                    gDataSocketPtr->send( data , 16 , remoteIP , remotePort );
+                    gDataSocketPtr->send( data , 16 , robotIP , robotDataPort );
                 }
 
                 break;
@@ -499,7 +506,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                 std::strcpy( data , "reload\r\n" );
 
                 if ( gCmdSocketPtr != NULL ) {
-                    gCmdSocketPtr->connect( remoteIP , 3512 , sf::milliseconds( 500 ) );
+                    gCmdSocketPtr->connect( robotIP , alfCmdPort , sf::milliseconds( 500 ) );
                     gCmdSocketPtr->send( data , 16 );
                     gCmdSocketPtr->disconnect();
                 }
@@ -511,7 +518,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                 std::strcpy( data , "reboot\r\n" );
 
                 if ( gCmdSocketPtr != NULL ) {
-                    gCmdSocketPtr->connect( remoteIP , 3512 , sf::milliseconds( 500 ) );
+                    gCmdSocketPtr->connect( robotIP , alfCmdPort , sf::milliseconds( 500 ) );
                     gCmdSocketPtr->send( data , 16 );
                     gCmdSocketPtr->disconnect();
                 }
@@ -524,7 +531,6 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                     DestroyWindow( gMainWinPtr );
                 }
 
-                gExit = true;
                 PostQuitMessage(0);
 
                 break;
@@ -542,18 +548,11 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                         data[13] = selection;
 
                         if ( gDataSocketPtr != NULL ) {
-                            gDataSocketPtr->send( data , 16 , remoteIP , remotePort );
+                            gDataSocketPtr->send( data , 16 , robotIP , robotDataPort );
                         }
                     }
                 }
                 }
-
-                break;
-            }
-
-            case WM_DESTROY: {
-                gExit = true;
-                PostQuitMessage(0);
 
                 break;
             }
@@ -579,6 +578,30 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         SetMapMode( hdc , oldMapMode );
 
         EndPaint( handle , &ps );
+
+        break;
+    }
+
+    case WM_DESTROY: {
+        PostQuitMessage(0);
+
+        break;
+    }
+
+    case WM_MJPEGSTREAM_START: {
+        gStreamWinPtr->display();
+
+        break;
+    }
+
+    case WM_MJPEGSTREAM_STOP: {
+        gStreamWinPtr->display();
+
+        break;
+    }
+
+    case WM_MJPEGSTREAM_NEWIMAGE: {
+        gStreamWinPtr->display();
 
         break;
     }

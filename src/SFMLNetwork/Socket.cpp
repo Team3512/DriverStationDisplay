@@ -33,8 +33,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include "../SFML/Network/Socket.hpp"
-#include "Win32/SocketImpl.hpp"
 #include "../SFML/System/Err.hpp"
+#include <cstring>
 
 
 namespace sf
@@ -42,7 +42,7 @@ namespace sf
 ////////////////////////////////////////////////////////////
 Socket::Socket(Type type) :
 m_type      (type),
-m_socket    (priv::SocketImpl::invalidSocket()),
+m_socket    (INVALID_SOCKET),
 m_isBlocking(true)
 {
 
@@ -61,8 +61,10 @@ Socket::~Socket()
 void Socket::setBlocking(bool blocking)
 {
     // Apply if the socket is already created
-    if (m_socket != priv::SocketImpl::invalidSocket())
-        priv::SocketImpl::setBlocking(m_socket, blocking);
+    if ( m_socket != INVALID_SOCKET ) {
+        u_long block = blocking ? 0 : 1;
+        ioctlsocket( m_socket , FIONBIO , &block );
+    }
 
     m_isBlocking = blocking;
 }
@@ -76,7 +78,7 @@ bool Socket::isBlocking() const
 
 
 ////////////////////////////////////////////////////////////
-SocketHandle Socket::getHandle() const
+unsigned int Socket::getHandle() const
 {
     return m_socket;
 }
@@ -86,19 +88,19 @@ SocketHandle Socket::getHandle() const
 void Socket::create()
 {
     // Don't create the socket if it already exists
-    if (m_socket == priv::SocketImpl::invalidSocket())
+    if (m_socket == INVALID_SOCKET)
     {
-        SocketHandle handle = socket(PF_INET, m_type == Tcp ? SOCK_STREAM : SOCK_DGRAM, 0);
+        unsigned int handle = socket(PF_INET, m_type == Tcp ? SOCK_STREAM : SOCK_DGRAM, 0);
         create(handle);
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-void Socket::create(SocketHandle handle)
+void Socket::create(unsigned int handle)
 {
     // Don't create the socket if it already exists
-    if (m_socket == priv::SocketImpl::invalidSocket())
+    if (m_socket == INVALID_SOCKET)
     {
         // Assign the new handle
         m_socket = handle;
@@ -133,11 +135,60 @@ void Socket::create(SocketHandle handle)
 void Socket::close()
 {
     // Close the socket
-    if (m_socket != priv::SocketImpl::invalidSocket())
+    if (m_socket != INVALID_SOCKET)
     {
-        priv::SocketImpl::close(m_socket);
-        m_socket = priv::SocketImpl::invalidSocket();
+        closesocket( m_socket );
+        m_socket = INVALID_SOCKET;
     }
 }
+
+
+////////////////////////////////////////////////////////////
+sockaddr_in Socket::createAddress(uint32_t address, unsigned short port)
+{
+    sockaddr_in addr;
+    std::memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
+    addr.sin_addr.s_addr = htonl(address);
+    addr.sin_family      = AF_INET;
+    addr.sin_port        = htons(port);
+
+    return addr;
+}
+
+////////////////////////////////////////////////////////////
+Socket::Status Socket::getErrorStatus()
+{
+    switch (WSAGetLastError())
+    {
+        case WSAEWOULDBLOCK :  return Socket::NotReady;
+        case WSAECONNABORTED : return Socket::Disconnected;
+        case WSAECONNRESET :   return Socket::Disconnected;
+        case WSAETIMEDOUT :    return Socket::Disconnected;
+        case WSAENETRESET :    return Socket::Disconnected;
+        case WSAENOTCONN :     return Socket::Disconnected;
+        default :              return Socket::Error;
+    }
+}
+
+////////////////////////////////////////////////////////////
+// Windows needs some initialization and cleanup to get
+// sockets working properly... so let's create a class that will
+// do it automatically
+////////////////////////////////////////////////////////////
+struct SocketInitializer
+{
+    SocketInitializer()
+    {
+        WSADATA init;
+        WSAStartup(MAKEWORD(2, 2), &init);
+    }
+
+    ~SocketInitializer()
+    {
+        WSACleanup();
+    }
+};
+
+SocketInitializer globalInitializer;
 
 } // namespace sf

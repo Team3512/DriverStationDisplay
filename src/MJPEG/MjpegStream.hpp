@@ -41,6 +41,10 @@ extern "C" {
 #include "mjpegrx.h"
 }
 
+#define WM_MJPEGSTREAM_START     (WM_APP + 0x0001)
+#define WM_MJPEGSTREAM_STOP      (WM_APP + 0x0002)
+#define WM_MJPEGSTREAM_NEWIMAGE  (WM_APP + 0x0003)
+
 class MjpegStream {
 public:
     MjpegStream( const std::string& hostName ,

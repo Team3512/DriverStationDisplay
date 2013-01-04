@@ -7,6 +7,10 @@
 #ifndef DRAWABLE_HPP
 #define DRAWABLE_HPP
 
+#ifdef _WIN32_WINNT
+#undef _WIN32_WINNT
+#endif
+
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -31,13 +35,13 @@ public:
 
     const Vector2i getSize();
 
-    void setFillColor( COLORREF color );
+    virtual void setFillColor( COLORREF color );
     COLORREF getFillColor();
 
-    void setOutlineColor( COLORREF color );
+    virtual void setOutlineColor( COLORREF color );
     COLORREF getOutlineColor();
 
-    void setOutlineThickness( int thickness );
+    virtual void setOutlineThickness( int thickness );
     int getOutlineThickness();
 
 protected:

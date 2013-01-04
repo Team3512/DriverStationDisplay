@@ -34,7 +34,7 @@
 ////////////////////////////////////////////////////////////
 #include "../SFML/System/String.hpp"
 #include "../SFML/Network/Packet.hpp"
-#include "Win32/SocketImpl.hpp"
+#include <winsock2.h>
 #include <cstring>
 
 uint64_t htonll( uint64_t value ) {

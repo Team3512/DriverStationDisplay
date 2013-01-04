@@ -118,7 +118,7 @@ Vector2i MjpegStream::getPosition() {
     GetWindowRect( m_streamWin , &windowPos );
     m_displayMutex.unlock();
 
-    return Vector<int , int>( windowPos.left , windowPos.top );
+    return Vector2i( windowPos.left , windowPos.top );
 }
 
 void MjpegStream::setPosition( const Vector2i& position ) {
@@ -159,6 +159,9 @@ void MjpegStream::startStream() {
 
         // Launch the MJPEG receiving/processing thread
         m_streamInst = mjpeg_launchthread( const_cast<char*>( m_hostName.c_str() ) , m_port , &m_callbacks );
+
+        // Send message to parent window about the stream opening
+        PostMessage( m_parentWin , WM_MJPEGSTREAM_START , 0 , 0 );
     }
 }
 
@@ -169,6 +172,8 @@ void MjpegStream::stopStream() {
         // Close the receive thread
         if ( m_streamInst != NULL ) {
             mjpeg_stopthread( m_streamInst );
+            // Send message to parent window about the stream closing
+            PostMessage( m_parentWin , WM_MJPEGSTREAM_STOP , 0 , 0 );
         }
     }
 }
@@ -222,17 +227,13 @@ void MjpegStream::display() {
             m_displayMutex.lock();
 
             // Create offscreen DC for image to go on
-            HDC imageHdc = CreateCompatibleDC( NULL );
+            HDC imageHdc = CreateCompatibleDC( windowDC );
 
             // Put the image into the offscreen DC and save the old one
             HBITMAP imageBackup = static_cast<HBITMAP>( SelectObject( imageHdc , m_imageBuffer ) );
 
-            // Load image to real BITMAP just to retrieve its dimensions
-            BITMAP tempBMP;
-            GetObject( m_imageBuffer , sizeof( BITMAP ) , &tempBMP );
-
             // Copy image from offscreen DC to window's DC
-            BitBlt( windowDC , 0 , 0 , tempBMP.bmWidth , tempBMP.bmHeight , imageHdc , 0 , 0 , SRCCOPY );
+            BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , imageHdc , 0 , 0 , SRCCOPY );
 
             // Restore old image
             SelectObject( imageHdc , imageBackup );
@@ -256,17 +257,6 @@ void MjpegStream::display() {
         m_displayMutex.unlock();
         m_imageMutex.unlock();
     }
-
-    m_imageMutex.lock();
-    m_displayMutex.lock();
-
-    // FIXME
-    /*if ( m_firstImage || m_imageAge.getElapsedTime().asMilliseconds() > 1000 ) {
-        m_streamDisplay.display();
-    }*/
-
-    m_displayMutex.unlock();
-    m_imageMutex.unlock();
 
     // Release window's device context
     ReleaseDC( m_streamWin , windowDC );
@@ -341,6 +331,9 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
 
         // Reset the image age timer
         streamPtr->m_imageAge.restart();
+
+        // Send message to parent window about the new image
+        PostMessage( streamPtr->m_parentWin , WM_MJPEGSTREAM_NEWIMAGE , 0 , 0 );
     }
 
     streamPtr->m_imageMutex.unlock();

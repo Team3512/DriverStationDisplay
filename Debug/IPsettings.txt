@@ -1,4 +1,6 @@
-streamHost = germany.acfsys.net
-streamPort = 8080
+streamHost    = germany.acfsys.net
+streamPort    = 8080
 
+robotIP       = 10.35.12.2
 robotDataPort = 5615
+alfCmdPort    = 3512
