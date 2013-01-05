@@ -280,6 +280,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                                     reinterpret_cast<LPARAM>( autonNames[i].c_str() )
                             );
                         }
+
+                        // Select the first Autonomous automatically
+                        SendMessage( gAutonComboBox , CB_SETCURSEL , 0 , 0 );
                     }
                 }
 
@@ -344,7 +347,10 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                  */
                 distanceText.setString( numberToString( distanceToTarget * 0.00328084f ) + L" ft" );
                 /* ========================================================= */
-			}
+
+                // Make the window redraw the controls
+                InvalidateRect( mainWindow , NULL , TRUE );
+            }
 
             Sleep( 30 );
         }
