@@ -40,9 +40,6 @@
 // Global because the window is closed by a button in CALLBACK OnEvent
 HWND gAutonComboBox = NULL;
 
-// Global because the window is closed by a button in CALLBACK OnEvent
-HWND gMainWinPtr = NULL;
-
 // Global because IP configuration settings are needed in CALLBACK OnEvent
 Settings gSettings( "IPSettings.txt" );
 
@@ -55,9 +52,6 @@ MjpegStream* gStreamWinPtr = NULL;
 // Allows usage of socket in CALLBACK OnEvent
 sf::UdpSocket* gDataSocketPtr = NULL;
 sf::TcpSocket* gCmdSocketPtr = NULL;
-
-// Used to tell message loop when to exit
-volatile bool gExit = false;
 
 template <class T>
 std::wstring numberToString( T number ) {
@@ -112,7 +106,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             NULL ,
             Instance ,
             NULL );
-    gMainWinPtr = mainWindow;
 
     MjpegStream streamWin( gSettings.getValueFor( "streamHost" ) ,
             std::atoi( gSettings.getValueFor( "streamPort" ).c_str() ) ,
@@ -200,7 +193,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     // Make sure the main window is shown before continuing
     ShowWindow( mainWindow , SW_SHOW );
 
-    while ( !gExit ) {
+    bool isExiting = false;
+    while ( !isExiting ) {
         if ( PeekMessage( &message , NULL , 0 , 0 , PM_NOREMOVE ) ) {
             if ( GetMessage( &message , NULL , 0 , 0 ) > 0 ) {
                 // If a message was waiting in the message queue, process it
@@ -208,7 +202,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 DispatchMessage( &message );
             }
             else {
-                gExit = true;
+                isExiting = true;
             }
         }
         else {
@@ -533,10 +527,6 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             }
 
             case IDC_EXIT_BUTTON: {
-                if ( gMainWinPtr != NULL ) {
-                    DestroyWindow( gMainWinPtr );
-                }
-
                 PostQuitMessage(0);
 
                 break;
