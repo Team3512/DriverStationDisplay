@@ -349,7 +349,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 /* ========================================================= */
 
                 // Make the window redraw the controls
-                InvalidateRect( mainWindow , NULL , TRUE );
+                InvalidateRect( mainWindow , NULL , FALSE );
             }
 
             Sleep( 30 );
@@ -573,15 +573,40 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint( handle , &ps );
 
+        /* ===== Create buffer DC ===== */
+        RECT rect;
+        GetClientRect( handle , &rect );
+
+        HDC bufferDC = CreateCompatibleDC( hdc );
+        HBITMAP bufferBmp = CreateCompatibleBitmap( hdc , rect.right , rect.bottom );
+
+        HBITMAP oldBmp = static_cast<HBITMAP>( SelectObject( bufferDC , bufferBmp ) );
+        /* ============================ */
+
+        // Fill buffer DC with a background color
+        HBRUSH backgroundBrush = CreateSolidBrush( RGB( 87 , 87 , 87 ) );
+        HRGN region = CreateRectRgn( 0 , 0 , rect.right , rect.bottom );
+        FillRgn( bufferDC , region , backgroundBrush );
+        DeleteObject( region );
+        DeleteObject( backgroundBrush );
+
         // Creates 1:1 relationship between logical units and pixels
-        int oldMapMode = SetMapMode( hdc , MM_TEXT );
+        int oldMapMode = SetMapMode( bufferDC , MM_TEXT );
 
         for ( unsigned int i = 0 ; i < gDrawables.size() ; i++ ) {
-            gDrawables[i]->draw( hdc );
+            gDrawables[i]->draw( bufferDC );
         }
 
+        BitBlt( hdc , 0 , 0 , rect.right , rect.bottom , bufferDC , 0 , 0 , SRCCOPY );
+
         // Restore old DC mapping mode
-        SetMapMode( hdc , oldMapMode );
+        SetMapMode( bufferDC , oldMapMode );
+
+        // Replace the old bitmap and delete the created one
+        DeleteObject( SelectObject( bufferDC , oldBmp ) );
+
+        // Free the buffer DC
+        DeleteDC( bufferDC );
 
         EndPaint( handle , &ps );
 
