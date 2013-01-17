@@ -106,6 +106,10 @@ private:
     HBITMAP m_waitBmp;
     Text m_waitMsg;
 
+    // Contains background color
+    HDC m_backgroundDC;
+    HBITMAP m_backgroundBmp;
+
     // Holds image most recently received from the host
     sf::Image m_tempImage;
     sf::Mutex m_imageMutex;

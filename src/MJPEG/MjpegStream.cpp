@@ -106,6 +106,7 @@ MjpegStream::~MjpegStream() {
     DeleteDC( m_connectDC );
     DeleteDC( m_disconnectDC );
     DeleteDC( m_waitDC );
+    DeleteDC( m_backgroundDC );
 
     DestroyWindow( m_streamWin );
     DestroyWindow( m_toggleButton );
@@ -215,7 +216,8 @@ void MjpegStream::display() {
             m_displayMutex.lock();
 
             // Display connect graphic from another device context
-            BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_waitDC , 0 , 0 , SRCCOPY );
+            BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_backgroundDC , 0 , 0 , SRCCOPY );
+            BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_waitDC , 0 , 0 , SRCPAINT );
 
             m_displayMutex.unlock();
             m_imageMutex.unlock();
@@ -252,7 +254,9 @@ void MjpegStream::display() {
         m_displayMutex.lock();
 
         // Display connect graphic from another device context
-        BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_disconnectDC , 0 , 0 , SRCCOPY );
+        SetBkColor( windowDC , RGB( 40 , 40 , 40 ) );
+        //BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_backgroundDC , 0 , 0 , SRCCOPY );
+        BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_disconnectDC , 0 , 0 , SRCPAINT );
 
         m_displayMutex.unlock();
         m_imageMutex.unlock();
@@ -355,6 +359,11 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     m_waitBmp = NULL;
     DeleteDC( m_waitDC );
     m_waitDC = NULL;
+
+    DeleteObject( m_backgroundBmp );
+    m_backgroundBmp = NULL;
+    DeleteDC( m_backgroundDC );
+    m_backgroundDC = NULL;
     /* ===================================================================== */
 
     // Create new device contexts
@@ -362,16 +371,19 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     m_connectDC = CreateCompatibleDC( streamWinDC );
     m_disconnectDC = CreateCompatibleDC( streamWinDC );
     m_waitDC = CreateCompatibleDC( streamWinDC );
+    m_backgroundDC = CreateCompatibleDC( streamWinDC );
 
     // Create a 1:1 relationship between logical units and pixels
     SetMapMode( m_connectDC , MM_TEXT );
     SetMapMode( m_disconnectDC , MM_TEXT );
     SetMapMode( m_waitDC , MM_TEXT );
+    SetMapMode( m_backgroundDC , MM_TEXT );
 
     // Create the bitmaps used for graphics
     m_connectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_disconnectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_waitBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
+    m_backgroundBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
 
     ReleaseDC( m_streamWin , streamWinDC );
 
@@ -379,57 +391,70 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     SelectObject( m_connectDC , m_connectBmp );
     SelectObject( m_disconnectDC , m_disconnectBmp );
     SelectObject( m_waitDC , m_waitBmp );
+    SelectObject( m_backgroundDC , m_backgroundBmp );
 
-    // Fill them with a background color
+    // Create brushes and regions for backgrounds
     HBRUSH backgroundBrush = CreateSolidBrush( RGB( 40 , 40 , 40 ) );
-    HRGN region = CreateRectRgn( 0 , 0 , windowSize.X , windowSize.Y );
-    FillRgn( m_connectDC , region , backgroundBrush );
-    FillRgn( m_disconnectDC , region , backgroundBrush );
-    FillRgn( m_waitDC , region , backgroundBrush );
-    DeleteObject( region );
+    HRGN backgroundRegion = CreateRectRgn( 0 , 0 , windowSize.X , windowSize.Y );
+
+    HBRUSH transparentBrush = CreateSolidBrush( RGB( 0 , 0 , 0 ) );
+
+    HBRUSH waitBrush = CreateSolidBrush( RGB( 128 , 128 , 128 ) );
+    HRGN waitRegion = CreateRectRgn( windowSize.X / 3 , windowSize.Y / 3 , 2 * windowSize.X / 3 , 2 * windowSize.Y / 3 );
+
+    /* ===== Fill graphics with a background color ===== */
+    FillRgn( m_connectDC , backgroundRegion , backgroundBrush );
+
+    // Need a special background color since they will be transparent
+    FillRgn( m_disconnectDC , backgroundRegion , transparentBrush );
+    FillRgn( m_waitDC , backgroundRegion , transparentBrush );
+
+    // Add transparent rectangle
+    FillRgn( m_disconnectDC , waitRegion , waitBrush );
+    //FillRgn( m_waitDC , waitRegion , waitBrush );
+
+    // Create background
+    FillRgn( m_backgroundDC , backgroundRegion , backgroundBrush );
+    /* ================================================= */
+
+    // Free the brushes and regions
     DeleteObject( backgroundBrush );
+    DeleteObject( backgroundRegion );
+    DeleteObject( waitRegion );
+    DeleteObject( waitBrush );
 
     /* ===== Recenter the messages ===== */
-    SIZE textSize;
-    GetTextExtentPoint32W( m_connectDC ,
-            m_connectMsg.getString().c_str() ,
-            static_cast<int>(m_connectMsg.getString().length()) ,
-            &textSize
-            );
-    m_connectMsg.setPosition( Vector2i( ( windowSize.X - textSize.cx ) / 2.f ,
-            ( windowSize.Y - textSize.cy - 6.f ) / 2.f ) );
+    m_connectMsg.setPosition( Vector2i( windowSize.X / 2.f ,
+            windowSize.Y / 2.f ) );
 
-    GetTextExtentPoint32W( m_disconnectDC ,
-            m_disconnectMsg.getString().c_str() ,
-            static_cast<int>(m_disconnectMsg.getString().length()) ,
-            &textSize
-            );
-    m_disconnectMsg.setPosition( Vector2i( ( windowSize.X - textSize.cx ) / 2.f ,
-            ( windowSize.Y - textSize.cy - 6.f ) / 2.f ) );
+    m_disconnectMsg.setPosition( Vector2i( windowSize.X / 2.f ,
+            windowSize.Y / 2.f ) );
 
-    GetTextExtentPoint32W( m_waitDC ,
-            m_waitMsg.getString().c_str() ,
-            static_cast<int>(m_waitMsg.getString().length()) ,
-            &textSize
-            );
-    m_waitMsg.setPosition( Vector2i( ( windowSize.X - textSize.cx ) / 2.f ,
-            ( windowSize.Y - textSize.cy - 6.f ) / 2.f ) );
+    m_waitMsg.setPosition( Vector2i( windowSize.X / 2.f ,
+            windowSize.Y / 2.f ) );
     /* ================================= */
 
     /* ===== Fill device contexts with messages ===== */
     int oldBkMode;
+    UINT oldAlign;
     m_imageMutex.lock();
 
     oldBkMode = SetBkMode( m_connectDC , TRANSPARENT );
+    oldAlign = SetTextAlign( m_connectDC , TA_CENTER | TA_BASELINE );
     m_connectMsg.draw( m_connectDC );
+    SetTextAlign( m_connectDC , oldAlign );
     SetBkMode( m_connectDC , oldBkMode );
 
     oldBkMode = SetBkMode( m_disconnectDC , TRANSPARENT );
+    oldAlign = SetTextAlign( m_disconnectDC , TA_CENTER | TA_BASELINE );
     m_disconnectMsg.draw( m_disconnectDC );
+    SetTextAlign( m_disconnectDC , oldAlign );
     SetBkMode( m_disconnectDC , oldBkMode );
 
     oldBkMode = SetBkMode( m_waitDC , TRANSPARENT );
+    oldAlign = SetTextAlign( m_waitDC , TA_CENTER | TA_BASELINE );
     m_waitMsg.draw( m_waitDC );
+    SetTextAlign( m_waitDC , oldAlign );
     SetBkMode( m_waitDC , oldBkMode );
 
     m_imageMutex.unlock();
