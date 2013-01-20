@@ -109,6 +109,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     MjpegStream streamWin( gSettings.getValueFor( "streamHost" ) ,
             std::atoi( gSettings.getValueFor( "streamPort" ).c_str() ) ,
+            gSettings.getValueFor( "streamRequestPath" ) ,
             mainWindow ,
             ( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
             60 ,

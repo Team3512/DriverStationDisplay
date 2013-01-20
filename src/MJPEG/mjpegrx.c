@@ -272,6 +272,7 @@ struct mjpeg_inst_t *
 mjpeg_launchthread(
         char *host,
         int port,
+        char *reqpath,
         struct mjpeg_callbacks_t *callbacks
         )
 {
@@ -283,6 +284,7 @@ mjpeg_launchthread(
     args = malloc(sizeof(struct mjpeg_threadargs_t));
     args->host = strdup(host);
     args->port = port;
+    args->reqpath = strdup(reqpath);
     args->inst = inst;
 
     args->callbacks = malloc(sizeof(struct mjpeg_callbacks_t));
@@ -326,6 +328,7 @@ mjpeg_threadmain(void *optarg)
     char *asciisize;
     int datasize;
     char *buf; 
+    char tmp[256];
 
     char *headerbuf;
     int headerbufsize;
@@ -344,6 +347,7 @@ mjpeg_threadmain(void *optarg)
         }
 
         free(args->host);
+        free(args->reqpath);
         free(args->callbacks);
 
         pthread_exit(NULL);
@@ -351,7 +355,9 @@ mjpeg_threadmain(void *optarg)
     }
 
     /* sends some bogus data so that we'll get a response */
-    send(sd, "GET / HTTP/1.0\r\n\r\n", 18, 0);
+    snprintf(tmp, 255, "GET %s HTTP/1.0\r\n\r\n", args->reqpath);
+    send(sd, tmp, strlen(tmp), 0);
+    printf("%s", tmp);
 
     while(args->inst->threadrunning > 0){
         /* Read and parse incoming HTTP response headers */
@@ -368,7 +374,7 @@ mjpeg_threadmain(void *optarg)
 
         if(asciisize == NULL){
             mjpeg_freelist(headerlist);
-            break;
+            continue;
         }
 
         datasize = atoi(asciisize);

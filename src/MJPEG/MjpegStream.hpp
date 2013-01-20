@@ -49,6 +49,7 @@ class MjpegStream {
 public:
     MjpegStream( const std::string& hostName ,
             unsigned short port ,
+            const std::string& reqPath,
             HWND parentWin ,
             int xPosition ,
             int yPosition ,
@@ -83,6 +84,7 @@ protected:
 private:
     std::string m_hostName;
     unsigned short m_port;
+    std::string m_requestPath;
 
     HWND m_parentWin;
 

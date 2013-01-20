@@ -1,6 +1,7 @@
-streamHost    = 10.35.12.6
-streamPort    = 8080
+streamHost        = 10.35.12.11
+streamPort        = 80
+streamRequestPath = /mjpg/video.mjpg
 
-robotIP       = 10.35.12.2
-robotDataPort = 1130
-alfCmdPort    = 3512
+robotIP           = 10.35.12.2
+robotDataPort     = 1130
+alfCmdPort        = 3512

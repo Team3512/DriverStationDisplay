@@ -13,6 +13,7 @@ struct keyvalue_t {
 
 struct mjpeg_threadargs_t {
     char *host;
+    char *reqpath;
     int port;
 
     struct mjpeg_callbacks_t *callbacks;
@@ -35,6 +36,7 @@ struct mjpeg_inst_t *
 mjpeg_launchthread(
         char *host,
         int port,
+        char *reqpath,
         struct mjpeg_callbacks_t *callbacks
         );
 

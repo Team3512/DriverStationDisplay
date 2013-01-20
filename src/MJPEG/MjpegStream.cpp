@@ -21,6 +21,7 @@ int stringToNumber( std::string str ) {
 
 MjpegStream::MjpegStream( const std::string& hostName ,
         unsigned short port ,
+        const std::string& requestPath ,
         HWND parentWin ,
         int xPosition ,
         int yPosition ,
@@ -30,6 +31,7 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         ) :
         m_hostName( hostName ) ,
         m_port( port ) ,
+        m_requestPath( requestPath ) ,
         m_connectDC( NULL ) ,
         m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance()->segoeUI18() , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) ) ,
         m_disconnectDC( NULL ) ,
@@ -159,7 +161,7 @@ void MjpegStream::startStream() {
         m_imageAge.restart();
 
         // Launch the MJPEG receiving/processing thread
-        m_streamInst = mjpeg_launchthread( const_cast<char*>( m_hostName.c_str() ) , m_port , &m_callbacks );
+        m_streamInst = mjpeg_launchthread( const_cast<char*>( m_hostName.c_str() ) , m_port , const_cast<char*>( m_requestPath.c_str() ) , &m_callbacks );
 
         // Send message to parent window about the stream opening
         PostMessage( m_parentWin , WM_MJPEGSTREAM_START , 0 , 0 );
