@@ -93,6 +93,12 @@ bool Image::saveToFile(const std::string& filename) const
     return priv::ImageLoader::getInstance().saveImageToFile(filename, m_pixels, m_size);
 }
 
+////////////////////////////////////////////////////////////
+Vector2<unsigned int> Image::getSize() const
+{
+    return m_size;
+}
+
 
 ////////////////////////////////////////////////////////////
 void Image::setPixel(unsigned int x, unsigned int y, const Color& color)

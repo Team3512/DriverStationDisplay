@@ -129,6 +129,14 @@ public :
     bool saveToFile(const std::string& filename) const;
 
     ////////////////////////////////////////////////////////////
+    /// \brief Return the size of the image
+    ///
+    /// \return Size in pixels
+    ///
+    ////////////////////////////////////////////////////////////
+    Vector2<unsigned int> getSize() const;
+
+    ////////////////////////////////////////////////////////////
     /// \brief Change the color of a pixel
     ///
     /// This function doesn't check the validity of the pixel

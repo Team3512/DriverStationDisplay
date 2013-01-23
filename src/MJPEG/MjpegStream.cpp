@@ -8,6 +8,7 @@
 #include "../WinGDI/UIFont.hpp"
 #include "MjpegStream.hpp"
 #include "../Resource.h"
+#include "ImageScale.hpp"
 
 #include <sstream>
 #include <wingdi.h>
@@ -296,6 +297,11 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
     // Create pointer to stream to make it easier to access the instance later
     MjpegStream* streamPtr = static_cast<MjpegStream*>( optarg );
 
+    // Target dimensions of resize. They should probably stay 320x240, as the window size mandates that.
+    int tWidth = streamPtr->getSize().X;
+    int tHeight = streamPtr->getSize().Y;
+    uint8_t *resizedBuf;
+
     // Holds pixel data for decompressed and decoded JPEG
     streamPtr->m_imageMutex.lock();
 
@@ -303,12 +309,26 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
     bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( buf , bufsize );
 
     if ( loadedCorrectly ) {
+
+        // Allocate a buffer to scale the image into
+        resizedBuf = (uint8_t*)std::malloc( 320 * 240 * 4 );
+
+        // Scale the image received into resizedBuf
+        imageScale((uint8_t *) streamPtr->m_tempImage.getPixelsPtr(),
+                streamPtr->m_tempImage.getSize().x,
+                streamPtr->m_tempImage.getSize().y,
+                (uint8_t *) resizedBuf,
+                tWidth,
+                tHeight,
+                4);
+
         /* ===== Reverse RGBA to BGRA before displaying the image ===== */
         /* Swap R and B because Win32 expects the color components in the
          * opposite order they are currently in
          */
-        streamPtr->m_pxlBuf = static_cast<char*>( malloc( streamPtr->getSize().X * streamPtr->getSize().Y * 4 ) );
-        std::memcpy( streamPtr->m_pxlBuf , streamPtr->m_tempImage.getPixelsPtr() , streamPtr->getSize().X * streamPtr->getSize().Y * 4 );
+        streamPtr->m_pxlBuf = static_cast<char*>( std::malloc( streamPtr->getSize().X * streamPtr->getSize().Y * 4 ) );
+        std::memcpy( streamPtr->m_pxlBuf , resizedBuf , streamPtr->getSize().X * streamPtr->getSize().Y * 4 );
+        std::free( resizedBuf );
 
         char blueTemp;
         char redTemp;
