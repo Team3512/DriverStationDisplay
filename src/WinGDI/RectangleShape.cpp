@@ -17,7 +17,7 @@ void RectangleShape::draw( HDC hdc ) {
     HPEN oldPen = (HPEN)SelectObject( hdc , CreatePen( PS_SOLID , Drawable::getOutlineThickness() , Drawable::getOutlineColor() ) );
     HBRUSH oldBrush = (HBRUSH)SelectObject( hdc , CreateSolidBrush( Drawable::getFillColor() ) );
 
-    // Draw circle with the points centered at its origin
+    // Draw rectangle
     Rectangle( hdc ,
             getBoundingRect().left - getOutlineThickness() ,
             getBoundingRect().top - getOutlineThickness() ,
