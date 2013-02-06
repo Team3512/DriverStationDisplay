@@ -1,5 +1,5 @@
-streamHost        = 10.35.12.11
-streamPort        = 80
+streamHost        = 10.1.0.82
+streamPort        = 8080
 streamRequestPath = /mjpg/video.mjpg
 
 robotIP           = 10.35.12.2

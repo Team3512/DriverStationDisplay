@@ -426,17 +426,16 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
 
     /* ===== Fill graphics with a background color ===== */
     FillRgn( m_connectDC , backgroundRegion , backgroundBrush );
+    FillRgn( m_disconnectDC , backgroundRegion , backgroundBrush );
 
     // Need a special background color since they will be transparent
-    FillRgn( m_disconnectDC , backgroundRegion , transparentBrush );
     FillRgn( m_waitDC , backgroundRegion , transparentBrush );
 
     // Add transparent rectangle
-    FillRgn( m_disconnectDC , waitRegion , waitBrush );
-    //FillRgn( m_waitDC , waitRegion , waitBrush );
+    FillRgn( m_waitDC , waitRegion , waitBrush );
 
-    // Create background
-    FillRgn( m_backgroundDC , backgroundRegion , backgroundBrush );
+    // Create background with transparency
+    FillRgn( m_waitDC , backgroundRegion , backgroundBrush );
     /* ================================================= */
 
     // Free the brushes and regions
