@@ -1,7 +1,7 @@
 #include "Resource.h"
 #include <windows.h>
 
-//mainIcon ICON "Spartatroniks.ico"
+mainIcon ICON "Spartatroniks.ico"
 
 ////////// Process Manifest
 //CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "DriverStationDisplay.manifest"

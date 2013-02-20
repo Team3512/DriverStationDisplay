@@ -63,13 +63,14 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
 INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     INITCOMMONCONTROLSEX icc;
 
-    // Initialise common controls.
+    // Initialize common controls.
     icc.dwSize = sizeof(icc);
     icc.dwICC = ICC_WIN95_CLASSES;
     InitCommonControlsEx(&icc);
 
     const char* mainClassName = "DriverStationDisplay";
 
+    HICON mainIcon = LoadIcon( Instance , "mainIcon" );
     HBRUSH mainBrush = CreateSolidBrush( RGB( 87 , 87 , 87 ) );
 
     // Define a class for our main window
@@ -81,12 +82,12 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     WindowClass.cbClsExtra    = 0;
     WindowClass.cbWndExtra    = 0;
     WindowClass.hInstance     = Instance;
-    WindowClass.hIcon         = NULL;
+    WindowClass.hIcon         = mainIcon;
     WindowClass.hCursor       = LoadCursor( NULL , IDC_ARROW );
     WindowClass.hbrBackground = mainBrush;
     WindowClass.lpszMenuName  = NULL;
     WindowClass.lpszClassName = mainClassName;
-    WindowClass.hIconSm       = NULL;
+    WindowClass.hIconSm       = mainIcon;
     RegisterClassEx(&WindowClass);
 
     MSG message;
@@ -134,60 +135,50 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     gCmdSocketPtr = &robotCmd;
 
     /* ===== GUI elements ===== */
-    ProgressBar drive1Meter( Vector2i( 12 , 12 ) , L"0% Forward" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
-    gDrawables.push_back( &drive1Meter );
+    Text driveModeText( Vector2i( 12 , 12 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
+    driveModeText.setString( L"Mode: Unknown" );
+    gDrawables.push_back( &driveModeText );
 
-    ProgressBar drive2Meter( Vector2i( 12 , drive1Meter.getPosition().Y + drive1Meter.getSize().Y + 14 + 24 ) , L"0% Turn" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
-    gDrawables.push_back( &drive2Meter );
+    Text gyroAngleText( Vector2i( 12 , 45 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
+    gyroAngleText.setString( L"Gyro: 0\u00b0" );
+    gDrawables.push_back( &gyroAngleText );
 
-    ProgressBar turretMeter( Vector2i( streamWin.getPosition().X , 12 ) , L"Manual: 0%" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
-    gDrawables.push_back( &turretMeter );
+    StatusLight isGyroEnabledLight( Vector2i( 12  , 89 ) , L"Gyro Enabled" );
+    gDrawables.push_back( &isGyroEnabledLight );
+    StatusLight slowRotateLight( Vector2i( 12 , 129 ) , L"Slow Rotation" );
+    gDrawables.push_back( &slowRotateLight );
 
-    ProgressBar targetRPMMeter( Vector2i( streamWin.getPosition().X + 100 /* width of prev. bar */ + 10 , 12 ) , L"RPM \u2192 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar manualRPMMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 61 ) , L"Manual: 0%" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    gDrawables.push_back( &manualRPMMeter );
+
+    ProgressBar targetRPMMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , manualRPMMeter.getPosition().Y + manualRPMMeter.getSize().Y + 14 + 24 ) , L"RPM \u2192 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
     gDrawables.push_back( &targetRPMMeter );
 
-    ProgressBar rpmMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X - 100 /* width of this bar */ , 12 ) , L"RPM: 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
+    ProgressBar rpmMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , targetRPMMeter.getPosition().Y + targetRPMMeter.getSize().Y + 14 + 24 ) , L"RPM: 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
     gDrawables.push_back( &rpmMeter );
 
-    StatusLight isLowGearLight( Vector2i( 12  , 129 ) , L"Low Gear" );
-    gDrawables.push_back( &isLowGearLight );
-    StatusLight isHammerDownLight( Vector2i( 12 , 169 ) , L"Hammer Down" );
-    gDrawables.push_back( &isHammerDownLight );
+    StatusLight isShooterReadyLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 234 ) , L"Shooter Ready" );
+    gDrawables.push_back( &isShooterReadyLight );
 
-    StatusLight turretLockLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 110 ) , L"Lock" );
-    gDrawables.push_back( &turretLockLight );
-
-    StatusLight isAutoAimingLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 150 ) , L"Auto Aim" );
-    gDrawables.push_back( &isAutoAimingLight );
-
-    StatusLight kinectOnlineLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 190 ) , L"Kinect" );
-    gDrawables.push_back( &kinectOnlineLight );
-
-    StatusLight isShootingLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 230 ) , L"Shooter On" );
+    StatusLight isShootingLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 274 ) , L"Shooter On" );
     gDrawables.push_back( &isShootingLight );
 
-    StatusLight shooterManualLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 270 ) , L"Manual RPM" );
-    gDrawables.push_back( &shooterManualLight );
-
-    Text distanceText( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 66 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
-    distanceText.setString( L"0 ft" );
-    gDrawables.push_back( &distanceText );
+    StatusLight isShooterManualLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 314 ) , L"Shooter Manual" );
+    gDrawables.push_back( &isShooterManualLight );
     /* ======================== */
 
     // Packet data
     std::string header;
-    unsigned int drive1ScaleZ = 0;
-    unsigned int drive2ScaleZ = 0;
-    unsigned int turretScaleZ = 0;
-    bool isLowGear = false;
-    unsigned char isHammerDown = 0;
+    unsigned int driveMode = 0;
+    int gyroAngle = 0;
+    bool isGyroEnabled = false;
+    bool slowRotate = false;
+    unsigned int manualRPM = 0;
+    unsigned int targetRPM = 0;
     unsigned int shooterRPM = 0;
-    bool shooterIsManual = false;
+    bool isShooterReady = false;
     bool isShooting = false;
-    bool isAutoAiming = false;
-    bool turretLockedOn = false;
-    unsigned char kinectOnline = sf::Socket::Error;
-    unsigned int distanceToTarget;
+    bool isShooterManual = false;
     std::string tempAutonName;
     std::vector<std::string> autonNames;
 
@@ -217,32 +208,28 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 if ( std::strcmp( header.c_str() , "display" ) == 0 ) {
                     /* Unpacks the following variables:
                      *
-                     * unsigned int: drive1 ScaleZ
-                     * unsigned int: drive2 ScaleZ
-                     * unsigned int: turret ScaleZ
-                     * bool: drivetrain is in low gear
-                     * unsigned char: is hammer mechanism deployed
+                     * unsigned int: drive mode
+                     * int: gyro angle
+                     * bool: isGyroEnabled
+                     * bool: slowRotate
+                     * unsigned int: manual RPM
+                     * unsigned int: target RPM
                      * unsigned int: shooter RPM
-                     * bool: shooter RPM control is manual
+                     * bool: shooterReady
                      * bool: isShooting
-                     * bool: isAutoAiming
-                     * bool: turret is locked on
-                     * unsigned char: Kinect is online
-                     * unsigned int: distance to target
+                     * bool: isShooterManual
                      */
 
-                    dataPacket >> drive1ScaleZ
-                    >> drive2ScaleZ
-                    >> turretScaleZ
-                    >> isLowGear
-                    >> isHammerDown
+                    dataPacket >> driveMode
+                    >> gyroAngle
+                    >> isGyroEnabled
+                    >> slowRotate
+                    >> manualRPM
+                    >> targetRPM
                     >> shooterRPM
-                    >> shooterIsManual
+                    >> isShooterReady
                     >> isShooting
-                    >> isAutoAiming
-                    >> turretLockedOn
-                    >> kinectOnline
-                    >> distanceToTarget;
+                    >> isShooterManual;
                 }
 
                 else if ( std::strcmp( header.c_str() , "autonList" ) == 0 ) {
@@ -282,65 +269,85 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 }
 
                 /* ===== Adjust GUI interface to match data from robot ===== */
-                drive1Meter.setPercent( static_cast<float>(drive1ScaleZ) / 100000.f * 100.f );
-                drive1Meter.setString( numberToString( static_cast<float>(drive1ScaleZ) / 1000.f ) + L"%  Forward" );
 
-                drive2Meter.setPercent( static_cast<float>(drive2ScaleZ) / 100000.f * 100.f );
-                drive2Meter.setString( numberToString( static_cast<float>(drive2ScaleZ) / 1000.f ) + L"%  Turn" );
-
-                turretMeter.setPercent( static_cast<float>(turretScaleZ) / 100000.f * 100.f );
-                turretMeter.setString( L"Manual: " + numberToString( static_cast<float>(turretScaleZ) / 1000.f ) + L"%" );
-
-                targetRPMMeter.setPercent( static_cast<float>(turretScaleZ) / 100000.f * 100.f );
-                targetRPMMeter.setString( L"RPM \u2192 " + numberToString( static_cast<float>(turretScaleZ) / 100000.f * 4260.f ) );
-
-                if ( isLowGear ) {
-                    isLowGearLight.setActive( StatusLight::active );
-                }
-                else {
-                    isLowGearLight.setActive( StatusLight::inactive );
-                }
-
-                if ( isHammerDown == 1 ) { // if hammer is deployed
-                    isHammerDownLight.setActive( StatusLight::active );
-                }
-                else if ( isHammerDown == 2 ) { // if hammer is transitioning between deployed and retracted
-                    isHammerDownLight.setActive( StatusLight::standby );
-                }
-                else { // else hammer is retracted
-                    isHammerDownLight.setActive( StatusLight::inactive );
-                }
-
-                rpmMeter.setPercent( static_cast<float>(shooterRPM) / 100000.f / 4260.f * 100.f );
-                rpmMeter.setString( L"RPM: " + numberToString( static_cast<float>(shooterRPM) / 100000.f ) );
-
-                if ( shooterIsManual ) {
-                    shooterManualLight.setActive( StatusLight::active );
-                }
-                else {
-                    shooterManualLight.setActive( StatusLight::inactive );
-                }
-
-                turretLockLight.setActive( turretLockedOn ? StatusLight::active : StatusLight::inactive );
-
-                if ( kinectOnline == sf::Socket::Done ) {
-                    kinectOnlineLight.setActive( StatusLight::active );
-                }
-                else if ( kinectOnline == sf::Socket::NotReady ) {
-                    kinectOnlineLight.setActive( StatusLight::standby );
-                }
-                else {
-                    kinectOnlineLight.setActive( StatusLight::inactive );
-                }
-
-                isShootingLight.setActive( isShooting ? StatusLight::active : StatusLight::inactive );
-
-                isAutoAimingLight.setActive( isAutoAiming ? StatusLight::active : StatusLight::inactive );
-
-                /* Sets distance to target to be displayed
-                 * 0.00328084f converts from millimeters to feet
+                /* Omni = 0,
+                 * Strafe,
+                 * Arcade,
+                 * FLpivot,
+                 * FRpivot,
+                 * RLpivot,
+                 * RRpivot
                  */
-                distanceText.setString( numberToString( distanceToTarget * 0.00328084f ) + L" ft" );
+                if ( driveMode == 0 ) {
+                    driveModeText.setString( L"Mode: Omni" );
+                }
+                else if ( driveMode == 1 ) {
+                    driveModeText.setString( L"Mode: Strafe" );
+                }
+                else if ( driveMode == 2 ) {
+                    driveModeText.setString( L"Mode: Arcade" );
+                }
+                else if ( driveMode == 3 ) {
+                    driveModeText.setString( L"Mode: FLpivot" );
+                }
+                else if ( driveMode == 4 ) {
+                    driveModeText.setString( L"Mode: FRpivot" );
+                }
+                else if ( driveMode == 5 ) {
+                    driveModeText.setString( L"Mode: RLpivot" );
+                }
+                else if ( driveMode == 6 ) {
+                    driveModeText.setString( L"Mode: RRpivot" );
+                }
+                else {
+                    driveModeText.setString( L"Mode: Unknown" );
+                }
+
+                gyroAngleText.setString( L"Gyro: " + numberToString( static_cast<float>(gyroAngle) / 100000.f ) + L"\u00b0" );
+
+                if ( isGyroEnabled ) {
+                    isGyroEnabledLight.setActive( StatusLight::active );
+                }
+                else {
+                    isGyroEnabledLight.setActive( StatusLight::inactive );
+                }
+
+                if ( slowRotate ) {
+                    slowRotateLight.setActive( StatusLight::active );
+                }
+                else {
+                    slowRotateLight.setActive( StatusLight::inactive );
+                }
+
+                manualRPMMeter.setPercent( static_cast<float>(manualRPM) / 100000.f * 100.f );
+                manualRPMMeter.setString( L"Manual: " + numberToString( static_cast<float>(manualRPM) / 1000.f * 100.f ) + L"%" );
+
+                targetRPMMeter.setPercent( static_cast<float>(targetRPM) / 100000.f / 5000.f * 100.f );
+                targetRPMMeter.setString( L"RPM \u2192 " + numberToString( static_cast<float>(targetRPM) ) );
+
+                rpmMeter.setPercent( static_cast<float>(shooterRPM) / 100000.f / 5000.f * 100.f );
+                rpmMeter.setString( L"RPM: " + numberToString( static_cast<float>(shooterRPM) ) );
+
+                if ( isShooterReady ) {
+                    isShooterReadyLight.setActive( StatusLight::active );
+                }
+                else {
+                    isShooterReadyLight.setActive( StatusLight::inactive );
+                }
+
+                if ( isShooting ) {
+                    isShootingLight.setActive( StatusLight::active );
+                }
+                else {
+                    isShootingLight.setActive( StatusLight::inactive );
+                }
+
+                if ( isShooterManual ) {
+                    isShooterManualLight.setActive( StatusLight::active );
+                }
+                else {
+                    isShooterManualLight.setActive( StatusLight::inactive );
+                }
                 /* ========================================================= */
 
                 // Make the window redraw the controls

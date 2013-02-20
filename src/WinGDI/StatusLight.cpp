@@ -45,7 +45,7 @@ void StatusLight::draw( HDC hdc ) {
 
 void StatusLight::setActive( Status newStatus ) {
     if ( newStatus == StatusLight::active ) {
-        setFillColor( RGB( 0 , 120 , 0 ) );
+        setFillColor( RGB( 0 , 0 , 120 ) );
     }
     else if ( newStatus == StatusLight::standby ) {
         setFillColor( RGB( 128 , 128 , 0 ) );
