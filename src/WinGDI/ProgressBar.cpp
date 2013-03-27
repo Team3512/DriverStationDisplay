@@ -8,15 +8,15 @@
 #include "UIFont.hpp"
 
 #include <wingdi.h>
+#include <cstring> // FIXME
 
-ProgressBar::ProgressBar( const Vector2i& position , std::wstring message , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , float percentFull ) :
+ProgressBar::ProgressBar( const Vector2i& position , std::wstring text , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , bool netUpdate ) :
         RectangleShape( position , Vector2i( 100 , 18 ) , emptyFillColor , outlineColor , 1 ) ,
+        NetUpdate( netUpdate ) ,
         m_barFill( Vector2i( position.X + 1 , position.Y + 1 ) , Vector2i( 98 , 16 ) , fullFillColor , RGB( 0 , 70 , 0 ) , 0 ) ,
-        m_text( Vector2i( position.X , position.Y + 18 + 2 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) ) {
+        m_text( Vector2i( position.X , position.Y + 18 + 2 ) , UIFont::getInstance()->segoeUI14() , text.c_str() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) , false ) {
 
-    setPercent( percentFull );
-
-    m_text.setString( message );
+    setPercent( 0.f );
 }
 
 void ProgressBar::draw( HDC hdc ) {
@@ -80,4 +80,18 @@ void ProgressBar::setBarFillColor( COLORREF fill ) {
 
 COLORREF ProgressBar::getBarFillColor() {
     return m_barFill.getFillColor();
+}
+
+void ProgressBar::updateValue() {
+    netValue_t* printValue = getValue( m_varIds[0] );
+    netValue_t* percentValue = getValue( m_varIds[1] );
+
+    // TODO Not secure
+    wchar_t temp[128];
+
+    NetUpdate::fillValue( temp , 128 , printValue );
+
+    setString( temp );
+
+    setPercent( *static_cast<unsigned char*>(percentValue->value) );
 }

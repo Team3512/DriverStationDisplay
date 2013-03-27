@@ -12,11 +12,12 @@
 #define TEXT_HPP
 
 #include "Drawable.hpp"
+#include "NetUpdate.hpp"
 #include <string>
 
-class Text : public Drawable {
+class Text : public Drawable , public NetUpdate {
 public:
-    Text( const Vector2i& position , HFONT font , COLORREF fillColor , COLORREF outlineColor );
+    Text( const Vector2i& position , HFONT font , std::wstring text , COLORREF fillColor , COLORREF outlineColor , bool netUpdate );
 
     void setFont( HFONT font );
 
@@ -27,6 +28,8 @@ public:
     const std::wstring& getString();
 
     void draw( HDC hdc );
+
+    void updateValue();
 
 private:
     // The following functions don't do anything

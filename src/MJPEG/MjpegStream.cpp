@@ -34,11 +34,11 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_port( port ) ,
         m_requestPath( requestPath ) ,
         m_connectDC( NULL ) ,
-        m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance()->segoeUI18() , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) ) ,
+        m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance()->segoeUI18() , L"Connecting..." , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
         m_disconnectDC( NULL ) ,
-        m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance()->segoeUI18() , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) ) ,
+        m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance()->segoeUI18() , L"Disconnected" , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
         m_waitDC( NULL ) ,
-        m_waitMsg( Vector2i( 0 , 0 ) , UIFont::getInstance()->segoeUI18() , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) ) ,
+        m_waitMsg( Vector2i( 0 , 0 ) , UIFont::getInstance()->segoeUI18() , L"Waiting..." , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
 
         m_pxlBuf( NULL ) ,
 
@@ -47,11 +47,6 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_streamInst( NULL ) ,
 
         m_stopReceive( true ) {
-
-    // Set correct text for messages
-    m_connectMsg.setString( L"Connecting..." );
-    m_disconnectMsg.setString( L"Disconnected" );
-    m_waitMsg.setString( L"Waiting..." );
 
     m_parentWin = parentWin;
 
@@ -367,24 +362,40 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
 
 void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     /* ===== Free all DC's so we can make new ones of the correct size ===== */
-    DeleteObject( m_connectBmp );
+    if ( m_connectBmp != NULL ) {
+        DeleteObject( m_connectBmp );
+    }
     m_connectBmp = NULL;
-    DeleteDC( m_connectDC );
+    if ( m_connectDC != NULL ) {
+        DeleteDC( m_connectDC );
+    }
     m_connectDC = NULL;
 
-    DeleteObject( m_disconnectBmp );
+    if ( m_disconnectBmp != NULL ) {
+        DeleteObject( m_disconnectBmp );
+    }
     m_disconnectBmp = NULL;
-    DeleteDC( m_disconnectDC );
+    if ( m_disconnectDC != NULL ) {
+        DeleteDC( m_disconnectDC );
+    }
     m_disconnectDC = NULL;
 
-    DeleteObject( m_waitBmp );
+    if ( m_waitBmp != NULL ) {
+        DeleteObject( m_waitBmp );
+    }
     m_waitBmp = NULL;
-    DeleteDC( m_waitDC );
+    if ( m_waitDC != NULL ) {
+        DeleteDC( m_waitDC );
+    }
     m_waitDC = NULL;
 
-    DeleteObject( m_backgroundBmp );
+    if ( m_backgroundBmp != NULL ) {
+        DeleteObject( m_backgroundBmp );
+    }
     m_backgroundBmp = NULL;
-    DeleteDC( m_backgroundDC );
+    if ( m_backgroundDC != NULL ) {
+        DeleteDC( m_backgroundDC );
+    }
     m_backgroundDC = NULL;
     /* ===================================================================== */
 

@@ -8,20 +8,20 @@
 #include "StatusLight.hpp"
 #include "UIFont.hpp"
 
+#include <cstring>
 #include <wingdi.h>
 
-StatusLight::StatusLight( const Vector2i& position , std::wstring message , Status currentStatus  ) :
+StatusLight::StatusLight( const Vector2i& position , std::wstring message , bool netUpdate ) :
         Drawable( position , Vector2i( 0 , 0 ) , 0 , 0 , 0 ) ,
-        m_status( currentStatus ) ,
-        m_text( position , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) ) {
+        NetUpdate( netUpdate ) ,
+        m_status( StatusLight::inactive ) ,
+        m_text( position , UIFont::getInstance()->segoeUI14() , message , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) , false ) {
     setOutlineThickness( 2 );
     setOutlineColor( RGB( 50 , 50 , 50 ) );
     setPosition( position );
     setSize( 24 , 24 );
 
-    m_text.setString( message );
-
-    setActive( currentStatus );
+    setActive( m_status );
 }
 
 void StatusLight::draw( HDC hdc ) {
@@ -66,7 +66,7 @@ void StatusLight::setPosition( const Vector2i& position ) {
     Drawable::setPosition( Vector2i( position.X - 6 , position.Y - 6 ) );
 
     // Set position of text in relation to the circle
-    m_text.setPosition( Vector2i( position.X + 12 /* radius */ + 10 ,
+    m_text.setPosition( Vector2i( position.X + 12 /* diameter */ + 10 ,
             position.Y - 3 ) );
 }
 
@@ -75,7 +75,7 @@ void StatusLight::setPosition( short x , short y ) {
     Drawable::setPosition( x - 6 , y - 6 );
 
     // Set position of text in relation to the circle
-    m_text.setPosition( Vector2i( x + 12 /* radius */ + 10 ,
+    m_text.setPosition( Vector2i( x + 12 /* diameter */ + 10 ,
             y - 3 ) );
 }
 
@@ -85,4 +85,15 @@ void StatusLight::setString( const std::wstring& message ) {
 
 const std::wstring& StatusLight::getString() {
     return m_text.getString();
+}
+
+void StatusLight::updateValue() {
+    netValue_t* lightValue = getValue( m_varIds[0] );
+
+    unsigned char tempVal = 0;
+    std::memcpy( &tempVal , lightValue->value , sizeof(unsigned char) );
+
+    setActive( Status( tempVal ) );
+
+    setString( getUpdateText() );
 }

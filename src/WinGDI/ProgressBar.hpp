@@ -8,12 +8,13 @@
 #define PROGRESSBAR_HPP
 
 #include "RectangleShape.hpp"
+#include "NetUpdate.hpp"
 #include "Text.hpp"
 #include <string>
 
-class ProgressBar : public RectangleShape {
+class ProgressBar : public RectangleShape , public NetUpdate {
 public:
-    ProgressBar( const Vector2i& position , std::wstring message , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , float percentFull = 0.f );
+    ProgressBar( const Vector2i& position , std::wstring text , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , bool netUpdate );
 
     void setPercent( float percentFull );
     float getPercent();
@@ -31,6 +32,8 @@ public:
     COLORREF getBarFillColor();
 
     void draw( HDC hdc );
+
+    void updateValue();
 
 private:
     RectangleShape m_barFill;

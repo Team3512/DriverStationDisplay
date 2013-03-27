@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: Main.cpp
 //Description: Receives data from the robot and displays it in a GUI
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 /* TODO Get position of "DriverStation" window and adjust main window height
@@ -16,6 +16,7 @@
 #include "SFML/Network/TcpSocket.hpp"
 
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <cstring>
@@ -26,6 +27,7 @@
 #include "WinGDI/UIFont.hpp"
 #include "MJPEG/MjpegStream.hpp"
 #include "Settings.hpp"
+#include "DisplaySettings.hpp"
 #include "Resource.h"
 
 #define _WIN32_WINNT 0x0601
@@ -44,7 +46,7 @@ HWND gAutonComboBox = NULL;
 Settings gSettings( "IPSettings.txt" );
 
 // Stores all Drawables to be drawn with WM_PAINT message
-std::vector<Drawable*> gDrawables;
+DisplaySettings* gDrawables = NULL;
 
 // Allows manipulation of MjpegStream in CALLBACK OnEvent
 MjpegStream* gStreamWinPtr = NULL;
@@ -52,11 +54,6 @@ MjpegStream* gStreamWinPtr = NULL;
 // Allows usage of socket in CALLBACK OnEvent
 sf::UdpSocket* gDataSocketPtr = NULL;
 sf::TcpSocket* gCmdSocketPtr = NULL;
-
-template <class T>
-std::wstring numberToString( T number ) {
-    return static_cast<std::wostringstream*>( &(std::wostringstream() << number) )->str();
-}
 
 LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lParam );
 
@@ -121,7 +118,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     /* ===== Robot Data Sending Variables ===== */
     sf::UdpSocket robotData;
-    robotData.bind( std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() ) );
+    robotData.bind( std::atoi( gSettings.getValueFor( "dsDataPort" ).c_str() ) );
     robotData.setBlocking( false );
     gDataSocketPtr = &robotData;
 
@@ -134,51 +131,10 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     sf::TcpSocket robotCmd;
     gCmdSocketPtr = &robotCmd;
 
-    /* ===== GUI elements ===== */
-    Text driveModeText( Vector2i( 12 , 12 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
-    driveModeText.setString( L"Mode: Unknown" );
-    gDrawables.push_back( &driveModeText );
-
-    Text gyroAngleText( Vector2i( 12 , 45 ) , UIFont::getInstance()->segoeUI14() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) );
-    gyroAngleText.setString( L"Gyro: 0\u00b0" );
-    gDrawables.push_back( &gyroAngleText );
-
-    StatusLight isGyroEnabledLight( Vector2i( 12  , 89 ) , L"Gyro Enabled" );
-    gDrawables.push_back( &isGyroEnabledLight );
-    StatusLight slowRotateLight( Vector2i( 12 , 129 ) , L"Slow Rotation" );
-    gDrawables.push_back( &slowRotateLight );
-
-    ProgressBar manualRPMMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 61 ) , L"Manual: 0%" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
-    gDrawables.push_back( &manualRPMMeter );
-
-    ProgressBar targetRPMMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , manualRPMMeter.getPosition().Y + manualRPMMeter.getSize().Y + 14 + 24 ) , L"RPM \u2192 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
-    gDrawables.push_back( &targetRPMMeter );
-
-    ProgressBar rpmMeter( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , targetRPMMeter.getPosition().Y + targetRPMMeter.getSize().Y + 14 + 24 ) , L"RPM: 0" , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) );
-    gDrawables.push_back( &rpmMeter );
-
-    StatusLight isShooterReadyLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 234 ) , L"Shooter Ready" );
-    gDrawables.push_back( &isShooterReadyLight );
-
-    StatusLight isShootingLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 274 ) , L"Shooter On" );
-    gDrawables.push_back( &isShootingLight );
-
-    StatusLight isShooterManualLight( Vector2i( streamWin.getPosition().X + streamWin.getSize().X + 10 , 314 ) , L"Shooter Manual" );
-    gDrawables.push_back( &isShooterManualLight );
-    /* ======================== */
+    gDrawables = new DisplaySettings( "" , 12 , 12 , streamWin.getPosition().X + streamWin.getSize().X + 10 , 12 );
 
     // Packet data
     std::string header;
-    unsigned int driveMode = 0;
-    int gyroAngle = 0;
-    bool isGyroEnabled = false;
-    bool slowRotate = false;
-    unsigned int manualRPM = 0;
-    unsigned int targetRPM = 0;
-    unsigned int shooterRPM = 0;
-    bool isShooterReady = false;
-    bool isShooting = false;
-    bool isShooterManual = false;
     std::string tempAutonName;
     std::vector<std::string> autonNames;
 
@@ -205,39 +161,21 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 // Unpacks header telling packet type (either "display" or "autonList")
                 dataPacket >> header;
 
-                if ( std::strcmp( header.c_str() , "display" ) == 0 ) {
-                    /* Unpacks the following variables:
-                     *
-                     * unsigned int: drive mode
-                     * int: gyro angle
-                     * bool: isGyroEnabled
-                     * bool: slowRotate
-                     * unsigned int: manual RPM
-                     * unsigned int: target RPM
-                     * unsigned int: shooter RPM
-                     * bool: shooterReady
-                     * bool: isShooting
-                     * bool: isShooterManual
-                     */
-
-                    dataPacket >> driveMode
-                    >> gyroAngle
-                    >> isGyroEnabled
-                    >> slowRotate
-                    >> manualRPM
-                    >> targetRPM
-                    >> shooterRPM
-                    >> isShooterReady
-                    >> isShooting
-                    >> isShooterManual;
+                if ( std::strcmp( header.c_str() , "display\r\n" ) == 0 ) {
+                    gDrawables->updateGuiTable( dataPacket );
+                    NetUpdate::updateElements();
                 }
 
-                else if ( std::strcmp( header.c_str() , "autonList" ) == 0 ) {
+                else if ( std::strcmp( header.c_str() , "guiCreate\r\n" ) == 0 ) {
+                    gDrawables->reloadGUI( dataPacket );
+                }
+
+                else if ( std::strcmp( header.c_str() , "autonList\r\n" ) == 0 ) {
                     /* Unpacks the following variables:
                      *
                      * Autonomous Modes (contained in rest of packet):
                      * std::string: autonomous routine name
-                     * ...
+                     * <more autonomous routine names>...
                      */
 
                     autonNames.clear();
@@ -267,92 +205,24 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                         SendMessage( gAutonComboBox , CB_SETCURSEL , 0 , 0 );
                     }
                 }
-
-                /* ===== Adjust GUI interface to match data from robot ===== */
-
-                /* Omni = 0,
-                 * Strafe,
-                 * Arcade,
-                 * FLpivot,
-                 * FRpivot,
-                 * RLpivot,
-                 * RRpivot
+                /* If a new autonomous mode was selected from the robot, it
+                 * sends back this packet as confirmation
                  */
-                if ( driveMode == 0 ) {
-                    driveModeText.setString( L"Mode: Omni" );
-                }
-                else if ( driveMode == 1 ) {
-                    driveModeText.setString( L"Mode: Strafe" );
-                }
-                else if ( driveMode == 2 ) {
-                    driveModeText.setString( L"Mode: Arcade" );
-                }
-                else if ( driveMode == 3 ) {
-                    driveModeText.setString( L"Mode: FLpivot" );
-                }
-                else if ( driveMode == 4 ) {
-                    driveModeText.setString( L"Mode: FRpivot" );
-                }
-                else if ( driveMode == 5 ) {
-                    driveModeText.setString( L"Mode: RLpivot" );
-                }
-                else if ( driveMode == 6 ) {
-                    driveModeText.setString( L"Mode: RRpivot" );
-                }
-                else {
-                    driveModeText.setString( L"Mode: Unknown" );
-                }
+                else if ( std::strcmp( header.c_str() , "autonConfirmed\r\n" ) == 0 ) {
+                    std::string autoName = "Autonomous mode changed to\n";
+                    std::string tempName;
+                    dataPacket >> tempName;
+                    autoName += tempName;
 
-                gyroAngleText.setString( L"Gyro: " + numberToString( static_cast<float>(gyroAngle) / 100000.f ) + L"\u00b0" );
-
-                if ( isGyroEnabled ) {
-                    isGyroEnabledLight.setActive( StatusLight::active );
+                    MessageBox( mainWindow , autoName.c_str() , "Autonomous Change" , MB_ICONINFORMATION | MB_OK );
                 }
-                else {
-                    isGyroEnabledLight.setActive( StatusLight::inactive );
-                }
-
-                if ( slowRotate ) {
-                    slowRotateLight.setActive( StatusLight::active );
-                }
-                else {
-                    slowRotateLight.setActive( StatusLight::inactive );
-                }
-
-                manualRPMMeter.setPercent( static_cast<float>(manualRPM) / 100000.f * 100.f );
-                manualRPMMeter.setString( L"Manual: " + numberToString( static_cast<float>(manualRPM) / 1000.f * 100.f ) + L"%" );
-
-                targetRPMMeter.setPercent( static_cast<float>(targetRPM) / 100000.f / 5000.f * 100.f );
-                targetRPMMeter.setString( L"RPM \u2192 " + numberToString( static_cast<float>(targetRPM) ) );
-
-                rpmMeter.setPercent( static_cast<float>(shooterRPM) / 100000.f / 5000.f * 100.f );
-                rpmMeter.setString( L"RPM: " + numberToString( static_cast<float>(shooterRPM) ) );
-
-                if ( isShooterReady ) {
-                    isShooterReadyLight.setActive( StatusLight::active );
-                }
-                else {
-                    isShooterReadyLight.setActive( StatusLight::inactive );
-                }
-
-                if ( isShooting ) {
-                    isShootingLight.setActive( StatusLight::active );
-                }
-                else {
-                    isShootingLight.setActive( StatusLight::inactive );
-                }
-
-                if ( isShooterManual ) {
-                    isShooterManualLight.setActive( StatusLight::active );
-                }
-                else {
-                    isShooterManualLight.setActive( StatusLight::inactive );
-                }
-                /* ========================================================= */
 
                 // Make the window redraw the controls
                 InvalidateRect( mainWindow , NULL , FALSE );
             }
+
+            // Make the window redraw the controls
+            InvalidateRect( mainWindow , NULL , FALSE );
 
             Sleep( 30 );
         }
@@ -591,9 +461,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         // Creates 1:1 relationship between logical units and pixels
         int oldMapMode = SetMapMode( bufferDC , MM_TEXT );
 
-        for ( unsigned int i = 0 ; i < gDrawables.size() ; i++ ) {
-            gDrawables[i]->draw( bufferDC );
-        }
+        gDrawables->drawDisplay( bufferDC );
 
         BitBlt( hdc , 0 , 0 , rect.right , rect.bottom , bufferDC , 0 , 0 , SRCCOPY );
 

@@ -5,16 +5,16 @@
 //Author: Tyler Veness
 //=============================================================================
 
-// TODO Add color-blind mode
-
 #ifndef STATUS_LIGHT_HPP
 #define STATUS_LIGHT_HPP
 
 #include "Drawable.hpp"
+#include "NetUpdate.hpp"
 #include "Text.hpp"
+
 #include <string>
 
-class StatusLight : public Drawable {
+class StatusLight : public Drawable , public NetUpdate {
 public:
     enum Status {
         active,
@@ -22,7 +22,7 @@ public:
         inactive
     };
 
-    StatusLight( const Vector2i& position , std::wstring message , Status currentStatus = StatusLight::inactive );
+    StatusLight( const Vector2i& position , std::wstring message , bool netUpdate );
 
     void setActive( Status newStatus );
     Status getActive();
@@ -34,6 +34,8 @@ public:
     const std::wstring& getString();
 
     void draw( HDC hdc );
+
+    void updateValue();
 
 private:
     Status m_status;

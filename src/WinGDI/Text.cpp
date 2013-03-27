@@ -7,10 +7,13 @@
 #include "Text.hpp"
 #include "UIFont.hpp"
 #include <wingdi.h>
+#include <cstring> // FIXME
 
-Text::Text( const Vector2i& position , HFONT font , COLORREF fillColor , COLORREF outlineColor ) :
+Text::Text( const Vector2i& position , HFONT font , std::wstring text , COLORREF fillColor , COLORREF outlineColor , bool netUpdate ) :
         Drawable( position , Vector2i( 0 , 0 ) , fillColor , outlineColor , 0 ) ,
+        NetUpdate( netUpdate ) ,
         m_font( font ) {
+    m_string = text;
 }
 
 void Text::setFont( HFONT font ) {
@@ -55,4 +58,15 @@ void Text::draw( HDC hdc ) {
 
     // Restore old font
     SelectObject( hdc , oldFont );
+}
+
+void Text::updateValue() {
+    netValue_t* printValue = getValue( m_varIds[0] );
+
+    // TODO Not secure
+    wchar_t temp[128];
+
+    NetUpdate::fillValue( temp , 128 , printValue );
+
+    setString( temp );
 }
