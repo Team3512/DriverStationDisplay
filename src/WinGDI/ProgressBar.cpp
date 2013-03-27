@@ -86,12 +86,16 @@ void ProgressBar::updateValue() {
     netValue_t* printValue = getValue( m_varIds[0] );
     netValue_t* percentValue = getValue( m_varIds[1] );
 
-    // TODO Not secure
-    wchar_t temp[128];
+    if ( printValue != NULL ) {
+        // TODO Not secure
+        wchar_t temp[128];
 
-    NetUpdate::fillValue( temp , 128 , printValue );
+        NetUpdate::fillValue( temp , 128 , printValue );
 
-    setString( temp );
+        setString( temp );
+    }
 
-    setPercent( *static_cast<unsigned char*>(percentValue->value) );
+    if ( percentValue != NULL ) {
+        setPercent( *static_cast<unsigned char*>(percentValue->value) );
+    }
 }

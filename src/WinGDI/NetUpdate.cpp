@@ -236,7 +236,13 @@ void NetUpdate::clearNetValues() {
 }
 
 netValue_t* NetUpdate::getValue( const std::wstring& key ) {
-    return m_netValues[key];
+    // If there is a value for the given key, return it
+    if ( m_netValues.find( key ) != m_netValues.end() ) {
+        return m_netValues[key];
+    }
+    else {
+        return NULL;
+    }
 }
 
 void NetUpdate::updateElements() {

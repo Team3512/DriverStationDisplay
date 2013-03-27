@@ -90,10 +90,12 @@ const std::wstring& StatusLight::getString() {
 void StatusLight::updateValue() {
     netValue_t* lightValue = getValue( m_varIds[0] );
 
-    unsigned char tempVal = 0;
-    std::memcpy( &tempVal , lightValue->value , sizeof(unsigned char) );
+    if ( lightValue != NULL ) {
+        unsigned char tempVal = 0;
+        std::memcpy( &tempVal , lightValue->value , sizeof(unsigned char) );
 
-    setActive( Status( tempVal ) );
+        setActive( Status( tempVal ) );
+    }
 
     setString( getUpdateText() );
 }
