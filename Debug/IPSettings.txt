@@ -1,4 +1,4 @@
-streamHost        = 10.1.0.82
+streamHost        = 10.35.12.11
 streamPort        = 80
 streamRequestPath = /mjpg/video.mjpg
 
@@ -8,5 +8,5 @@ alfCmdPort        = 3512
 dsDataPort        = 1130
 
 #the DS sends to this
-robotIP           = 127.0.0.1
-robotDataPort     = 1131
+robotIP           = 10.35.12.2
+robotDataPort     = 1130

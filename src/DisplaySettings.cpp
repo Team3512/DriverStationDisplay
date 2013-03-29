@@ -13,6 +13,7 @@
 #include "WinGDI/UIFont.hpp"
 
 #include <fstream>
+#include <cstdio>
 
 DisplaySettings::DisplaySettings( std::string fileName , int leftX , int leftY , int rightX , int rightY ) :
     m_lStartX( leftX ) ,
@@ -29,16 +30,43 @@ DisplaySettings::~DisplaySettings() {
 }
 
 void DisplaySettings::reloadGUI( sf::Packet& packet ) {
-    std::wstring elementLine;
+    std::wstring *elementLine;
+    unsigned int filesize;
+    wchar_t *tmpbuf;
+    unsigned char tmpbyte;
+    unsigned int i;
+    wchar_t *curLine;
 
     // Remove old elements before creating new ones
     clearGUI();
 
     resetAllTemps();
 
-    while ( packet >> elementLine ) {
-        parseLine( elementLine );
+    // Read the file out of the packet
+    packet >> filesize;
+
+    // Read the file into a wchar_t buffer
+    tmpbuf = (wchar_t *)std::malloc(sizeof(wchar_t)*(filesize+1));
+    for(i = 0; i < filesize; i++) {
+        packet >> tmpbyte;
+        tmpbuf[i] = std::btowc(tmpbyte);
     }
+    tmpbuf[i] = L'\0';
+
+    // Send individual lines for processing
+    curLine = std::wcstok( tmpbuf, L"\r\n" );
+    while( curLine != NULL ) {
+        elementLine = new std::wstring(curLine);
+        if( elementLine->length() > 0 ) {
+            parseLine( *elementLine );
+        }
+        delete elementLine;
+
+        curLine = std::wcstok(NULL, L"\r\n");
+    }
+
+    // Free the file buffer
+    free(tmpbuf);
 }
 
 void DisplaySettings::reloadGUI( const std::string& fileName ) {

@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <iostream> // FIXME
 
 #include "WinGDI/ProgressBar.hpp"
 #include "WinGDI/StatusLight.hpp"
@@ -224,7 +225,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             // Make the window redraw the controls
             InvalidateRect( mainWindow , NULL , FALSE );
 
-            Sleep( 30 );
+            Sleep( 100 );
         }
     }
 
