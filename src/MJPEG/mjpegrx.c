@@ -100,7 +100,7 @@ mjpeg_rxheaders(char **buf_out, int *bufsize_out, int sd){
 }
 
 int
-mjpeg_sck_connect(char *host, int port)
+mjpeg_sck_connect(char *host, int port, int *sdp)
 {
     int sd;
     int error;
@@ -113,6 +113,9 @@ mjpeg_sck_connect(char *host, int port)
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if(sd < 0) return -1;
+
+    /* Return the socket pointer */
+    *sdp = sd;
 
     /* get the host */
     hp = gethostbyname(host);
@@ -130,8 +133,8 @@ mjpeg_sck_connect(char *host, int port)
         sizeof(struct sockaddr_in));
     if(error != 0) return -1;
 
-    /* everything worked, return the socket descriptor */
-    return sd;
+    /* everything worked */
+    return 0;
 }
 
 char *
@@ -304,13 +307,9 @@ mjpeg_launchthread(
 void
 mjpeg_stopthread(struct mjpeg_inst_t *inst)
 {
-    #ifdef WIN32
-    closesocket(inst->sd);
-    #else
-    close(inst->sd);
-    #endif
-
     inst->threadrunning = 0;
+    shutdown(inst->sd, SHUT_RDWR);
+
     pthread_join(inst->thread, NULL);
 
     free(inst);
@@ -324,6 +323,7 @@ mjpeg_threadmain(void *optarg)
     struct mjpeg_threadargs_t* args = optarg;
 
     int sd;
+    int error;
 
     char *asciisize;
     int datasize;
@@ -337,9 +337,9 @@ mjpeg_threadmain(void *optarg)
     int bytesread;
 
     /* connect */
-    sd = mjpeg_sck_connect(args->host, args->port);
-    args->inst->sd = sd;
-    if(sd < 0){
+    error = mjpeg_sck_connect(args->host, args->port, &args->inst->sd);
+    sd = args->inst->sd;
+    if(error < 0){
         /* call the thread finished callback */
         if(args->callbacks->donecallback != NULL){
             args->callbacks->donecallback(
