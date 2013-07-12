@@ -26,7 +26,7 @@ DisplaySettings::DisplaySettings( std::string fileName , int leftX , int leftY ,
 }
 
 DisplaySettings::~DisplaySettings() {
-
+    clearGUI();
 }
 
 void DisplaySettings::reloadGUI( sf::Packet& packet ) {

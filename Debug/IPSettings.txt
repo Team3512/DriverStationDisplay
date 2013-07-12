@@ -8,5 +8,5 @@ alfCmdPort        = 3512
 dsDataPort        = 1130
 
 #the DS sends to this
-robotIP           = 10.35.12.2
-robotDataPort     = 1130
+robotIP           = 127.0.0.1
+robotDataPort     = 1131

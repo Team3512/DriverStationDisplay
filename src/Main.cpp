@@ -12,8 +12,11 @@
 
 #include "SFML/Network/IpAddress.hpp"
 #include "SFML/Network/Packet.hpp"
-#include "SFML/Network/UdpSocket.hpp"
 #include "SFML/Network/TcpSocket.hpp"
+#include "SFML/Network/UdpSocket.hpp"
+
+#include "SFML/System/Clock.hpp"
+#include "SFML/System/Thread.hpp"
 
 #include <sstream>
 #include <fstream>
@@ -43,6 +46,9 @@
 // Global because the window is closed by a button in CALLBACK OnEvent
 HWND gAutonComboBox = NULL;
 
+// Global so the brush doesn't have to be initialized in two places
+HBRUSH gMainBrush = NULL;
+
 // Global because IP configuration settings are needed in CALLBACK OnEvent
 Settings gSettings( "IPSettings.txt" );
 
@@ -69,7 +75,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     const char* mainClassName = "DriverStationDisplay";
 
     HICON mainIcon = LoadIcon( Instance , "mainIcon" );
-    HBRUSH mainBrush = CreateSolidBrush( RGB( 87 , 87 , 87 ) );
+    gMainBrush = CreateSolidBrush( RGB( 87 , 87 , 87 ) );
 
     // Define a class for our main window
     WNDCLASSEX WindowClass;
@@ -82,7 +88,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     WindowClass.hInstance     = Instance;
     WindowClass.hIcon         = mainIcon;
     WindowClass.hCursor       = LoadCursor( NULL , IDC_ARROW );
-    WindowClass.hbrBackground = mainBrush;
+    WindowClass.hbrBackground = gMainBrush;
     WindowClass.lpszMenuName  = NULL;
     WindowClass.lpszClassName = mainClassName;
     WindowClass.hIconSm       = mainIcon;
@@ -134,10 +140,17 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     gDrawables = new DisplaySettings( "" , 12 , 12 , streamWin.getPosition().X + streamWin.getSize().X + 10 , 12 );
 
+    // Used for displaying message box to user while also updating the display
+    sf::Thread* msgBoxThrPtr = NULL;
+
     // Packet data
     std::string header;
     std::string tempAutonName;
     std::vector<std::string> autonNames;
+
+    // Used for auto-connect with robot
+    sf::Clock connectClock;
+    bool connectedBefore = false;
 
     // Make sure the main window is shown before continuing
     ShowWindow( mainWindow , SW_SHOW );
@@ -155,6 +168,19 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             }
         }
         else {
+            // If timeout has passed, remove GUI and attempt reconnect
+            if ( connectClock.getElapsedTime().asMilliseconds() > 2000 ) {
+                sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
+                unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
+                char data[16] = "connect\r\n";
+
+                if ( gDataSocketPtr != NULL ) {
+                    gDataSocketPtr->send( data , 16 , robotIP , robotDataPort );
+                }
+
+                connectClock.restart();
+            }
+
             streamWin.display();
 
             // Retrieve data sent from robot and unpack it
@@ -165,10 +191,23 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                 if ( std::strcmp( header.c_str() , "display\r\n" ) == 0 ) {
                     gDrawables->updateGuiTable( dataPacket );
                     NetUpdate::updateElements();
+
+                    /* Only allow keep-alive if we have a valid GUI; we need to
+                     * connect and create the GUI before accepting display data
+                     */
+                    if ( connectedBefore ) {
+                        connectClock.restart();
+                    }
                 }
 
                 else if ( std::strcmp( header.c_str() , "guiCreate\r\n" ) == 0 ) {
                     gDrawables->reloadGUI( dataPacket );
+
+                    if ( !connectedBefore ) {
+                        connectedBefore = true;
+                    }
+
+                    connectClock.restart();
                 }
 
                 else if ( std::strcmp( header.c_str() , "autonList\r\n" ) == 0 ) {
@@ -202,7 +241,10 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                             );
                         }
 
-                        // Select the first Autonomous automatically
+                        /* Select the first Autonomous automatically; it will
+                         * be updated to the correct value when the
+                         * 'autonConfirmed' packet arrives
+                         */
                         SendMessage( gAutonComboBox , CB_SETCURSEL , 0 , 0 );
                     }
                 }
@@ -215,7 +257,19 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                     dataPacket >> tempName;
                     autoName += tempName;
 
-                    MessageBox( mainWindow , autoName.c_str() , "Autonomous Change" , MB_ICONINFORMATION | MB_OK );
+                    LPARAM namePtr = reinterpret_cast<LPARAM>( tempName.c_str() );
+
+                    // Change local selection to match sent one
+                    SendMessage( gAutonComboBox , CB_SELECTSTRING , -1 , namePtr );
+
+                    // Delete old thread before spawning new one
+                    delete msgBoxThrPtr;
+
+                    msgBoxThrPtr = new sf::Thread( [=]{
+                            MessageBox( mainWindow , autoName.c_str() , "Autonomous Change" , MB_ICONINFORMATION | MB_OK );
+                    } );
+
+                    msgBoxThrPtr->launch();
                 }
 
                 // Make the window redraw the controls
@@ -228,6 +282,13 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             Sleep( 100 );
         }
     }
+
+    // Neither of these were allocated on the stack before storing their pointers
+    DeleteObject( gMainBrush );
+    delete gDrawables;
+
+    // Delete message box thread
+    delete msgBoxThrPtr;
 
     UIFont::freeInstance();
 
@@ -348,7 +409,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
     }
 
     case WM_COMMAND: {
-        char* data = static_cast<char*>( std::malloc( 16 ) );
+        char data[16];
 
         sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
         unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
@@ -433,8 +494,6 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             }
         }
 
-        std::free( data );
-
         break;
     }
 
@@ -453,11 +512,9 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         /* ============================ */
 
         // Fill buffer DC with a background color
-        HBRUSH backgroundBrush = CreateSolidBrush( RGB( 87 , 87 , 87 ) );
         HRGN region = CreateRectRgn( 0 , 0 , rect.right , rect.bottom );
-        FillRgn( bufferDC , region , backgroundBrush );
+        FillRgn( bufferDC , region , gMainBrush );
         DeleteObject( region );
-        DeleteObject( backgroundBrush );
 
         // Creates 1:1 relationship between logical units and pixels
         int oldMapMode = SetMapMode( bufferDC , MM_TEXT );
