@@ -119,7 +119,14 @@ mjpeg_sck_connect(char *host, int port, int *sdp)
 
     /* get the host */
     hp = gethostbyname(host);
-    if(hp == NULL) return -1;
+    if(hp == NULL) {
+#ifdef WIN32
+        closesocket(sd);
+#else
+        close(sd);
+#endif
+        return -1;
+    }
 
     memset(&pin, 0, sizeof(struct sockaddr_in));
     pin.sin_family = AF_INET;
@@ -131,7 +138,14 @@ mjpeg_sck_connect(char *host, int port, int *sdp)
         sd,
         (struct sockaddr *)&pin,
         sizeof(struct sockaddr_in));
-    if(error != 0) return -1;
+    if(error != 0) {
+#ifdef WIN32
+        closesocket(sd);
+#else
+        close(sd);
+#endif
+        return -1;
+    }
 
     /* everything worked */
     return 0;
@@ -308,7 +322,11 @@ void
 mjpeg_stopthread(struct mjpeg_inst_t *inst)
 {
     inst->threadrunning = 0;
-    shutdown(inst->sd, SHUT_RDWR);
+#ifdef WIN32
+    closesocket(inst->sd);
+#else
+    close(inst->sd);
+#endif
 
     pthread_join(inst->thread, NULL);
 
