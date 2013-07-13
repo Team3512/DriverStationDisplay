@@ -33,8 +33,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include "../SFML/System/Thread.hpp"
-#include "../SFML/System/Err.hpp"
 
+#include <iostream>
 #include <cassert>
 #include <process.h>
 
@@ -56,7 +56,7 @@ void Thread::launch()
     m_thread = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, &Thread::entryPoint, this, 0, &m_threadId));
 
     if (!m_thread)
-        err() << "Failed to create thread" << std::endl;
+        std::cerr << "Failed to create thread" << std::endl;
 }
 
 

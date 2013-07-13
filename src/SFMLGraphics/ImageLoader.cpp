@@ -33,10 +33,10 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include "ImageLoader.hpp"
-#include "../SFML/System/Err.hpp"
 #include "stb_image/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image/stb_image_write.h"
+#include <iostream>
 #include <cctype>
 
 
@@ -107,7 +107,7 @@ bool ImageLoader::loadImageFromFile(const std::string& filename, std::vector<uin
     else
     {
         // Error, failed to load the image
-        err() << "Failed to load image \"" << filename << "\". Reason : " << stbi_failure_reason() << std::endl;
+        std::cerr << "Failed to load image \"" << filename << "\". Reason : " << stbi_failure_reason() << std::endl;
 
         return false;
     }
@@ -146,14 +146,14 @@ bool ImageLoader::loadImageFromMemory(const void* data, std::size_t dataSize, st
         else
         {
             // Error, failed to load the image
-            err() << "Failed to load image from memory. Reason : " << stbi_failure_reason() << std::endl;
+            std::cerr << "Failed to load image from memory. Reason : " << stbi_failure_reason() << std::endl;
 
             return false;
         }
     }
     else
     {
-        err() << "Failed to load image from memory, no data provided" << std::endl;
+        std::cerr << "Failed to load image from memory, no data provided" << std::endl;
         return false;
     }
 }
@@ -192,7 +192,7 @@ bool ImageLoader::saveImageToFile(const std::string& filename, const std::vector
         }
     }
 
-    err() << "Failed to save image \"" << filename << "\"" << std::endl;
+    std::cerr << "Failed to save image \"" << filename << "\"" << std::endl;
     return false;
 }
 

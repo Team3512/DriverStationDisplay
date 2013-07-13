@@ -34,7 +34,7 @@
 ////////////////////////////////////////////////////////////
 #include "../SFML/Graphics/Image.hpp"
 #include "ImageLoader.hpp"
-#include "../SFML/System/Err.hpp"
+#include <iostream>
 #include <algorithm>
 #include <cstring>
 
@@ -128,7 +128,7 @@ const uint8_t* Image::getPixelsPtr() const
     }
     else
     {
-        err() << "Trying to access the pixels of an empty image" << std::endl;
+        std::cerr << "Trying to access the pixels of an empty image" << std::endl;
         return NULL;
     }
 }
