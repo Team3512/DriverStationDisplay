@@ -101,7 +101,12 @@ private:
     HBITMAP m_connectBmp;
     Text m_connectMsg;
 
-    // Contains "Disconnected" message
+    // Contains opaque "Disconnected" message
+    HDC m_failConnectDC;
+    HBITMAP m_failConnectBmp;
+    Text m_failConnectMsg;
+
+    // Contains transparent "Disconnected" message
     HDC m_disconnectDC;
     HBITMAP m_disconnectBmp;
     Text m_disconnectMsg;

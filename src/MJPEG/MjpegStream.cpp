@@ -35,6 +35,8 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_requestPath( requestPath ) ,
         m_connectDC( NULL ) ,
         m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Connecting..." , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
+        m_failConnectDC( NULL ) ,
+        m_failConnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Disconnected" , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
         m_disconnectDC( NULL ) ,
         m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Disconnected" , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
         m_waitDC( NULL ) ,
@@ -102,6 +104,7 @@ MjpegStream::~MjpegStream() {
     DeleteObject( m_imageBuffer );
 
     DeleteDC( m_connectDC );
+    DeleteDC( m_failConnectDC );
     DeleteDC( m_disconnectDC );
     DeleteDC( m_waitDC );
     DeleteDC( m_backgroundDC );
@@ -368,56 +371,68 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     /* ===== Free all DC's so we can make new ones of the correct size ===== */
     if ( m_connectBmp != NULL ) {
         DeleteObject( m_connectBmp );
+        m_connectBmp = NULL;
     }
-    m_connectBmp = NULL;
     if ( m_connectDC != NULL ) {
         DeleteDC( m_connectDC );
+        m_connectDC = NULL;
     }
-    m_connectDC = NULL;
+
+    if ( m_failConnectBmp != NULL ) {
+        DeleteObject( m_failConnectBmp );
+        m_failConnectBmp = NULL;
+    }
+    if ( m_failConnectDC != NULL ) {
+        DeleteDC( m_failConnectDC );
+        m_failConnectDC = NULL;
+    }
 
     if ( m_disconnectBmp != NULL ) {
         DeleteObject( m_disconnectBmp );
+        m_disconnectBmp = NULL;
     }
-    m_disconnectBmp = NULL;
     if ( m_disconnectDC != NULL ) {
         DeleteDC( m_disconnectDC );
+        m_disconnectDC = NULL;
     }
-    m_disconnectDC = NULL;
 
     if ( m_waitBmp != NULL ) {
         DeleteObject( m_waitBmp );
+        m_waitBmp = NULL;
     }
-    m_waitBmp = NULL;
     if ( m_waitDC != NULL ) {
         DeleteDC( m_waitDC );
+        m_waitDC = NULL;
     }
-    m_waitDC = NULL;
 
     if ( m_backgroundBmp != NULL ) {
         DeleteObject( m_backgroundBmp );
+        m_backgroundBmp = NULL;
     }
-    m_backgroundBmp = NULL;
     if ( m_backgroundDC != NULL ) {
         DeleteDC( m_backgroundDC );
+        m_backgroundDC = NULL;
     }
-    m_backgroundDC = NULL;
     /* ===================================================================== */
 
     // Create new device contexts
     HDC streamWinDC = GetDC( m_streamWin );
     m_connectDC = CreateCompatibleDC( streamWinDC );
+    m_failConnectDC = CreateCompatibleDC( streamWinDC );
     m_disconnectDC = CreateCompatibleDC( streamWinDC );
     m_waitDC = CreateCompatibleDC( streamWinDC );
     m_backgroundDC = CreateCompatibleDC( streamWinDC );
 
     // Create a 1:1 relationship between logical units and pixels
     SetMapMode( m_connectDC , MM_TEXT );
+    SetMapMode( m_failConnectDC , MM_TEXT );
     SetMapMode( m_disconnectDC , MM_TEXT );
     SetMapMode( m_waitDC , MM_TEXT );
     SetMapMode( m_backgroundDC , MM_TEXT );
 
     // Create the bitmaps used for graphics
     m_connectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
+    m_failConnectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_disconnectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_waitBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_backgroundBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
@@ -426,6 +441,7 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
 
     // Give each graphic a bitmap to use
     SelectObject( m_connectDC , m_connectBmp );
+    SelectObject( m_failConnectDC , m_failConnectBmp );
     SelectObject( m_disconnectDC , m_disconnectBmp );
     SelectObject( m_waitDC , m_waitBmp );
     SelectObject( m_backgroundDC , m_backgroundBmp );
@@ -441,6 +457,7 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
 
     /* ===== Fill graphics with a background color ===== */
     FillRgn( m_connectDC , backgroundRegion , backgroundBrush );
+    FillRgn( m_failConnectDC , backgroundRegion , backgroundBrush );
     FillRgn( m_disconnectDC , backgroundRegion , backgroundBrush );
 
     // Need a special background color since they will be transparent
@@ -480,6 +497,12 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     m_connectMsg.draw( m_connectDC );
     SetTextAlign( m_connectDC , oldAlign );
     SetBkMode( m_connectDC , oldBkMode );
+
+    oldBkMode = SetBkMode( m_failConnectDC , TRANSPARENT );
+    oldAlign = SetTextAlign( m_failConnectDC , TA_CENTER | TA_BASELINE );
+    m_failConnectMsg.draw( m_failConnectDC );
+    SetTextAlign( m_failConnectDC , oldAlign );
+    SetBkMode( m_failConnectDC , oldBkMode );
 
     oldBkMode = SetBkMode( m_disconnectDC , TRANSPARENT );
     oldAlign = SetTextAlign( m_disconnectDC , TA_CENTER | TA_BASELINE );
