@@ -10,6 +10,10 @@
  * (capture SIGQOUIT or SIGKILL?)
  */
 
+#define _WIN32_WINNT 0x0601
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 #include "SFML/Network/IpAddress.hpp"
 #include "SFML/Network/Packet.hpp"
 #include "SFML/Network/TcpSocket.hpp"
@@ -27,10 +31,6 @@
 #include "Settings.hpp"
 #include "DisplaySettings.hpp"
 #include "Resource.h"
-
-#define _WIN32_WINNT 0x0601
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 #include <wingdi.h>
 

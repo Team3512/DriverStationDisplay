@@ -281,6 +281,10 @@ void MjpegStream::display() {
     std::free( buttonText );
 }
 
+void MjpegStream::saveCurrentImage( const std::string& fileName ) {
+    m_tempImage.saveToFile( fileName );
+}
+
 void MjpegStream::doneCallback( void* optarg ) {
     static_cast<MjpegStream*>(optarg)->m_stopReceive = true;
     static_cast<MjpegStream*>(optarg)->m_firstImage = true;
@@ -292,7 +296,7 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
     // Create pointer to stream to make it easier to access the instance later
     MjpegStream* streamPtr = static_cast<MjpegStream*>( optarg );
 
-    // Target dimensions of resize. They should probably stay 320x240, as the window size mandates that.
+    // Target dimensions of resize
     int tWidth = streamPtr->getSize().X;
     int tHeight = streamPtr->getSize().Y;
     uint8_t *resizedBuf;
@@ -306,7 +310,7 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
     if ( loadedCorrectly ) {
 
         // Allocate a buffer to scale the image into
-        resizedBuf = (uint8_t*)std::malloc( 320 * 240 * 4 );
+        resizedBuf = (uint8_t*)std::malloc( tWidth * tHeight * 4 );
 
         // Scale the image received into resizedBuf
         imageScale((uint8_t *) streamPtr->m_tempImage.getPixelsPtr(),

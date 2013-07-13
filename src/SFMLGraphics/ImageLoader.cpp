@@ -80,41 +80,6 @@ ImageLoader::~ImageLoader()
 
 
 ////////////////////////////////////////////////////////////
-bool ImageLoader::loadImageFromFile(const std::string& filename, std::vector<uint8_t>& pixels, Vector2<unsigned int>& size)
-{
-    // Clear the array (just in case)
-    pixels.clear();
-
-    // Load the image and get a pointer to the pixels in memory
-    int width, height, channels;
-    unsigned char* ptr = stbi_load(filename.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-
-    if (ptr && width && height)
-    {
-        // Assign the image properties
-        size.x = width;
-        size.y = height;
-
-        // Copy the loaded pixels to the pixel buffer
-        pixels.resize(width * height * 4);
-        memcpy(&pixels[0], ptr, pixels.size());
-
-        // Free the loaded pixels (they are now in our own pixel buffer)
-        stbi_image_free(ptr);
-
-        return true;
-    }
-    else
-    {
-        // Error, failed to load the image
-        std::cerr << "Failed to load image \"" << filename << "\". Reason : " << stbi_failure_reason() << std::endl;
-
-        return false;
-    }
-}
-
-
-////////////////////////////////////////////////////////////
 bool ImageLoader::loadImageFromMemory(const void* data, std::size_t dataSize, std::vector<uint8_t>& pixels, Vector2<unsigned int>& size)
 {
     // Check input parameters

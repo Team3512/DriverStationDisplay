@@ -39,9 +39,7 @@
 #include "../WinGDI/Text.hpp"
 #include "../WinGDI/Vector.hpp"
 
-extern "C" {
 #include "mjpegrx.h"
-}
 
 #define WM_MJPEGSTREAM_START     (WM_APP + 0x0001)
 #define WM_MJPEGSTREAM_STOP      (WM_APP + 0x0002)
@@ -78,6 +76,9 @@ public:
 
     // Displays the stream or a message if the stream isn't working
     void display();
+
+    // Saves most recently received image to a file
+    void saveCurrentImage( const std::string& fileName );
 
 protected:
     static void doneCallback( void* optarg );
