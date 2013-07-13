@@ -18,17 +18,11 @@
 #include "SFML/System/Clock.hpp"
 #include "SFML/System/Thread.hpp"
 
-#include <sstream>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <cstring>
-#include <iostream> // FIXME
 
-#include "WinGDI/ProgressBar.hpp"
-#include "WinGDI/StatusLight.hpp"
-#include "WinGDI/Text.hpp"
-#include "WinGDI/UIFont.hpp"
 #include "MJPEG/MjpegStream.hpp"
 #include "Settings.hpp"
 #include "DisplaySettings.hpp"
@@ -289,8 +283,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     // Delete message box thread
     delete msgBoxThrPtr;
-
-    UIFont::freeInstance();
 
     // Clean up windows
     DestroyWindow( mainWindow );

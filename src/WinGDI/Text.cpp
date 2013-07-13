@@ -39,7 +39,7 @@ void Text::draw( HDC hdc ) {
         oldFont = (HFONT)SelectObject( hdc , m_font );
     }
     else {
-        oldFont = (HFONT)SelectObject( hdc , UIFont::getInstance()->segoeUI14() );
+        oldFont = (HFONT)SelectObject( hdc , UIFont::getInstance().segoeUI14() );
     }
 
     // Set text color

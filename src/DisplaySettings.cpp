@@ -282,7 +282,7 @@ void DisplaySettings::parseLine( std::wstring line ) {
 
     // Create element
     if ( m_currentType == std::wstring( L"TEXT" ) ) {
-        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance()->segoeUI14() , m_startText , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) , true );
+        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) , true );
         elemPtr = temp;
         netPtr = temp;
     }

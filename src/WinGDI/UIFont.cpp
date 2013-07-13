@@ -7,21 +7,10 @@
 #include "UIFont.hpp"
 #include <wingdi.h>
 
-UIFont* UIFont::m_instance = NULL;
+UIFont UIFont::m_instance;
 
-UIFont* UIFont::getInstance() {
-    if ( m_instance == NULL ) {
-        m_instance = new UIFont;
-    }
-
+UIFont& UIFont::getInstance() {
     return m_instance;
-}
-
-void UIFont::freeInstance() {
-    if ( m_instance != NULL ) {
-        DeleteObject( m_instance->m_segoeUI14 );
-        DeleteObject( m_instance->m_segoeUI18 );
-    }
 }
 
 UIFont::UIFont() {
@@ -55,6 +44,11 @@ UIFont::UIFont() {
             CLEARTYPE_QUALITY ,
             FF_DONTCARE | DEFAULT_PITCH ,
             "Segoe UI" );
+}
+
+UIFont::~UIFont() {
+    DeleteObject( m_segoeUI14 );
+    DeleteObject( m_segoeUI18 );
 }
 
 const HFONT UIFont::segoeUI14() {

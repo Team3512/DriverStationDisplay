@@ -11,24 +11,26 @@
 #ifndef UIFONT_HPP
 #define UIFONT_HPP
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0601
+#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 class UIFont {
 public:
     // @return a global instance of the fonts available
-    static UIFont* getInstance();
-    static void freeInstance();
+    static UIFont& getInstance();
 
     const HFONT segoeUI14();
     const HFONT segoeUI18();
 
 protected:
     UIFont();
+    ~UIFont();
 
 private:
-    static UIFont* m_instance;
+    static UIFont m_instance;
 
     HFONT m_segoeUI14;
     HFONT m_segoeUI18;
