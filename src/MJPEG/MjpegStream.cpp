@@ -2,7 +2,7 @@
 //File Name: MjpegStream.cpp
 //Description: Receives an MJPEG stream and displays it in a child window with
 //             the specified properties
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #include "../WinGDI/UIFont.hpp"

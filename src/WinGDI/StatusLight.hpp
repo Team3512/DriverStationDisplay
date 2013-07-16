@@ -2,7 +2,7 @@
 //File Name: StatusLight.hpp
 //Description: Shows green, yellow, or red circle depending on its internal
 //             state
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #ifndef STATUS_LIGHT_HPP

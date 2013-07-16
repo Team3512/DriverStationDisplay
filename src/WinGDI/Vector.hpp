@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: Vector.hpp
 //Description: Holds definitions for ProgressBar class
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #ifndef VECTOR_HPP

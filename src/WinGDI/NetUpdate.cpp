@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: NetUpdate.cpp
 //Description: Allows WinGDI drawable objects to update over the network
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #include "NetUpdate.hpp"

@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: UIFont.cpp
 //Description: Provides a collection of fonts for use by other classes
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #include "UIFont.hpp"

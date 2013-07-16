@@ -1,4 +1,8 @@
-/* mjpeg HTTP stream decoder */
+/*=============================================================================
+ *File Name: mjpegrx.h
+ *Description: MJPEG HTTP stream decoder
+ *Author: FRC Team 3512, Spartatroniks
+ *=============================================================================*/
 
 #ifndef _MJPEGRX_H
 #define _MJPEGRX_H

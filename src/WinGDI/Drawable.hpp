@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: Drawable.hpp
 //Description: Provides interface for WinGDI drawable objects
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #ifndef DRAWABLE_HPP

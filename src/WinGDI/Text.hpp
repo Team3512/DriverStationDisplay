@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: Text.hpp
 //Description: Provides a wrapper for WinGDI text
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 /* In this class's case, outlineColor is actually the background color of the

@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: ProgressBar.hpp
 //Description: Provides an interface to a progress bar with WinGDI
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #ifndef PROGRESSBAR_HPP

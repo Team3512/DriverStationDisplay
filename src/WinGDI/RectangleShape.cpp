@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: RectangleShape.cpp
 //Description: Provides a wrapper for WinGDI rectangles
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #include "RectangleShape.hpp"

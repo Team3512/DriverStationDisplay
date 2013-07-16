@@ -2,7 +2,7 @@
 //File Name: MjpegStream.hpp
 //Description: Receives an MJPEG stream and displays it in a child window with
 //             the specified properties
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #ifndef MJPEG_STREAM_HPP

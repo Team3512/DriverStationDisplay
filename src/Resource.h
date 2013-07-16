@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: Resource.h
 //Description: Holds all resource IDs for win32 GUI components
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #ifndef RESOURCE_H

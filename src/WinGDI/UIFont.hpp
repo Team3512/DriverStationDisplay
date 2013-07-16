@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: UIFont.hpp
 //Description: Provides a collection of fonts for use by other classes
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 /* Each font's size assumes a 1:1 relationship between logical units and pixels

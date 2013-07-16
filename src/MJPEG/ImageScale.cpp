@@ -1,3 +1,9 @@
+//=============================================================================
+//File Name: ImageScale.cpp
+//Description: Resizes a given image by either duplicating or skipping pixels
+//Author: FRC Team 3512, Spartatroniks
+//=============================================================================
+
 #include "ImageScale.hpp"
 
 #include <stdio.h>

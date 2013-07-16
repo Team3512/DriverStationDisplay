@@ -1,3 +1,9 @@
+//=============================================================================
+//File Name: ImageScale.hpp
+//Description: Resizes a given image by either duplicating or skipping pixels
+//Author: FRC Team 3512, Spartatroniks
+//=============================================================================
+
 #ifndef _IMAGESCALE_HPP
 #define _IMAGESCALE_HPP
 

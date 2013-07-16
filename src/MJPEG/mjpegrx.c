@@ -1,4 +1,8 @@
-/* mjpeg HTTP stream decoder */
+/*=============================================================================
+ *File Name: mjpegrx.c
+ *Description: MJPEG HTTP stream decoder
+ *Author: FRC Team 3512, Spartatroniks
+ *=============================================================================*/
 
 #ifdef WIN32
 

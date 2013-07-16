@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: NetUpdate.hpp
 //Description: Allows WinGDI drawable objects to update over the network
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #ifndef NET_UPDATE_HPP

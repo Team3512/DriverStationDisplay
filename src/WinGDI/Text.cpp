@@ -1,7 +1,7 @@
 //=============================================================================
 //File Name: Text.cpp
 //Description: Provides a wrapper for WinGDI text
-//Author: Tyler Veness
+//Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
 #include "Text.hpp"
