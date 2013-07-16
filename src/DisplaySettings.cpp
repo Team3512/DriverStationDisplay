@@ -46,7 +46,7 @@ void DisplaySettings::reloadGUI( sf::Packet& packet ) {
     packet >> filesize;
 
     // Read the file into a wchar_t buffer
-    tmpbuf = (wchar_t *)std::malloc(sizeof(wchar_t)*(filesize+1));
+    tmpbuf = new wchar_t[filesize + 1];
     for(i = 0; i < filesize; i++) {
         packet >> tmpbyte;
         tmpbuf[i] = std::btowc(tmpbyte);
@@ -66,7 +66,7 @@ void DisplaySettings::reloadGUI( sf::Packet& packet ) {
     }
 
     // Free the file buffer
-    free(tmpbuf);
+    delete[] tmpbuf;
 }
 
 void DisplaySettings::reloadGUI( const std::string& fileName ) {

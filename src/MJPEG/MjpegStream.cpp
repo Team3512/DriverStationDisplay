@@ -35,8 +35,6 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_requestPath( requestPath ) ,
         m_connectDC( NULL ) ,
         m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Connecting..." , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
-        m_failConnectDC( NULL ) ,
-        m_failConnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Disconnected" , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
         m_disconnectDC( NULL ) ,
         m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Disconnected" , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
         m_waitDC( NULL ) ,
@@ -104,7 +102,6 @@ MjpegStream::~MjpegStream() {
     DeleteObject( m_imageBuffer );
 
     DeleteDC( m_connectDC );
-    DeleteDC( m_failConnectDC );
     DeleteDC( m_disconnectDC );
     DeleteDC( m_waitDC );
     DeleteDC( m_backgroundDC );
@@ -156,6 +153,7 @@ void MjpegStream::setSize( const Vector2i& size ) {
 void MjpegStream::startStream() {
     if ( m_stopReceive == true ) { // if stream is closed, reopen it
         m_stopReceive = false;
+        m_firstImage = true;
 
         m_imageAge.restart();
 
@@ -216,8 +214,7 @@ void MjpegStream::display() {
             m_imageMutex.lock();
             m_displayMutex.lock();
 
-            // Display connect graphic from another device context
-            BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_backgroundDC , 0 , 0 , SRCCOPY );
+            // Display wait graphic from another device context
             BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_waitDC , 0 , 0 , SRCPAINT );
 
             m_displayMutex.unlock();
@@ -249,15 +246,13 @@ void MjpegStream::display() {
         }
     }
 
-    // Else we aren't connected to the host
+    // Else we aren't connected to the host; display disconnect graphic
     else {
         m_imageMutex.lock();
         m_displayMutex.lock();
 
-        // Display connect graphic from another device context
-        SetBkColor( windowDC , RGB( 40 , 40 , 40 ) );
-        //BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_backgroundDC , 0 , 0 , SRCCOPY );
-        BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_disconnectDC , 0 , 0 , SRCPAINT );
+        // Display disconnect graphic from another device context
+        BitBlt( windowDC , 0 , 0 , getSize().X , getSize().Y , m_disconnectDC , 0 , 0 , SRCCOPY );
 
         m_displayMutex.unlock();
         m_imageMutex.unlock();
@@ -266,7 +261,7 @@ void MjpegStream::display() {
     // Release window's device context
     ReleaseDC( m_streamWin , windowDC );
 
-    char* buttonText = static_cast<char*>( std::malloc( 13 ) );
+    char buttonText[13];
     GetWindowText( m_toggleButton , buttonText , 13 );
 
     // If running and button displays "Start"
@@ -280,8 +275,6 @@ void MjpegStream::display() {
         // Change text displayed on button (LParam is button HWND)
         SendMessage( m_toggleButton , WM_SETTEXT , 0 , reinterpret_cast<LPARAM>("Start Stream") );
     }
-
-    std::free( buttonText );
 }
 
 void MjpegStream::saveCurrentImage( const std::string& fileName ) {
@@ -290,8 +283,6 @@ void MjpegStream::saveCurrentImage( const std::string& fileName ) {
 
 void MjpegStream::doneCallback( void* optarg ) {
     static_cast<MjpegStream*>(optarg)->m_stopReceive = true;
-    static_cast<MjpegStream*>(optarg)->m_firstImage = true;
-
     static_cast<MjpegStream*>(optarg)->m_streamInst = NULL;
 }
 
@@ -302,7 +293,7 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
     // Target dimensions of resize
     int tWidth = streamPtr->getSize().X;
     int tHeight = streamPtr->getSize().Y;
-    uint8_t *resizedBuf;
+    uint8_t* resizedBuf;
 
     // Holds pixel data for decompressed and decoded JPEG
     streamPtr->m_imageMutex.lock();
@@ -311,9 +302,8 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
     bool loadedCorrectly = streamPtr->m_tempImage.loadFromMemory( buf , bufsize );
 
     if ( loadedCorrectly ) {
-
         // Allocate a buffer to scale the image into
-        resizedBuf = (uint8_t*)std::malloc( tWidth * tHeight * 4 );
+        resizedBuf = new uint8_t[tWidth * tHeight * 4];
 
         // Scale the image received into resizedBuf
         imageScale((uint8_t *) streamPtr->m_tempImage.getPixelsPtr(),
@@ -328,9 +318,9 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
         /* Swap R and B because Win32 expects the color components in the
          * opposite order they are currently in
          */
-        streamPtr->m_pxlBuf = static_cast<char*>( std::malloc( streamPtr->getSize().X * streamPtr->getSize().Y * 4 ) );
+        streamPtr->m_pxlBuf = new char[streamPtr->getSize().X * streamPtr->getSize().Y * 4];
         std::memcpy( streamPtr->m_pxlBuf , resizedBuf , streamPtr->getSize().X * streamPtr->getSize().Y * 4 );
-        std::free( resizedBuf );
+        delete[] resizedBuf;
 
         char blueTemp;
         char redTemp;
@@ -347,7 +337,7 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optarg ) {
         DeleteObject( streamPtr->m_imageBuffer ); // free previous image if there is one
         streamPtr->m_imageBuffer = CreateBitmap( streamPtr->getSize().X , streamPtr->getSize().Y , 1 , 32 , streamPtr->m_pxlBuf );
 
-        std::free( streamPtr->m_pxlBuf );
+        delete[] streamPtr->m_pxlBuf;
 	}
 
     // If HBITMAP was created successfully, set a flag and reset the timer
@@ -376,15 +366,6 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     if ( m_connectDC != NULL ) {
         DeleteDC( m_connectDC );
         m_connectDC = NULL;
-    }
-
-    if ( m_failConnectBmp != NULL ) {
-        DeleteObject( m_failConnectBmp );
-        m_failConnectBmp = NULL;
-    }
-    if ( m_failConnectDC != NULL ) {
-        DeleteDC( m_failConnectDC );
-        m_failConnectDC = NULL;
     }
 
     if ( m_disconnectBmp != NULL ) {
@@ -418,21 +399,18 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     // Create new device contexts
     HDC streamWinDC = GetDC( m_streamWin );
     m_connectDC = CreateCompatibleDC( streamWinDC );
-    m_failConnectDC = CreateCompatibleDC( streamWinDC );
     m_disconnectDC = CreateCompatibleDC( streamWinDC );
     m_waitDC = CreateCompatibleDC( streamWinDC );
     m_backgroundDC = CreateCompatibleDC( streamWinDC );
 
     // Create a 1:1 relationship between logical units and pixels
     SetMapMode( m_connectDC , MM_TEXT );
-    SetMapMode( m_failConnectDC , MM_TEXT );
     SetMapMode( m_disconnectDC , MM_TEXT );
     SetMapMode( m_waitDC , MM_TEXT );
     SetMapMode( m_backgroundDC , MM_TEXT );
 
     // Create the bitmaps used for graphics
     m_connectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
-    m_failConnectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_disconnectBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_waitBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
     m_backgroundBmp = CreateCompatibleBitmap( streamWinDC , getSize().X , getSize().Y );
@@ -441,7 +419,6 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
 
     // Give each graphic a bitmap to use
     SelectObject( m_connectDC , m_connectBmp );
-    SelectObject( m_failConnectDC , m_failConnectBmp );
     SelectObject( m_disconnectDC , m_disconnectBmp );
     SelectObject( m_waitDC , m_waitBmp );
     SelectObject( m_backgroundDC , m_backgroundBmp );
@@ -457,7 +434,6 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
 
     /* ===== Fill graphics with a background color ===== */
     FillRgn( m_connectDC , backgroundRegion , backgroundBrush );
-    FillRgn( m_failConnectDC , backgroundRegion , backgroundBrush );
     FillRgn( m_disconnectDC , backgroundRegion , backgroundBrush );
 
     // Need a special background color since they will be transparent
@@ -497,12 +473,6 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     m_connectMsg.draw( m_connectDC );
     SetTextAlign( m_connectDC , oldAlign );
     SetBkMode( m_connectDC , oldBkMode );
-
-    oldBkMode = SetBkMode( m_failConnectDC , TRANSPARENT );
-    oldAlign = SetTextAlign( m_failConnectDC , TA_CENTER | TA_BASELINE );
-    m_failConnectMsg.draw( m_failConnectDC );
-    SetTextAlign( m_failConnectDC , oldAlign );
-    SetBkMode( m_failConnectDC , oldBkMode );
 
     oldBkMode = SetBkMode( m_disconnectDC , TRANSPARENT );
     oldAlign = SetTextAlign( m_disconnectDC , TA_CENTER | TA_BASELINE );
