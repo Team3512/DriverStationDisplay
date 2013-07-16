@@ -80,7 +80,9 @@ void NetUpdate::updateValues( sf::Packet& packet ) {
     std::wstring str;
     bool valAllocated = false;
 
-    while ( !packet.endOfPacket() ) {
+    bool haveValidData = true;
+
+    while ( !packet.endOfPacket() && haveValidData ) {
         if ( packet >> type && packet >> key ) {
             // If 'key' already has an entry
             if ( m_netValues.find( key ) != m_netValues.end() ) {
@@ -205,6 +207,9 @@ void NetUpdate::updateValues( sf::Packet& packet ) {
                 break;
             }
             }
+        }
+        else {
+            haveValidData = false;
         }
     }
 }
