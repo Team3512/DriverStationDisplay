@@ -8,7 +8,6 @@
 #include "UIFont.hpp"
 
 #include <wingdi.h>
-#include <cstring> // FIXME
 
 ProgressBar::ProgressBar( const Vector2i& position , std::wstring text , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , bool netUpdate ) :
         RectangleShape( position , Vector2i( 100 , 18 ) , emptyFillColor , outlineColor , 1 ) ,

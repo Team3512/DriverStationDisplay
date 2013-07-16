@@ -7,7 +7,6 @@
 #include "Text.hpp"
 #include "UIFont.hpp"
 #include <wingdi.h>
-#include <cstring> // FIXME
 
 Text::Text( const Vector2i& position , HFONT font , std::wstring text , COLORREF fillColor , COLORREF outlineColor , bool netUpdate ) :
         Drawable( position , Vector2i( 0 , 0 ) , fillColor , outlineColor , 0 ) ,

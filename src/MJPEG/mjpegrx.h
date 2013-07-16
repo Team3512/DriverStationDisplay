@@ -11,7 +11,12 @@
 extern "C" {
 #endif
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <pthread.h>
+#endif
 
 struct keyvalue_t {
     char *key;
@@ -34,11 +39,20 @@ struct mjpeg_callbacks_t {
     void *optarg;
 };
 
+#ifdef WIN32
+struct mjpeg_inst_t {
+    volatile int threadrunning;
+    HANDLE thread;
+    unsigned int threadId;
+    int sd;
+};
+#else
 struct mjpeg_inst_t {
     volatile int threadrunning;
     pthread_t thread;
     int sd;
 };
+#endif
 
 struct mjpeg_inst_t *
 mjpeg_launchthread(
@@ -49,7 +63,13 @@ mjpeg_launchthread(
         );
 
 void mjpeg_stopthread(struct mjpeg_inst_t *inst);
+
+/* Win32 requires different function pointer for _beginthreadex */
+#ifdef WIN32
+unsigned int __stdcall mjpeg_threadmain(void *optarg);
+#else
 void * mjpeg_threadmain(void *optarg);
+#endif
 
 #ifdef __cplusplus
 }

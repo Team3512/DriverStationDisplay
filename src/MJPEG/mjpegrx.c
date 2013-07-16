@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+#include <process.h>
 #include <assert.h>
 
 #else
@@ -317,7 +317,11 @@ mjpeg_launchthread(
 
     inst->threadrunning = 1;
 
+#ifdef WIN32
+    inst->thread = (HANDLE)(_beginthreadex(NULL, 0, mjpeg_threadmain, args, 0, &inst->threadId));
+#else
     pthread_create(&inst->thread, NULL, mjpeg_threadmain, args);
+#endif
 
     return inst;
 }
@@ -328,19 +332,32 @@ mjpeg_stopthread(struct mjpeg_inst_t *inst)
     inst->threadrunning = 0;
 #ifdef WIN32
     closesocket(inst->sd);
+
+    /* Wait for thread to exit */
+    if (inst->thread != NULL){
+        WaitForSingleObject(inst->thread, INFINITE);
+
+        CloseHandle(inst->thread);
+        inst->thread = NULL;
+    }
 #else
     close(inst->sd);
-#endif
-
     pthread_join(inst->thread, NULL);
+#endif
 
     free(inst);
 
     return;
 }
 
+/* Win32 requires different function pointer for _beginthreadex */
+#ifdef WIN32
+unsigned int
+__stdcall mjpeg_threadmain(void *optarg)
+#else
 void *
 mjpeg_threadmain(void *optarg)
+#endif
 {
     struct mjpeg_threadargs_t* args = optarg;
 
@@ -372,8 +389,13 @@ mjpeg_threadmain(void *optarg)
         free(args->reqpath);
         free(args->callbacks);
 
+#ifdef WIN32
+        _endthreadex(0);
+        return 0;
+#else
         pthread_exit(NULL);
         return NULL;
+#endif
     }
 
     /* sends some bogus data so that we'll get a response */
@@ -433,6 +455,11 @@ mjpeg_threadmain(void *optarg)
     free(args);
     // args->inst is still alive after here because we don't free it
 
+#ifdef WIN32
+    _endthreadex(0);
+    return 0;
+#else
     pthread_exit(NULL);
     return NULL;
+#endif
 }
