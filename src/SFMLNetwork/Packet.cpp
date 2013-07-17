@@ -127,7 +127,7 @@ bool Packet::endOfPacket() const
 
 
 ////////////////////////////////////////////////////////////
-Packet::operator BoolType() const
+Packet::operator Packet::BoolType() const
 {
     return m_isValid ? &Packet::checkSize : NULL;
 }

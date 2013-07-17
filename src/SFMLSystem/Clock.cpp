@@ -34,7 +34,6 @@
 ////////////////////////////////////////////////////////////
 #include "../SFML/System/Clock.hpp"
 
-#include "../SFML/Config.hpp"
 #include <windows.h>
 
 LARGE_INTEGER getFrequency();

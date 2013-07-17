@@ -35,9 +35,9 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include "../Config.hpp"
 #include "Color.hpp"
 #include "../System/Vector2.hpp"
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -92,7 +92,7 @@ public :
     /// \see loadFromFile, loadFromStream
     ///
     ////////////////////////////////////////////////////////////
-    bool loadFromMemory(const void* data, std::size_t size);
+    bool loadFromMemory(const void* data, std::size_t dataSize);
 
     ////////////////////////////////////////////////////////////
     /// \brief Save the image to a file on disk
@@ -180,45 +180,3 @@ private :
 
 
 #endif // SFML_IMAGE_HPP
-
-
-////////////////////////////////////////////////////////////
-/// \class sf::Image
-/// \ingroup graphics
-///
-/// sf::Image is an abstraction to manipulate images
-/// as bidimensional arrays of pixels. The class provides
-/// functions to load, read, write and save pixels, as well
-/// as many other useful functions.
-///
-/// sf::Image can handle a unique internal representation of
-/// pixels, which is RGBA 32 bits. This means that a pixel
-/// must be composed of 8 bits red, green, blue and alpha
-/// channels -- just like a sf::Color.
-/// All the functions that return an array of pixels follow
-/// this rule, and all parameters that you pass to sf::Image
-/// functions (such as loadFromPixels) must use this
-/// representation as well.
-///
-/// A sf::Image can be copied, but it is a heavy resource and
-/// if possible you should always use [const] references to
-/// pass or return them to avoid useless copies.
-///
-/// Usage example:
-/// \code
-/// // Load an image file from a file
-/// sf::Image image;
-/// if (!image.loadFromFile("image.jpg"))
-///     return -1;
-///
-/// // Make the top-left pixel transparent
-/// sf::Color color = image.getPixel(0, 0);
-/// color.a = 0;
-/// image.setPixel(0, 0, color);
-///
-/// // Save the image to a file
-/// if (!image.saveToFile("result.png"))
-///     return -1;
-/// \endcode
-///
-////////////////////////////////////////////////////////////

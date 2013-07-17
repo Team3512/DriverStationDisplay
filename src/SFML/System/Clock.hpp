@@ -35,7 +35,6 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include "../Config.hpp"
 #include "Time.hpp"
 
 
@@ -100,33 +99,3 @@ private :
 
 
 #endif // SFML_CLOCK_HPP
-
-
-////////////////////////////////////////////////////////////
-/// \class sf::Clock
-/// \ingroup system
-///
-/// sf::Clock is a lightweight class for measuring time.
-///
-/// It provides the most precise time that the underlying
-/// OS can achieve (generally microseconds or nanoseconds).
-/// It also ensures monotonicity, which means that the returned
-/// time can never go backward, even if the system time is
-/// changed.
-///
-/// Usage example:
-/// \code
-/// sf::Clock clock;
-/// ...
-/// Time time1 = clock.getElapsedTime();
-/// ...
-/// Time time2 = clock.restart();
-/// \endcode
-///
-/// The sf::Time value returned by the clock can then be
-/// converted to a number of seconds, milliseconds or even
-/// microseconds.
-///
-/// \see sf::Time
-///
-////////////////////////////////////////////////////////////

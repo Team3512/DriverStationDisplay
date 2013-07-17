@@ -33,10 +33,26 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include "../SFML/Graphics/Image.hpp"
-#include "ImageLoader.hpp"
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+
+#include "stb_image/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image/stb_image_write.h"
+#include <cctype>
+
+
+namespace
+{
+    // Convert a string to lower case
+    std::string toLower(std::string str)
+    {
+        for (std::string::iterator i = str.begin(); i != str.end(); ++i)
+            *i = static_cast<char>(std::tolower(*i));
+        return str;
+    }
+}
 
 
 namespace sf
@@ -74,16 +90,85 @@ void Image::create(unsigned int width, unsigned int height, const uint8_t* pixel
 
 
 ////////////////////////////////////////////////////////////
-bool Image::loadFromMemory(const void* data, std::size_t size)
+bool Image::loadFromMemory(const void* data, std::size_t dataSize)
 {
-    return priv::ImageLoader::getInstance().loadImageFromMemory(data, size, m_pixels, m_size);
+    // Check input parameters
+    if (data && dataSize)
+    {
+        // Clear the array (just in case)
+        m_pixels.clear();
+
+        // Load the image and get a pointer to the pixels in memory
+        int width, height, channels;
+        const unsigned char* buffer = static_cast<const unsigned char*>(data);
+        unsigned char* ptr = stbi_load_from_memory(buffer, static_cast<int>(dataSize), &width, &height, &channels, STBI_rgb_alpha);
+
+        if (ptr && width && height)
+        {
+            // Assign the image properties
+            m_size.x = width;
+            m_size.y = height;
+
+            // Copy the loaded pixels to the pixel buffer
+            m_pixels.resize(width * height * 4);
+            std::memcpy(&m_pixels[0], ptr, m_pixels.size());
+
+            // Free the loaded pixels (they are now in our own pixel buffer)
+            stbi_image_free(ptr);
+
+            return true;
+        }
+        else
+        {
+            // Error, failed to load the image
+            std::cerr << "Failed to load image from memory. Reason : " << stbi_failure_reason() << std::endl;
+
+            return false;
+        }
+    }
+    else
+    {
+        std::cerr << "Failed to load image from memory, no data provided" << std::endl;
+        return false;
+    }
 }
 
 
 ////////////////////////////////////////////////////////////
 bool Image::saveToFile(const std::string& filename) const
 {
-    return priv::ImageLoader::getInstance().saveImageToFile(filename, m_pixels, m_size);
+    // Make sure the image is not empty
+    if (!m_pixels.empty() && (m_size.x > 0) && (m_size.y > 0))
+    {
+        // Deduce the image type from its extension
+        if (filename.size() > 3)
+        {
+            // Extract the extension
+            std::string extension = filename.substr(filename.size() - 3);
+
+            if (toLower(extension) == "bmp")
+            {
+                // BMP format
+                if (stbi_write_bmp(filename.c_str(), m_size.x, m_size.y, 4, &m_pixels[0]))
+                    return true;
+            }
+            else if (toLower(extension) == "tga")
+            {
+                // TGA format
+                if (stbi_write_tga(filename.c_str(), m_size.x, m_size.y, 4, &m_pixels[0]))
+                    return true;
+            }
+            else if(toLower(extension) == "png")
+            {
+                // PNG format
+                if (stbi_write_png(filename.c_str(), m_size.x, m_size.y, 4, &m_pixels[0], 0))
+                    return true;
+            }
+        }
+    }
+
+    std::cerr << "Failed to save image \"" << filename << "\"" << std::endl;
+    return false;
 }
 
 ////////////////////////////////////////////////////////////

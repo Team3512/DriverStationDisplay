@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include "../Config.hpp"
+#include <cstdint>
 
 
 namespace sf
@@ -81,33 +81,3 @@ public :
 
 
 #endif // SFML_COLOR_HPP
-
-
-////////////////////////////////////////////////////////////
-/// \class sf::Color
-/// \ingroup graphics
-///
-/// sf::Color is a simple color class composed of 4 components:
-/// \li Red
-/// \li Green
-/// \li Blue
-/// \li Alpha (opacity)
-///
-/// Each component is a public member, an unsigned integer in
-/// the range [0, 255]. Thus, colors can be constructed and
-/// manipulated very easily:
-///
-/// \code
-/// sf::Color color(255, 0, 0); // red
-/// color.r = 0;                // make it black
-/// color.b = 128;              // make it dark blue
-/// \endcode
-///
-/// The fourth component of colors, named "alpha", represents
-/// the opacity of the color. A color with an alpha value of
-/// 255 will be fully opaque, while an alpha value of 0 will
-/// make a color fully transparent, whatever the value of the
-/// other components is.
-/// \endcode
-///
-////////////////////////////////////////////////////////////

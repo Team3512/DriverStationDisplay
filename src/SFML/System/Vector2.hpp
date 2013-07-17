@@ -75,30 +75,3 @@ public :
 
 
 #endif // SFML_VECTOR2_HPP
-
-
-////////////////////////////////////////////////////////////
-/// \class sf::Vector2
-/// \ingroup system
-///
-/// sf::Vector2 is a simple class that defines a mathematical
-/// vector with two coordinates (x and y). It can be used to
-/// represent anything that has two dimensions: a size, a point,
-/// a velocity, etc.
-///
-/// The template parameter T is the type of the coordinates. It
-/// can be any type that supports arithmetic operations (+, -, /, *)
-/// and comparisons (==, !=), for example int or float.
-///
-/// The sf::Vector2 class has a small and simple interface, its x and y members
-/// can be accessed directly (there's no accessor like setX(), getX()) and it
-/// contains no mathematical function like dot product, cross product, length, etc.
-///
-/// Usage example:
-/// \code
-/// sf::Vector2f v1(16.5f, 24.f);
-/// v1.x = 18.2f;
-/// float y = v1.y;
-/// \endcode
-///
-////////////////////////////////////////////////////////////
