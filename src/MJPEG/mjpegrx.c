@@ -1,8 +1,4 @@
-/*=============================================================================
- *File Name: mjpegrx.c
- *Description: MJPEG HTTP stream decoder
- *Author: FRC Team 3512, Spartatroniks
- *=============================================================================*/
+/* mjpeg HTTP stream decoder */
 
 #ifdef WIN32
 
@@ -19,8 +15,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <process.h>
 #include <assert.h>
+
+#include "win32_socketpair.h"
 
 #else
 
@@ -39,12 +36,19 @@
 #include <strings.h>
 #include <string.h>
 
-#include <pthread.h>
 #include <assert.h>
+
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #endif
 
 #include "mjpegrx.h"
+
+/* Returns the larger of a or b */
+#define mjpeg_max(a, b) ((a > b) ? a : b)
+
 char * strtok_r_n(char *str, char *sep, char **last, char *used);
 
 #ifdef WIN32
@@ -60,15 +64,21 @@ _sck_wsainit(){
 }
 #endif
 
+/* Read a byte from sd into (*buf)+*bufpos . If afterwards,
+   *bufpos == (*bufsize)-1, reallocate the buffer as 1024
+   bytes larger, updating *bufsize . This function blocks
+   until either a byte is received, or cancelfd becomes
+   ready for reading. */
 int
-mjpeg_rxbyte(char **buf, int *bufpos, int *bufsize, int sd){
+mjpeg_rxbyte(char **buf, int *bufpos, int *bufsize, int sd, int cancelfd){
     int bytesread;
 
-    bytesread = recv(sd, (*buf)+*bufpos, 1, MSG_WAITALL);
-    if(bytesread < 1) return 1;
+    bytesread = mjpeg_sck_recv(sd, (*buf)+*bufpos, 1, cancelfd);
+    if(bytesread == -1) return -1;
+    if(bytesread != 1) return 1;
     (*bufpos)++;
 
-    if(*bufpos == 1023){
+    if(*bufpos == (*bufsize)-1){
         *bufsize += 1024;
         *buf = realloc(*buf, *bufsize);
     }
@@ -76,8 +86,10 @@ mjpeg_rxbyte(char **buf, int *bufpos, int *bufsize, int sd){
     return 0;
 }
 
+/* Read data up until the character sequence "\r\n\r\n" is
+   received. */
 int
-mjpeg_rxheaders(char **buf_out, int *bufsize_out, int sd){
+mjpeg_rxheaders(char **buf_out, int *bufsize_out, int sd, int cancelfd){
     int allocsize;
     int bufpos;
     char *buf;
@@ -87,11 +99,12 @@ mjpeg_rxheaders(char **buf_out, int *bufsize_out, int sd){
     buf = malloc(allocsize);
 
     while(1){
-        if(mjpeg_rxbyte(&buf, &bufpos, &allocsize, sd) != 0){
+        if(mjpeg_rxbyte(&buf, &bufpos, &allocsize, sd, cancelfd) != 0){
             free(buf);
             return -1;
         }
-        if(bufpos >= 4 && buf[bufpos-4] == '\r' && buf[bufpos-3] == '\n' && buf[bufpos-2] == '\r' && buf[bufpos-1] == '\n'){
+        if(bufpos >= 4 && buf[bufpos-4] == '\r' && buf[bufpos-3] == '\n' &&
+            buf[bufpos-2] == '\r' && buf[bufpos-1] == '\n'){
             break;
         }
     }
@@ -103,56 +116,219 @@ mjpeg_rxheaders(char **buf_out, int *bufsize_out, int sd){
     return 0;
 }
 
+/* A platform-independent wrapper for the UNIX close(2) and
+   Windows closesocket() functions. */
 int
-mjpeg_sck_connect(char *host, int port, int *sdp)
+mjpeg_sck_close(int sd)
+{
+#ifdef WIN32
+    return closesocket(sd);
+#else
+    return close(sd);
+#endif
+}
+
+/* mjpeg_sck_recv() blocks until either len bytes of data have
+   been read into buf, or cancelfd becomes ready for reading.
+   If either len bytes are read, or cancelfd becomes ready for
+   reading, the number of bytes received is returned. On error,
+   -1 is returned, and errno is set appropriately. */
+int
+mjpeg_sck_recv(int sockfd, void *buf, size_t len, int cancelfd)
+{
+    int error;
+    int nread;
+    fd_set readfds;
+    fd_set exceptfds;
+
+    nread = 0;
+    while(nread < len) {
+        FD_ZERO(&readfds);
+        FD_ZERO(&exceptfds);
+
+        /* Set the sockets into the fd_set s */
+        FD_SET(sockfd, &readfds);
+        FD_SET(sockfd, &exceptfds);
+        if(cancelfd) {
+            FD_SET(cancelfd, &readfds);
+            FD_SET(cancelfd, &exceptfds);
+        }
+
+        error = select(mjpeg_max(sockfd, cancelfd)+1, &readfds, NULL, &exceptfds, NULL);
+        if(error == -1) {
+            return -1;
+        }
+
+        /* If an exception occurred with either one, return error. */
+        if((cancelfd && FD_ISSET(cancelfd, &exceptfds)) ||
+            FD_ISSET(sockfd, &exceptfds)) {
+            return -1;
+        }
+
+        /* If cancelfd is ready for reading, return now with what
+           we have read so far. */
+        if(cancelfd && FD_ISSET(cancelfd, &readfds)) {
+            return nread;
+        }
+
+        /* Otherwise, read some more. */
+        error = recv(sockfd, buf+nread, len-nread, 0);
+        if(error == -1) {
+            return -1;
+        }
+        nread += error;
+    }
+
+    return nread;
+}
+
+/* mjpeg_sck_connect() attempts to connect to the specified
+   remote host on the specified port. The function blocks
+   until either cancelfd becomes ready for reading, or the
+   connection succeeds or times out.
+   If the connection succeeds, the new socket descriptor
+   is returned. On error, -1 isreturned, and errno is
+   set appropriately. */
+int
+mjpeg_sck_connect(char *host, int port, int cancelfd)
 {
     int sd;
     int error;
+    int error_code;
+    int error_code_len;
+    int nbenabled;
+#ifndef WIN32
+    int flags;
+#endif
     struct hostent *hp;
     struct sockaddr_in pin;
+    fd_set readfds;
+    fd_set writefds;
+    fd_set exceptfds;
 
     #ifdef WIN32
     _sck_wsainit();
     #endif
 
+    /* Create a new socket */
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if(sd < 0) return -1;
 
-    /* Return the socket pointer */
-    *sdp = sd;
+    /* Set the non-blocking flag */
+    nbenabled = 1;
+#ifdef WIN32
+    error = ioctlsocket(sd, FIONBIO, (u_long *) &nbenabled);
+    if(error != 0) {
+        mjpeg_sck_close(sd);
+        return -1;
+    }
+#else
+    flags = fcntl(sd, F_GETFL, 0);
+    if(flags == -1) {
+        mjpeg_sck_close(sd);
+        return -1;
+    }
+    error = fcntl(sd, F_SETFL, flags | O_NONBLOCK);
+    if(error == -1) {
+        mjpeg_sck_close(sd);
+        return -1;
+    }
+#endif
 
-    /* get the host */
+    /* Resolve the specified hostname to an IPv4
+       address. */
     hp = gethostbyname(host);
     if(hp == NULL) {
-#ifdef WIN32
-        closesocket(sd);
-#else
-        close(sd);
-#endif
+        mjpeg_sck_close(sd);
         return -1;
     }
 
+    /* Set up the sockaddr_in structure. */
     memset(&pin, 0, sizeof(struct sockaddr_in));
     pin.sin_family = AF_INET;
     pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
     pin.sin_port = htons(port);
 
-    /* connect */
+    /* Try to connect */
     error = connect(
         sd,
         (struct sockaddr *)&pin,
         sizeof(struct sockaddr_in));
-    if(error != 0) {
+
 #ifdef WIN32
-        closesocket(sd);
+    if(error != 0 && WSAGetLastError() != WSAEWOULDBLOCK) {
+        mjpeg_sck_close(sd);
+        return -1;
+    }
 #else
-        close(sd);
+    if(error != 0 && errno != EINPROGRESS) {
+        mjpeg_sck_close(sd);
+        return -1;
+    }
+#endif
+
+    /* select(2) for reading and exceptions on the socket and
+       cancelfd. */
+    FD_ZERO(&readfds);
+    FD_SET(cancelfd, &readfds);
+
+    FD_ZERO(&writefds);
+    FD_SET(sd, &writefds);
+
+    FD_ZERO(&exceptfds);
+    FD_SET(sd, &exceptfds);
+    FD_SET(cancelfd, &exceptfds);
+    error = select(mjpeg_max(sd, cancelfd)+1, &readfds, &writefds, &exceptfds, NULL);
+    if(error == -1) {
+        mjpeg_sck_close(sd);
+        return -1;
+    }
+
+    /* We were interrupted by data at cancelfd before we could
+       finish connecting. */
+    if(FD_ISSET(cancelfd, &readfds)) {
+        mjpeg_sck_close(sd);
+#ifdef WIN32
+        WSASetLastError(WSAETIMEDOUT);
+#else
+        errno = ETIMEDOUT;
 #endif
         return -1;
     }
 
-    /* everything worked */
-    return 0;
+    /* Something bad happened. Probably one of the sockets
+       selected for an exception. */
+    if(!FD_ISSET(sd, &writefds)) {
+        mjpeg_sck_close(sd);
+#ifdef WIN32
+        WSASetLastError(WSAEBADF);
+#else
+        errno = EBADF;
+#endif
+        return -1;
+    }
+
+    /* Check that connecting was successful. */
+    error_code_len = sizeof(error_code);
+    error = getsockopt(sd, SOL_SOCKET, SO_ERROR, (void *) &error_code, (socklen_t *) &error_code_len);
+    if(error == -1) {
+      mjpeg_sck_close(sd);
+      return -1;
+    }
+    if(error_code != 0) {
+    /* Note: Setting errno on systems which either do not support
+       it, or whose socket error codes are not consistent with its
+       system error codes is a bad idea. */
+#if WIN32
+        WSASetLastError(error);
+#else
+        errno = error;
+#endif
+        return -1;
+    }
+
+    /* We're connected */
+    return sd;
 }
 
 char *
@@ -170,6 +346,10 @@ strchrs(char *s, char *c)
     return NULL;
 }
 
+/* A slightly modified version of strtok_r. When the function encounters a
+   character in the separator list, that character is set into *used before
+   the token is returned. This allows the caller to determine which separator
+   character preceded the returned token. */
 char *
 strtok_r_n(char *str, char *sep, char **last, char *used)
 {
@@ -262,6 +442,8 @@ mjpeg_process_header(char *header)
     return start;
 }
 
+/* mjpeg_freelist() frees a key/value pair list generated by
+   mjpeg_process_header() . */
 void
 mjpeg_freelist(struct keyvalue_t *list){
     struct keyvalue_t *tmp = NULL;
@@ -278,6 +460,8 @@ mjpeg_freelist(struct keyvalue_t *list){
     return;
 }
 
+/* Return the data in the specified list that corresponds
+   to the specified key. */
 char *
 mjpeg_getvalue(struct keyvalue_t *list, char *key)
 {
@@ -289,6 +473,23 @@ mjpeg_getvalue(struct keyvalue_t *list, char *key)
     return NULL;
 }
 
+/* A platform independent wrapper function which acts like
+   the call socketpair(AF_INET, SOCK_STREAM, 0, sv) . */
+int
+mjpeg_pipe(int sv[2])
+{
+#ifdef WIN32
+    return dumb_socketpair((SOCKET *) sv, 0);
+#else
+    /* return pipe(sv); */
+    return socketpair(AF_LOCAL, SOCK_STREAM, 0, sv);
+#endif
+}
+
+/* Create a new mjpegrx instance, and launch it's thread. This
+   begins streaming of the specified MJPEG stream. 
+   On success, a pointer to an mjpeg_inst_t structure is returned.
+   On error, NULL is reutned.*/
 struct mjpeg_inst_t *
 mjpeg_launchthread(
         char *host,
@@ -297,72 +498,82 @@ mjpeg_launchthread(
         struct mjpeg_callbacks_t *callbacks
         )
 {
-    struct mjpeg_threadargs_t *args;
+    int error;
+    int pipefd[2];
     struct mjpeg_inst_t *inst;
 
+    /* Allocate an instance object for this instance. */
     inst = malloc(sizeof(struct mjpeg_inst_t));
 
-    args = malloc(sizeof(struct mjpeg_threadargs_t));
-    args->host = strdup(host);
-    args->port = port;
-    args->reqpath = strdup(reqpath);
-    args->inst = inst;
+    /* Fill the object's fields. */
+    inst->host = strdup(host);
+    inst->port = port;
+    inst->reqpath = strdup(reqpath);
 
-    args->callbacks = malloc(sizeof(struct mjpeg_callbacks_t));
+    /* Create a pipe that, when written to, causes any operation
+       in the mjpegrx thread currently blocking to be cancelled. */
+    error = mjpeg_pipe(pipefd);
+    if(error != 0) {
+      return NULL;
+    }
+    inst->cancelfdr = pipefd[0];
+    inst->cancelfdw = pipefd[1];
+
+    /* Copy the mjpeg_callbacks_t structure into it's corresponding
+       field in the mjpeg_inst_t structure. */
     memcpy(
-        args->callbacks,
+        &inst->callbacks,
         callbacks,
         sizeof(struct mjpeg_callbacks_t)
     );
 
+    /* Mark the thread as running. */
     inst->threadrunning = 1;
 
-#ifdef WIN32
-    inst->thread = (HANDLE)(_beginthreadex(NULL, 0, mjpeg_threadmain, args, 0, &inst->threadId));
-#else
-    pthread_create(&inst->thread, NULL, mjpeg_threadmain, args);
-#endif
+    /* Spawn the thread. */
+    error = mjpeg_thread_create(&inst->thread, mjpeg_threadmain, inst);
+    if(error != 0) {
+        free(inst->host);
+        free(inst->reqpath);
+        free(inst);
+        return NULL;
+    }
 
     return inst;
 }
 
+/* Stop the specified mjpegrx instance. */
 void
 mjpeg_stopthread(struct mjpeg_inst_t *inst)
 {
+    /* Signal the thread to exit. */
     inst->threadrunning = 0;
-#ifdef WIN32
-    closesocket(inst->sd);
 
-    /* Wait for thread to exit */
-    if (inst->thread != NULL){
-        WaitForSingleObject(inst->thread, INFINITE);
+    /* Cancel any currently blocking operations. */
+    /* write(inst->cancelfdw, "U", 1); */
+    send(inst->cancelfdw, "U", 1, 0);
 
-        CloseHandle(inst->thread);
-        inst->thread = NULL;
-    }
-#else
-    close(inst->sd);
-    pthread_join(inst->thread, NULL);
-#endif
+    /* Wait for the thread to exit. */
+    mjpeg_thread_join(&inst->thread, NULL);
 
+    /* Free the mjpeg_inst_t and associated memory. */
+    free(inst->host);
+    free(inst->reqpath);
     free(inst);
 
     return;
 }
 
-/* Win32 requires different function pointer for _beginthreadex */
-#ifdef WIN32
-unsigned int
-__stdcall mjpeg_threadmain(void *optarg)
-#else
+/* The thread's main function. */
 void *
 mjpeg_threadmain(void *optarg)
-#endif
 {
-    struct mjpeg_threadargs_t* args = optarg;
+    struct mjpeg_inst_t* inst = optarg;
 
     int sd;
+#ifndef WIN32
     int error;
+#endif
 
     char *asciisize;
     int datasize;
@@ -375,43 +586,38 @@ mjpeg_threadmain(void *optarg)
 
     int bytesread;
 
-    /* connect */
-    error = mjpeg_sck_connect(args->host, args->port, &args->inst->sd);
-    sd = args->inst->sd;
-    if(error < 0){
+    /* Connect to the remote host. */
+    sd = mjpeg_sck_connect(inst->host, inst->port, inst->cancelfdr);
+    if(sd == -1){
+    	fprintf(stderr, "mjpegrx: Connection failed\n");
         /* call the thread finished callback */
-        if(args->callbacks->donecallback != NULL){
-            args->callbacks->donecallback(
-                args->callbacks->optarg);
+        if(inst->callbacks.donecallback != NULL){
+            inst->callbacks.donecallback(
+                inst->callbacks.optarg);
         }
 
-        free(args->host);
-        free(args->reqpath);
-        free(args->callbacks);
-
-#ifdef WIN32
-        _endthreadex(0);
-        return 0;
-#else
-        pthread_exit(NULL);
+        mjpeg_thread_exit(NULL);
         return NULL;
-#endif
     }
+    inst->sd = sd;
 
-    /* sends some bogus data so that we'll get a response */
-    snprintf(tmp, 255, "GET %s HTTP/1.0\r\n\r\n", args->reqpath);
+    /* Send the HTTP request. */
+    snprintf(tmp, 255, "GET %s HTTP/1.0\r\n\r\n", inst->reqpath);
     send(sd, tmp, strlen(tmp), 0);
     printf("%s", tmp);
 
-    while(args->inst->threadrunning > 0){
-        /* Read and parse incoming HTTP response headers */
-        if(mjpeg_rxheaders(&headerbuf, &headerbufsize, sd) == -1) break;
+    while(inst->threadrunning > 0){
+        /* Read and parse incoming HTTP response headers. */
+        if(mjpeg_rxheaders(&headerbuf, &headerbufsize, sd, inst->cancelfdr) == -1) {
+            fprintf(stderr, "mjpegrx: recv(2) failed\n");
+            break;
+        }
         headerlist = mjpeg_process_header(headerbuf);
         free(headerbuf);
         if(headerlist == NULL) break;
 
         /* Read the Content-Length header to determine the
-           length of data to read */
+           length of data to read. */
         asciisize = mjpeg_getvalue(
             headerlist,
             "Content-Length");
@@ -424,42 +630,33 @@ mjpeg_threadmain(void *optarg)
         datasize = atoi(asciisize);
         mjpeg_freelist(headerlist);
 
-        /* read the data */
+        /* Read the JPEG image data. */
         buf = malloc(datasize);
-        bytesread = recv(sd, buf, datasize, MSG_WAITALL);
+        bytesread = mjpeg_sck_recv(sd, buf, datasize, inst->cancelfdr);
         if(bytesread != datasize){
             free(buf);
+            fprintf(stderr, "mjpegrx: recv(2) failed\n");
             break;
         }
 
-        if(args->callbacks->readcallback != NULL){
-            args->callbacks->readcallback(
+        if(inst->callbacks.readcallback != NULL){
+            inst->callbacks.readcallback(
                 buf,
                 datasize,
-                args->callbacks->optarg);
+                inst->callbacks.optarg);
         }
         free(buf);
     }
-    #ifdef WIN32
-    closesocket(sd);
-    #else
-    close(sd);
-    #endif
 
-    if(args->callbacks->donecallback != NULL){
-        args->callbacks->donecallback(args->callbacks->optarg);
+    /* The loop has exited. We should now clean up and exit the thread. */
+    mjpeg_sck_close(sd);
+
+    /* Call the user's donecallback() function. */
+    if(inst->callbacks.donecallback != NULL){
+        inst->callbacks.donecallback(inst->callbacks.optarg);
     }
 
-    free(args->host);
-    free(args->callbacks);
-    free(args);
-    // args->inst is still alive after here because we don't free it
-
-#ifdef WIN32
-    _endthreadex(0);
-    return 0;
-#else
-    pthread_exit(NULL);
+    mjpeg_thread_exit(NULL);
     return NULL;
-#endif
 }
+
