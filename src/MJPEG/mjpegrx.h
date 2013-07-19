@@ -3,6 +3,10 @@
 #ifndef _MJPEGRX_H
 #define _MJPEGRX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mjpegrx_thread.h"
 
 struct keyvalue_t {
@@ -42,5 +46,9 @@ mjpeg_launchthread(
 int mjpeg_sck_recv(int sockfd, void *buf, size_t len, int cancelfd);
 void mjpeg_stopthread(struct mjpeg_inst_t *inst);
 void * mjpeg_threadmain(void *optarg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _MJPEGRX_H */

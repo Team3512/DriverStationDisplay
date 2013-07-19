@@ -2,8 +2,6 @@
 
 #ifdef WIN32
 
-#define MSG_WAITALL 0x08
-
 #include <winsock2.h>
 #include <signal.h>
 #define socklen_t int

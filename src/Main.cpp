@@ -106,7 +106,13 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             Instance ,
             NULL );
 
-    MjpegStream streamWin( gSettings.getValueFor( "streamHost" ) ,
+    /* If this isn't allocated on the heap, it can't be destroyed soon enough.
+     * If it were allocated on the stack, it would be destroyed when it leaves
+     * WinMain's scope, which is after its parent window is destroyed. This
+     * causes the cleanup in this object's destructor to not complete
+     * successfully.
+     */
+    gStreamWinPtr = new MjpegStream( gSettings.getValueFor( "streamHost" ) ,
             std::atoi( gSettings.getValueFor( "streamPort" ).c_str() ) ,
             gSettings.getValueFor( "streamRequestPath" ) ,
             mainWindow ,
@@ -115,7 +121,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             320 ,
             240 ,
             Instance );
-    gStreamWinPtr = &streamWin;
 
     /* ===== Robot Data Sending Variables ===== */
     sf::UdpSocket robotData;
@@ -132,7 +137,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     sf::TcpSocket robotCmd;
     gCmdSocketPtr = &robotCmd;
 
-    gDrawables = new DisplaySettings( "" , 12 , 12 , streamWin.getPosition().X + streamWin.getSize().X + 10 , 12 );
+    gDrawables = new DisplaySettings( "" , 12 , 12 , gStreamWinPtr->getPosition().X + gStreamWinPtr->getSize().X + 10 , 12 );
 
     // Used for displaying message box to user while also updating the display
     sf::Thread* msgBoxThrPtr = NULL;
@@ -151,8 +156,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     bool isExiting = false;
     while ( !isExiting ) {
-        if ( PeekMessage( &message , NULL , 0 , 0 , PM_NOREMOVE ) ) {
-            if ( GetMessage( &message , NULL , 0 , 0 ) > 0 ) {
+        if ( PeekMessage( &message , NULL , 0 , 0 , PM_REMOVE ) ) {
+            if ( message.message != WM_QUIT ) {
                 // If a message was waiting in the message queue, process it
                 TranslateMessage( &message );
                 DispatchMessage( &message );
@@ -174,8 +179,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
                 connectClock.restart();
             }
-
-            streamWin.display();
 
             // Retrieve data sent from robot and unpack it
             if ( robotData.receive( dataPacket , receiveIP , receivePort ) == sf::Socket::Done ) {
@@ -284,11 +287,14 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     // Delete message box thread
     delete msgBoxThrPtr;
 
+    // Delete MJPEG stream window
+    delete gStreamWinPtr;
+
     // Clean up windows
     DestroyWindow( mainWindow );
     UnregisterClass( mainClassName , Instance );
 
-    return EXIT_SUCCESS;
+    return message.wParam;
 }
 
 LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lParam ) {
@@ -536,19 +542,19 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
     }
 
     case WM_MJPEGSTREAM_START: {
-        gStreamWinPtr->display();
+        gStreamWinPtr->repaint();
 
         break;
     }
 
     case WM_MJPEGSTREAM_STOP: {
-        gStreamWinPtr->display();
+        gStreamWinPtr->repaint();
 
         break;
     }
 
     case WM_MJPEGSTREAM_NEWIMAGE: {
-        gStreamWinPtr->display();
+        gStreamWinPtr->repaint();
 
         break;
     }

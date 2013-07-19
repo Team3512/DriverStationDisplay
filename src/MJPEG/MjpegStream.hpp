@@ -22,6 +22,9 @@
  *
  * Change the button ID from IDC_STREAM_BUTTON to another ID if you want to
  * process more than one stream at once in WndProc
+ *
+ * Make sure every instance you create of this class is destroyed before its
+ * respective parent window. If not, the application will crash.
  */
 
 #ifndef _WIN32_WINNT
@@ -29,6 +32,11 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+#include <atomic>
 
 #include "../SFML/Graphics/Image.hpp"
 
@@ -44,6 +52,8 @@
 #define WM_MJPEGSTREAM_START     (WM_APP + 0x0001)
 #define WM_MJPEGSTREAM_STOP      (WM_APP + 0x0002)
 #define WM_MJPEGSTREAM_NEWIMAGE  (WM_APP + 0x0003)
+
+class StreamClassInit;
 
 class MjpegStream {
 public:
@@ -75,7 +85,7 @@ public:
     bool isStreaming();
 
     // Displays the stream or a message if the stream isn't working
-    void display();
+    void repaint();
 
     // Saves most recently received image to a file
     void saveCurrentImage( const std::string& fileName );
@@ -93,40 +103,43 @@ private:
 
     HWND m_streamWin;
 
+    // Resources for OpenGL rendering
+    HGLRC m_threadRC;
+    HDC m_bufferDC;
+
     // Holds pointer to button which toggles streaming
     HWND m_toggleButton;
 
     // Contains "Connecting" message
-    HDC m_connectDC;
-    HBITMAP m_connectBmp;
     Text m_connectMsg;
+    BYTE* m_connectPxl;
 
     // Contains "Disconnected" message
-    HDC m_disconnectDC;
-    HBITMAP m_disconnectBmp;
     Text m_disconnectMsg;
+    BYTE* m_disconnectPxl;
 
     // Contains "Waiting..." message
-    HDC m_waitDC;
-    HBITMAP m_waitBmp;
     Text m_waitMsg;
+    BYTE* m_waitPxl;
 
     // Contains background color
-    HDC m_backgroundDC;
-    HBITMAP m_backgroundBmp;
+    BYTE* m_backgroundPxl;
 
     // Holds image most recently received from the host
     sf::Image m_tempImage;
     sf::Mutex m_imageMutex;
 
     // Stores image before displaying it on the screen
-    HBITMAP m_imageBuffer;
-    char* m_pxlBuf;
+    uint8_t* m_pxlBuf;
+    unsigned int m_imgWidth;
+    unsigned int m_imgHeight;
+    unsigned int m_dispWidth;
+    unsigned int m_dispHeight;
 
     /* Used to determine when to draw the "Connecting..." message
      * (when the stream first starts)
      */
-    bool m_firstImage;
+    std::atomic<bool> m_firstImage;
 
     // Used for streaming MJPEG frames from host
     struct mjpeg_callbacks_t m_callbacks;
@@ -135,20 +148,33 @@ private:
     // Determines when a video frame is old
     sf::Clock m_imageAge;
 
-    // Locks display so only one thread can access or draw to it at a time
-    sf::Mutex m_displayMutex;
+    // Locks window so only one thread can access or draw to it at a time
+    sf::Mutex m_windowMutex;
 
     /* If true:
      *     Lets receive thread run
      * If false:
      *     Closes receive thread
      */
-    volatile bool m_stopReceive;
+    std::atomic<bool> m_stopReceive;
+
+    // Makes sure "Waiting..." graphic is drawn after timeout
+    sf::Thread m_updateThread;
 
     /* Recreates the graphics that display messages in the stream window
      * (Resizes them and recenters the text in the window)
      */
     void recreateGraphics( const Vector2i& windowSize );
+
+    // Initializes variables used for OpenGL rendering
+    void EnableOpenGL();
+    void DisableOpenGL();
+
+    static std::map<HWND , MjpegStream*> m_map;
+    static LRESULT CALLBACK WindowProc( HWND handle , UINT message , WPARAM wParam , LPARAM lParam );
+    void paint( PAINTSTRUCT* ps );
+
+    friend StreamClassInit;
 };
 
 #endif // MJPEG_STREAM_HPP
