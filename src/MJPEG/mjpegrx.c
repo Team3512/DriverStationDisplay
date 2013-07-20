@@ -194,8 +194,9 @@ mjpeg_sck_connect(char *host, int port, int cancelfd)
     int error;
     int error_code;
     int error_code_len;
-    int nbenabled;
-#ifndef WIN32
+#ifdef WIN32
+    u_long nbenabled;
+#else
     int flags;
 #endif
     struct hostent *hp;
@@ -213,9 +214,9 @@ mjpeg_sck_connect(char *host, int port, int cancelfd)
     if(sd < 0) return -1;
 
     /* Set the non-blocking flag */
-    nbenabled = 1;
 #ifdef WIN32
-    error = ioctlsocket(sd, FIONBIO, (u_long *) &nbenabled);
+    nbenabled = 1;
+    error = ioctlsocket(sd, FIONBIO, &nbenabled);
     if(error != 0) {
         mjpeg_sck_close(sd);
         return -1;
