@@ -1,6 +1,6 @@
 //=============================================================================
 //File Name: Vector.hpp
-//Description: Holds definitions for ProgressBar class
+//Description: Declares a container for coordinate pairs
 //Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
