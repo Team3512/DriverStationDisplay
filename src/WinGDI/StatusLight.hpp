@@ -33,6 +33,9 @@ public:
     void setString( const std::wstring& message );
     const std::wstring& getString();
 
+    static void setColorBlind( bool on );
+    static bool isColorBlind();
+
     void draw( HDC hdc );
 
     void updateValue();
@@ -41,6 +44,8 @@ private:
     Status m_status;
 
     Text m_text;
+
+    static bool m_isColorBlind;
 };
 
 #endif // STATUS_LIGHT_HPP

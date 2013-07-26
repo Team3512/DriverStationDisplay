@@ -11,6 +11,8 @@
 #include <cstring>
 #include <wingdi.h>
 
+bool StatusLight::m_isColorBlind = false;
+
 StatusLight::StatusLight( const Vector2i& position , std::wstring message , bool netUpdate ) :
         Drawable( position , Vector2i( 0 , 0 ) , 0 , 0 , 0 ) ,
         NetUpdate( netUpdate ) ,
@@ -44,14 +46,27 @@ void StatusLight::draw( HDC hdc ) {
 }
 
 void StatusLight::setActive( Status newStatus ) {
-    if ( newStatus == StatusLight::active ) {
-        setFillColor( RGB( 0 , 0 , 120 ) );
-    }
-    else if ( newStatus == StatusLight::standby ) {
-        setFillColor( RGB( 128 , 128 , 0 ) );
+    if ( m_isColorBlind ) {
+        if ( newStatus == StatusLight::active ) {
+            setFillColor( RGB( 0 , 0 , 120 ) );
+        }
+        else if ( newStatus == StatusLight::standby ) {
+            setFillColor( RGB( 128 , 128 , 0 ) );
+        }
+        else {
+            setFillColor( RGB( 128 , 0 , 0 ) );
+        }
     }
     else {
-        setFillColor( RGB( 128 , 0 , 0 ) );
+        if ( newStatus == StatusLight::active ) {
+            setFillColor( RGB( 0 , 120 , 0 ) );
+        }
+        else if ( newStatus == StatusLight::standby ) {
+            setFillColor( RGB( 128 , 128 , 0 ) );
+        }
+        else {
+            setFillColor( RGB( 128 , 0 , 0 ) );
+        }
     }
 
     m_status = newStatus;
@@ -85,6 +100,14 @@ void StatusLight::setString( const std::wstring& message ) {
 
 const std::wstring& StatusLight::getString() {
     return m_text.getString();
+}
+
+void StatusLight::setColorBlind( bool on ) {
+    m_isColorBlind = on;
+}
+
+bool StatusLight::isColorBlind() {
+    return m_isColorBlind;
 }
 
 void StatusLight::updateValue() {

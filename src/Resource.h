@@ -15,6 +15,7 @@
 #define IDC_REBOOT_BUTTON         204 // reboots cRIO controller
 #define IDC_EXIT_BUTTON           205 // exits program
 #define IDC_AUTON_COMBOBOX        206 // allows selection of autonomous routine
+#define IDC_COLORBLIND_CHK        207 // toggles color blind mode
 #define IDC_STATIC                -1
 
 #define IDM_ABOUT                 301

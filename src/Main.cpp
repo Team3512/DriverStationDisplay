@@ -28,6 +28,7 @@
 #include <cstring>
 
 #include "MJPEG/MjpegStream.hpp"
+#include "WinGDI/StatusLight.hpp"
 #include "Settings.hpp"
 #include "DisplaySettings.hpp"
 #include "Resource.h"
@@ -154,6 +155,10 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     // Make sure the main window is shown before continuing
     ShowWindow( mainWindow , SW_SHOW );
 
+    // Used for sending connect packets to robot
+    sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
+    unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
+
     bool isExiting = false;
     while ( !isExiting ) {
         if ( PeekMessage( &message , NULL , 0 , 0 , PM_REMOVE ) ) {
@@ -169,8 +174,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
         else {
             // If timeout has passed, remove GUI and attempt reconnect
             if ( connectClock.getElapsedTime().asMilliseconds() > 2000 ) {
-                sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
-                unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
                 char data[16] = "connect\r\n";
 
                 if ( gDataSocketPtr != NULL ) {
@@ -302,6 +305,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
     case WM_CREATE: {
         HGDIOBJ hfDefault = GetStockObject( DEFAULT_GUI_FONT );
 
+        // Create "connect" button
         HWND connectButton = CreateWindowEx( 0,
             "BUTTON",
             "Connect DS",
@@ -312,7 +316,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             28,
             handle,
             reinterpret_cast<HMENU>( IDC_CONNECT_BUTTON ),
-            GetModuleHandle( NULL ),
+            ((LPCREATESTRUCT)lParam)->hInstance,
             NULL);
 
         SendMessage(connectButton,
@@ -321,6 +325,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             MAKELPARAM( FALSE , 0 ) );
 
 
+        // Create "reload code" button
         HWND reloadButton = CreateWindowEx( 0,
             "BUTTON",
             "Reload Code",
@@ -331,7 +336,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             28,
             handle,
             reinterpret_cast<HMENU>( IDC_RELOAD_BUTTON ),
-            GetModuleHandle( NULL ),
+            ((LPCREATESTRUCT)lParam)->hInstance,
             NULL);
 
         SendMessage(reloadButton,
@@ -340,6 +345,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             MAKELPARAM( FALSE , 0 ) );
 
 
+        // Create "reboot robot" button
         HWND rebootButton = CreateWindowEx( 0,
             "BUTTON",
             "Reboot Robot",
@@ -350,7 +356,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             28,
             handle,
             reinterpret_cast<HMENU>( IDC_REBOOT_BUTTON ),
-            GetModuleHandle( NULL ),
+            ((LPCREATESTRUCT)lParam)->hInstance,
             NULL);
 
         SendMessage(rebootButton,
@@ -358,7 +364,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
 
-
+        // Create "exit" button
         HWND exitButton = CreateWindowEx( 0,
             "BUTTON",
             "Exit",
@@ -369,7 +375,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             28,
             handle,
             reinterpret_cast<HMENU>( IDC_EXIT_BUTTON ),
-            GetModuleHandle( NULL ),
+            ((LPCREATESTRUCT)lParam)->hInstance,
             NULL);
 
         SendMessage(exitButton,
@@ -377,6 +383,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
 
+        // Create autonomous mode selection box
         HWND autonComboBox = CreateWindowEx( 0,
             "COMBOBOX",
             "Autonomous Mode",
@@ -387,7 +394,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             GetSystemMetrics(SM_CYSCREEN) - 240 - ( 4 * ( 5 + 28 ) + 5 ),
             handle,
             reinterpret_cast<HMENU>( IDC_AUTON_COMBOBOX ),
-            GetModuleHandle( NULL ),
+            ((LPCREATESTRUCT)lParam)->hInstance,
             NULL );
         gAutonComboBox = autonComboBox;
 
@@ -402,6 +409,27 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             reinterpret_cast<LPARAM>( "" ));
 
         SendMessage( autonComboBox , CB_SETCURSEL , 0 , 0 );
+
+        // Create color blind mode check box
+        HWND colorBlindChk = CreateWindowEx( 0,
+            "BUTTON",
+            "Color Blind Mode",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
+            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+            5 * ( 5 + 28 ) + 5,
+            100,
+            28,
+            handle,
+            reinterpret_cast<HMENU>( IDC_COLORBLIND_CHK ),
+            ((LPCREATESTRUCT)lParam)->hInstance,
+            NULL);
+
+        SendMessage(colorBlindChk,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
+        CheckDlgButton( handle , IDC_COLORBLIND_CHK , BST_UNCHECKED );
 
         break;
     }
@@ -486,6 +514,26 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                         }
                     }
                 }
+                }
+
+                break;
+            }
+
+            case IDC_COLORBLIND_CHK: {
+                UINT checked = IsDlgButtonChecked( handle ,
+                        IDC_COLORBLIND_CHK );
+
+                if ( checked == BST_CHECKED ) {
+                    CheckDlgButton( handle , IDC_COLORBLIND_CHK ,
+                            BST_UNCHECKED );
+
+                    StatusLight::setColorBlind( false );
+                }
+                else if ( checked == BST_UNCHECKED ) {
+                    CheckDlgButton( handle , IDC_COLORBLIND_CHK ,
+                            BST_CHECKED );
+
+                    StatusLight::setColorBlind( true );
                 }
 
                 break;
