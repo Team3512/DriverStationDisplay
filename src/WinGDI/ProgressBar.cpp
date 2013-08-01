@@ -13,7 +13,7 @@ ProgressBar::ProgressBar( const Vector2i& position , std::wstring text , COLORRE
         RectangleShape( position , Vector2i( 100 , 18 ) , emptyFillColor , outlineColor , 1 ) ,
         NetUpdate( netUpdate ) ,
         m_barFill( Vector2i( position.X + 1 , position.Y + 1 ) , Vector2i( 98 , 16 ) , fullFillColor , RGB( 0 , 70 , 0 ) , 0 ) ,
-        m_text( Vector2i( position.X , position.Y + 18 + 2 ) , UIFont::getInstance().segoeUI14() , text.c_str() , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) , false ) {
+        m_text( Vector2i( position.X , position.Y + 18 + 2 ) , UIFont::getInstance().segoeUI14() , text.c_str() , RGB( 0 , 0 , 0 ) , RGB( 236 , 233 , 216 ) , false ) {
 
     setPercent( 0.f );
 }

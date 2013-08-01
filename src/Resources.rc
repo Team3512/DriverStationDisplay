@@ -4,7 +4,7 @@
 mainIcon ICON "Spartatroniks.ico"
 
 ////////// Process Manifest
-//CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "DriverStationDisplay.manifest"
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "DriverStationDisplay.manifest"
 
 ////////// About Dialog
 IDD_ABOUTBOX DIALOGEX (320 - 85) / 2 - 18, (240 - 31) / 2 - 22, 170, 62

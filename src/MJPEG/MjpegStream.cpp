@@ -63,7 +63,7 @@ StreamClassInit::StreamClassInit() {
     m_windowClass.hInstance     = GetModuleHandle( NULL );
     m_windowClass.hIcon         = NULL;
     m_windowClass.hCursor       = LoadCursor( NULL , IDC_ARROW );
-    m_windowClass.hbrBackground = (HBRUSH)GetStockObject( BLACK_BRUSH );
+    m_windowClass.hbrBackground = (HBRUSH)GetStockObject( WHITE_BRUSH );
     m_windowClass.lpszMenuName  = NULL;
     m_windowClass.lpszClassName = "Stream";
     m_windowClass.hIconSm       = NULL;
@@ -92,11 +92,11 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_threadRC( NULL ) ,
         m_bufferDC( NULL ) ,
 
-        m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Connecting..." , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
+        m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Connecting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) , false ) ,
         m_connectPxl( NULL ) ,
-        m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Disconnected" , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
+        m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Disconnected" , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) , false ) ,
         m_disconnectPxl( NULL ) ,
-        m_waitMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Waiting..." , RGB( 255 , 255 , 255 ) , RGB( 40 , 40 , 40 ) , false ) ,
+        m_waitMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Waiting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) , false ) ,
         m_waitPxl( NULL ) ,
         m_backgroundPxl( NULL ) ,
 
@@ -149,7 +149,7 @@ MjpegStream::MjpegStream( const std::string& hostName ,
     m_toggleButton = CreateWindowEx( 0,
         "BUTTON",
         "Start Stream",
-        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         xPosition ,
         yPosition + height + 5,
         100,
@@ -356,7 +356,7 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     SelectObject( backgroundDC , backgroundBmp );
 
     // Create brushes and regions for backgrounds
-    HBRUSH backgroundBrush = CreateSolidBrush( RGB( 40 , 40 , 40 ) );
+    HBRUSH backgroundBrush = CreateSolidBrush( RGB( 255 , 255 , 255 ) );
     HRGN backgroundRegion = CreateRectRgn( 0 , 0 , windowSize.X , windowSize.Y );
 
     HBRUSH transparentBrush = CreateSolidBrush( RGB( 0 , 0 , 0 ) );

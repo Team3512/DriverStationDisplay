@@ -41,9 +41,6 @@
 // Global because the window is closed by a button in CALLBACK OnEvent
 HWND gAutonComboBox = NULL;
 
-// Global so the brush doesn't have to be initialized in two places
-HBRUSH gMainBrush = NULL;
-
 // Global because IP configuration settings are needed in CALLBACK OnEvent
 Settings gSettings( "IPSettings.txt" );
 
@@ -70,7 +67,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     const char* mainClassName = "DriverStationDisplay";
 
     HICON mainIcon = LoadIcon( Instance , "mainIcon" );
-    gMainBrush = CreateSolidBrush( RGB( 87 , 87 , 87 ) );
 
     // Define a class for our main window
     WNDCLASSEX WindowClass;
@@ -83,7 +79,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     WindowClass.hInstance     = Instance;
     WindowClass.hIcon         = mainIcon;
     WindowClass.hCursor       = LoadCursor( NULL , IDC_ARROW );
-    WindowClass.hbrBackground = gMainBrush;
+    WindowClass.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
     WindowClass.lpszMenuName  = NULL;
     WindowClass.lpszClassName = mainClassName;
     WindowClass.hIconSm       = mainIcon;
@@ -284,7 +280,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     }
 
     // Neither of these were allocated on the stack before storing their pointers
-    DeleteObject( gMainBrush );
     delete gDrawables;
 
     // Delete message box thread
@@ -309,7 +304,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         HWND connectButton = CreateWindowEx( 0,
             "BUTTON",
             "Connect DS",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
             0 * ( 5 + 28 ) + 5,
             100,
@@ -329,7 +324,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         HWND reloadButton = CreateWindowEx( 0,
             "BUTTON",
             "Reload Code",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
             1 * ( 5 + 28 ) + 5,
             100,
@@ -349,7 +344,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         HWND rebootButton = CreateWindowEx( 0,
             "BUTTON",
             "Reboot Robot",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
             2 * ( 5 + 28 ) + 5,
             100,
@@ -368,7 +363,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         HWND exitButton = CreateWindowEx( 0,
             "BUTTON",
             "Exit",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
             3 * ( 5 + 28 ) + 5,
             100,
@@ -418,7 +413,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
             5 * ( 5 + 28 ) + 5,
             100,
-            28,
+            13,
             handle,
             reinterpret_cast<HMENU>( IDC_COLORBLIND_CHK ),
             ((LPCREATESTRUCT)lParam)->hInstance,
@@ -559,7 +554,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
 
         // Fill buffer DC with a background color
         HRGN region = CreateRectRgn( 0 , 0 , rect.right , rect.bottom );
-        FillRgn( bufferDC , region , gMainBrush );
+        FillRgn( bufferDC , region , GetSysColorBrush(COLOR_3DFACE) );
         DeleteObject( region );
 
         // Creates 1:1 relationship between logical units and pixels

@@ -5,6 +5,9 @@
 //Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
+#ifndef SETTINGS_HPP
+#define SETTINGS_HPP
+
 #include <map>
 #include <string>
 
@@ -36,3 +39,5 @@ private:
 
     std::string extractDataFromString( const bool& isName );
 };
+
+#endif // SETTINGS_HPP

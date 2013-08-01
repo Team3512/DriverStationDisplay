@@ -282,7 +282,7 @@ void DisplaySettings::parseLine( std::wstring line ) {
 
     // Create element
     if ( m_currentType == std::wstring( L"TEXT" ) ) {
-        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , RGB( 255 , 255 , 255 ) , RGB( 87 , 87 , 87 ) , true );
+        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , RGB( 0 , 0 , 0 ) , RGB( 236 , 233 , 216 ) , true );
         elemPtr = temp;
         netPtr = temp;
     }
@@ -292,7 +292,7 @@ void DisplaySettings::parseLine( std::wstring line ) {
         netPtr = temp;
     }
     else if ( m_currentType == std::wstring( L"PBAR" ) ) {
-        ProgressBar* temp = new ProgressBar( Vector2i( m_tempX , m_tempY ) , m_startText , RGB( 0 , 120 , 0 ) , RGB( 40 , 40 , 40 ) , RGB( 50 , 50 , 50 ) , true );
+        ProgressBar* temp = new ProgressBar( Vector2i( m_tempX , m_tempY ) , m_startText , RGB( 0 , 120 , 0 ) , RGB( 255 , 255 , 255 ) , RGB( 50 , 50 , 50 ) , true );
         elemPtr = temp;
         netPtr = temp;
     }
