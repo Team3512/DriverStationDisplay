@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <atomic>
 
 #include "MJPEG/MjpegStream.hpp"
 #include "WinGDI/StatusLight.hpp"
@@ -147,6 +148,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     // Used for auto-connect with robot
     sf::Clock connectClock;
     bool connectedBefore = false;
+    std::atomic<bool> connectDlgOpen( false );
 
     // Make sure the main window is shown before continuing
     ShowWindow( mainWindow , SW_SHOW );
@@ -169,7 +171,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
         }
         else {
             // If timeout has passed, remove GUI and attempt reconnect
-            if ( connectClock.getElapsedTime().asMilliseconds() > 2000 ) {
+            if ( connectClock.getElapsedTime().asMilliseconds() > 2000 && !connectDlgOpen ) {
                 char data[16] = "connect\r\n";
 
                 if ( gDataSocketPtr != NULL ) {
@@ -261,8 +263,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                     // Delete old thread before spawning new one
                     delete msgBoxThrPtr;
 
-                    msgBoxThrPtr = new sf::Thread( [=]{
+                    msgBoxThrPtr = new sf::Thread( [&]{ connectDlgOpen = true;
                             MessageBox( mainWindow , autoName.c_str() , "Autonomous Change" , MB_ICONINFORMATION | MB_OK );
+                            connectDlgOpen = false;
                     } );
 
                     msgBoxThrPtr->launch();
@@ -300,33 +303,13 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
     case WM_CREATE: {
         HGDIOBJ hfDefault = GetStockObject( DEFAULT_GUI_FONT );
 
-        // Create "connect" button
-        HWND connectButton = CreateWindowEx( 0,
-            "BUTTON",
-            "Connect DS",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            0 * ( 5 + 28 ) + 5,
-            100,
-            28,
-            handle,
-            reinterpret_cast<HMENU>( IDC_CONNECT_BUTTON ),
-            ((LPCREATESTRUCT)lParam)->hInstance,
-            NULL);
-
-        SendMessage(connectButton,
-            WM_SETFONT,
-            reinterpret_cast<WPARAM>( hfDefault ),
-            MAKELPARAM( FALSE , 0 ) );
-
-
         // Create "reload code" button
         HWND reloadButton = CreateWindowEx( 0,
             "BUTTON",
             "Reload Code",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            1 * ( 5 + 28 ) + 5,
+            0 * ( 5 + 28 ) + 5,
             100,
             28,
             handle,
@@ -346,7 +329,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             "Reboot Robot",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            2 * ( 5 + 28 ) + 5,
+            1 * ( 5 + 28 ) + 5,
             100,
             28,
             handle,
@@ -365,7 +348,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             "Exit",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            3 * ( 5 + 28 ) + 5,
+            2 * ( 5 + 28 ) + 5,
             100,
             28,
             handle,
@@ -384,7 +367,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             "Autonomous Mode",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWN,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            4 * ( 5 + 28 ) + 5,
+            3 * ( 5 + 28 ) + 5,
             100,
             GetSystemMetrics(SM_CYSCREEN) - 240 - ( 4 * ( 5 + 28 ) + 5 ),
             handle,
@@ -411,7 +394,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             "Color Blind Mode",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            5 * ( 5 + 28 ) + 5,
+            4 * ( 5 + 28 ) + 5,
             100,
             13,
             handle,
@@ -450,16 +433,6 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                  }
 
                  break;
-            }
-
-            case IDC_CONNECT_BUTTON: {
-                std::strcpy( data , "connect\r\n" );
-
-                if ( gDataSocketPtr != NULL ) {
-                    gDataSocketPtr->send( data , 16 , robotIP , robotDataPort );
-                }
-
-                break;
             }
 
             // These other commands get sent to ALF rather than the robot

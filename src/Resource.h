@@ -10,12 +10,11 @@
 #define IDD_ABOUTBOX              101
 
 #define IDC_STREAM_BUTTON         201 // MJPEG stream toggle button
-#define IDC_CONNECT_BUTTON        202 // connects to robot so it knows where to send HUD data
-#define IDC_RELOAD_BUTTON         203 // reloads the robot code kernel object
-#define IDC_REBOOT_BUTTON         204 // reboots cRIO controller
-#define IDC_EXIT_BUTTON           205 // exits program
-#define IDC_AUTON_COMBOBOX        206 // allows selection of autonomous routine
-#define IDC_COLORBLIND_CHK        207 // toggles color blind mode
+#define IDC_RELOAD_BUTTON         202 // reloads the robot code kernel object
+#define IDC_REBOOT_BUTTON         203 // reboots cRIO controller
+#define IDC_EXIT_BUTTON           204 // exits program
+#define IDC_AUTON_COMBOBOX        205 // allows selection of autonomous routine
+#define IDC_COLORBLIND_CHK        206 // toggles color blind mode
 #define IDC_STATIC                -1
 
 #define IDM_ABOUT                 301
