@@ -92,11 +92,17 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_threadRC( NULL ) ,
         m_bufferDC( NULL ) ,
 
-        m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Connecting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) , false ) ,
+        m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() ,
+                L"Connecting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) ,
+                false ) ,
         m_connectPxl( NULL ) ,
-        m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Disconnected" , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) , false ) ,
+        m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() ,
+                L"Disconnected" , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) ,
+                false ) ,
         m_disconnectPxl( NULL ) ,
-        m_waitMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() , L"Waiting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) , false ) ,
+        m_waitMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() ,
+                L"Waiting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) ,
+                false ) ,
         m_waitPxl( NULL ) ,
         m_backgroundPxl( NULL ) ,
 
@@ -175,12 +181,13 @@ MjpegStream::MjpegStream( const std::string& hostName ,
     m_callbacks.optarg = this;
 
     // Add window to global map
-    m_map.insert( m_map.begin() , std::pair<HWND , MjpegStream*>( m_streamWin , this ) );
+    m_map.insert( m_map.begin() ,
+            std::pair<HWND , MjpegStream*>( m_streamWin , this ) );
 
-    /* This isn't called in response to WM_CREATE because an entry in m_map for
-     * the window must exist first in order to call this function, but
-     * WM_CREATE is sent to the message queue immediately upon creation of the
-     * window, which is before this constructor has a change to add the entry.
+    /* This isn't called in response to the WM_CREATE message because an entry
+     * in m_map for the window must exist first, but WM_CREATE is sent to the
+     * message queue immediately upon creation of the window, which is before
+     * this constructor has a chance to add the entry.
      */
     EnableOpenGL();
 
