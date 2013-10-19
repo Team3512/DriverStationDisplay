@@ -38,7 +38,7 @@ std::wstring replaceUnicodeChars( std::wstring text ) {
 }
 
 std::list<NetUpdate*> NetUpdate::m_netObjs;
-std::map<std::wstring , netValue_t*> NetUpdate::m_netValues;
+std::map<std::string , netValue_t*> NetUpdate::m_netValues;
 
 NetUpdate::NetUpdate( bool trackUpdate ) :
 m_trackUpdate( trackUpdate ) {
@@ -74,10 +74,10 @@ const std::wstring& NetUpdate::getUpdateText() {
 
 void NetUpdate::updateValues( sf::Packet& packet ) {
     unsigned char type;
-    std::wstring key;
+    std::string key;
 
     netValue_t* tempVal;
-    std::wstring str;
+    std::string str;
     bool valAllocated = false;
 
     bool haveValidData = true;
@@ -202,7 +202,15 @@ void NetUpdate::updateValues( sf::Packet& packet ) {
                 break;
             }
             case 's': {
-                std::memcpy( tempVal->value , str.c_str() , sizeof(wchar_t) * tempVal->size );
+                // Convert std::string to std::wstring
+                wchar_t cStr[str.length() + 1];
+                std::memset( cStr , 0 , sizeof(cStr) );
+
+                for ( unsigned int i = 0 ; i < sizeof(cStr) / sizeof(wchar_t) ; i++ ) {
+                    cStr[i] = str[i];
+                }
+
+                std::memcpy( tempVal->value , cStr , sizeof(wchar_t) * tempVal->size );
 
                 break;
             }
@@ -231,7 +239,7 @@ void NetUpdate::freeValue( netValue_t* netVal ) {
 }
 
 void NetUpdate::clearNetValues() {
-    for ( std::map<std::wstring , netValue_t*>::iterator i = m_netValues.begin() ; i != m_netValues.end() ; i++ ) {
+    for ( std::map<std::string , netValue_t*>::iterator i = m_netValues.begin() ; i != m_netValues.end() ; i++ ) {
         freeValue( i->second );
 
         delete i->second; // Free netValue_t object
@@ -240,7 +248,7 @@ void NetUpdate::clearNetValues() {
     m_netValues.clear(); // Remove freed objects from std::map m_netValues
 }
 
-netValue_t* NetUpdate::getValue( const std::wstring& key ) {
+netValue_t* NetUpdate::getValue( const std::string& key ) {
     // If there is a value for the given key, return it
     if ( m_netValues.find( key ) != m_netValues.end() ) {
         return m_netValues[key];
@@ -256,7 +264,7 @@ void NetUpdate::updateElements() {
     }
 }
 
-void NetUpdate::updateKeys( std::vector<std::wstring>& keys ) {
+void NetUpdate::updateKeys( std::vector<std::string>& keys ) {
     m_varIds = keys;
 }
 

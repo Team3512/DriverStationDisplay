@@ -14,6 +14,7 @@
 
 #include <fstream>
 #include <cstdio>
+#include <cstring>
 
 DisplaySettings::DisplaySettings( std::string fileName , int leftX , int leftY , int rightX , int rightY ) :
     m_lStartX( leftX ) ,
@@ -30,12 +31,12 @@ DisplaySettings::~DisplaySettings() {
 }
 
 void DisplaySettings::reloadGUI( sf::Packet& packet ) {
-    std::wstring *elementLine;
+    std::string* elementLine;
     unsigned int filesize;
-    wchar_t *tmpbuf;
+    char* tmpbuf;
     unsigned char tmpbyte;
     unsigned int i;
-    wchar_t *curLine;
+    char* curLine;
 
     // Remove old elements before creating new ones
     clearGUI();
@@ -45,24 +46,24 @@ void DisplaySettings::reloadGUI( sf::Packet& packet ) {
     // Read the file out of the packet
     packet >> filesize;
 
-    // Read the file into a wchar_t buffer
-    tmpbuf = new wchar_t[filesize + 1];
+    // Read the file into a char buffer
+    tmpbuf = new char[filesize + 1];
     for(i = 0; i < filesize; i++) {
         packet >> tmpbyte;
-        tmpbuf[i] = std::btowc(tmpbyte);
+        tmpbuf[i] = tmpbyte;
     }
-    tmpbuf[i] = L'\0';
+    tmpbuf[i] = '\0';
 
     // Send individual lines for processing
-    curLine = std::wcstok( tmpbuf, L"\r\n" );
+    curLine = std::strtok( tmpbuf, "\r\n" );
     while( curLine != NULL ) {
-        elementLine = new std::wstring(curLine);
+        elementLine = new std::string(curLine);
         if( elementLine->length() > 0 ) {
             parseLine( *elementLine );
         }
         delete elementLine;
 
-        curLine = std::wcstok(NULL, L"\r\n");
+        curLine = std::strtok(NULL, "\r\n");
     }
 
     // Free the file buffer
@@ -71,7 +72,7 @@ void DisplaySettings::reloadGUI( sf::Packet& packet ) {
 
 void DisplaySettings::reloadGUI( const std::string& fileName ) {
     std::string tempName = fileName;
-    std::wifstream guiSettings( tempName );
+    std::ifstream guiSettings( tempName );
 
     // Remove old elements before creating new ones
     clearGUI();
@@ -107,7 +108,7 @@ void DisplaySettings::drawDisplay( HDC hdc ) {
     }
 }
 
-void DisplaySettings::parseLine( std::wstring line ) {
+void DisplaySettings::parseLine( std::string line ) {
     m_line = line;
     m_tempVarIds.clear();
 
@@ -121,7 +122,7 @@ void DisplaySettings::parseLine( std::wstring line ) {
     m_start = 0;
     m_length = 0;
 
-    m_delimiter = L" ";
+    m_delimiter = " ";
 
     // Get first three arguments
     for ( size_t i = 0 ; i < 3 ; i++ ) {
@@ -149,7 +150,7 @@ void DisplaySettings::parseLine( std::wstring line ) {
 
             unsigned int start = 0;
             unsigned int length = 0;
-            std::wstring delimiter = L",";
+            std::string delimiter = ",";
 
             // While there are still characters to parse
             while ( start < m_substring.size() - 1 ) {
@@ -181,12 +182,12 @@ void DisplaySettings::parseLine( std::wstring line ) {
             m_column = m_line.substr( m_start , m_length );
 
             // Store the element IDs in the correct columns
-            if ( m_column == std::wstring( L"left" ) ) {
+            if ( m_column == std::string( "left" ) ) {
                 // Store previous "current type" before updating it
                 m_lLastType = m_lCurrentType;
                 m_lCurrentType = m_currentType;
             }
-            else if ( m_column == std::wstring( L"right" ) ) {
+            else if ( m_column == std::string( "right" ) ) {
                 // Store previous "current type" before updating it
                 m_rLastType = m_rCurrentType;
                 m_rCurrentType = m_currentType;
@@ -198,7 +199,7 @@ void DisplaySettings::parseLine( std::wstring line ) {
         m_length = 0;
     }
 
-    m_delimiter = L"\"";
+    m_delimiter = "\"";
 
     // Get last two arguments in quotes
     for ( size_t i = 2 ; i < 4 ; i++ ) {
@@ -221,10 +222,30 @@ void DisplaySettings::parseLine( std::wstring line ) {
 
         // Get current argument
         if ( i == 2 ) {
-            m_startText = m_line.substr( m_start , m_length );
+            std::string tempStr = m_line.substr( m_start , m_length );
+
+            // Convert std::string to std::wstring
+            wchar_t cStr[tempStr.length() + 1];
+            std::memset( cStr , 0 , sizeof(cStr) );
+
+            for ( unsigned int i = 0 ; i < sizeof(cStr) / sizeof(wchar_t) ; i++ ) {
+                cStr[i] = tempStr[i];
+            }
+
+            m_startText = std::wstring( cStr );
         }
         else if ( i == 3 ) {
-            m_updateText = m_line.substr( m_start , m_length );
+            std::string tempStr = m_line.substr( m_start , m_length );
+
+            // Convert std::string to std::wstring
+            wchar_t cStr[tempStr.length() + 1];
+            std::memset( cStr , 0 , sizeof(cStr) );
+
+            for ( unsigned int i = 0 ; i < sizeof(cStr) / sizeof(wchar_t) ; i++ ) {
+                cStr[i] = tempStr[i];
+            }
+
+            m_updateText = std::wstring( cStr );
         }
 
         // Move start past current argument
@@ -240,34 +261,34 @@ void DisplaySettings::parseLine( std::wstring line ) {
     /* Set appropriate X and Y coordinates for new element and use
      * correct column's previous element ID
      */
-    if ( m_column == std::wstring( L"left" ) ) {
+    if ( m_column == std::string( "left" ) ) {
         m_tempX = m_lStartX;
         m_tempY = m_lTempY;
         m_lastType = m_lLastType;
     }
-    else if ( m_column == std::wstring( L"right" ) ) {
+    else if ( m_column == std::string( "right" ) ) {
         m_tempX = m_rStartX;
         m_tempY = m_rTempY;
         m_lastType = m_rLastType;
     }
 
     // Increase Y for new element
-    if ( m_lastType == std::wstring( L"TEXT" ) && m_currentType == std::wstring( L"TEXT" ) ) {
+    if ( m_lastType == std::string( "TEXT" ) && m_currentType == std::string( "TEXT" ) ) {
         m_tempY += 33;
     }
-    else if ( m_lastType == std::wstring( L"TEXT" ) && m_currentType == std::wstring( L"STATUSLIGHT" ) ) {
+    else if ( m_lastType == std::string( "TEXT" ) && m_currentType == std::string( "STATUSLIGHT" ) ) {
         m_tempY += 44;
     }
-    else if ( m_lastType == std::wstring( L"STATUSLIGHT" ) && m_currentType == std::wstring( L"STATUSLIGHT" ) ) {
+    else if ( m_lastType == std::string( "STATUSLIGHT" ) && m_currentType == std::string( "STATUSLIGHT" ) ) {
         m_tempY += 40;
     }
-    else if ( m_lastType == std::wstring( L"PBAR" ) && m_currentType == std::wstring( L"PBAR" ) ) {
+    else if ( m_lastType == std::string( "PBAR" ) && m_currentType == std::string( "PBAR" ) ) {
         m_tempY += 56;
     }
-    else if ( m_lastType == std::wstring( L"PBAR" ) && m_currentType == std::wstring( L"STATUSLIGHT" ) ) {
+    else if ( m_lastType == std::string( "PBAR" ) && m_currentType == std::string( "STATUSLIGHT" ) ) {
         m_tempY += 61;
     }
-    else if ( m_lastType != L"" ) {
+    else if ( m_lastType != "" ) {
         /* If the element doesn't match a name, like BLANK, the Y will
          * increment without creating an element
          */
@@ -281,17 +302,17 @@ void DisplaySettings::parseLine( std::wstring line ) {
     NetUpdate* netPtr = NULL;
 
     // Create element
-    if ( m_currentType == std::wstring( L"TEXT" ) ) {
+    if ( m_currentType == std::string( "TEXT" ) ) {
         Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , RGB( 0 , 0 , 0 ) , RGB( 236 , 233 , 216 ) , true );
         elemPtr = temp;
         netPtr = temp;
     }
-    else if ( m_currentType == std::wstring( L"STATUSLIGHT" ) ) {
+    else if ( m_currentType == std::string( "STATUSLIGHT" ) ) {
         StatusLight* temp = new StatusLight( Vector2i( m_tempX  , m_tempY ) , m_startText , true );
         elemPtr = temp;
         netPtr = temp;
     }
-    else if ( m_currentType == std::wstring( L"PBAR" ) ) {
+    else if ( m_currentType == std::string( "PBAR" ) ) {
         ProgressBar* temp = new ProgressBar( Vector2i( m_tempX , m_tempY ) , m_startText , RGB( 0 , 120 , 0 ) , RGB( 255 , 255 , 255 ) , RGB( 50 , 50 , 50 ) , true );
         elemPtr = temp;
         netPtr = temp;
@@ -311,10 +332,10 @@ void DisplaySettings::parseLine( std::wstring line ) {
     }
 
     // Update Y position for future elements
-    if ( m_column == std::wstring( L"left" ) ) {
+    if ( m_column == std::string( "left" ) ) {
         m_lTempY = m_tempY;
     }
-    else if ( m_column == std::wstring( L"right" ) ) {
+    else if ( m_column == std::string( "right" ) ) {
         m_rTempY = m_tempY;
     }
 }
