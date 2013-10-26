@@ -5,14 +5,14 @@ The DriverStationDisplay is a program we wrote and a protocol we invented to pro
 
 ## Dependencies
 
-This module requires SFML for VxWorks for its easy networking functionality. One can get it at our repository [here](https://github.com/Team3512/VxWorksSFML).
+The robot module which runs in cooperation with this program requires SFML for VxWorks for its easy networking functionality. One can get it at our repository [here](https://github.com/Team3512/VxWorksSFML).
 
 
 ## Robot Setup
 
-To use this module within a robot's code, copy the contents of the DSDisplay folder in our [modules repository](https://github.com/Team3512/RobotModules) into the source tree and include DriverStationDisplay.hpp.
+To use this program with a new robot, copy the contents of the DSDisplay folder in our [modules repository](https://github.com/Team3512/RobotModules) into the source tree and include DriverStationDisplay.hpp.
 
-A GUISettings.txt file should be placed in /ni-rt/system which informs the DriverStationDisplay what GUI elements it should create. It's format will be described later.
+A GUISettings.txt file should be placed in /ni-rt/system on the cRIO. Its contents inform the DriverStationDisplay what GUI elements it should create. The format of this file will be described later.
 
 
 ## DriverStation Client Setup
