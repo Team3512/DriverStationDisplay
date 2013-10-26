@@ -17,13 +17,65 @@ A GUISettings.txt file should be placed in /ni-rt/system which informs the Drive
 
 ## DriverStation Client Setup
 
-IPSettings.txt HERE
+Since this project was designed to link to libstdc++ and libgcc statically, DriverStationDisplay.exe and IPSettings.txt are the only required files on the Driver Station.
+
+### IPSettings.txt
+
+#### MJPEG Stream
+
+The required entries in IPSettings.txt are as follows:
+
+#### `streamHost`
+
+IP address of the MJPEG stream to display in the DriverStationDisplay
+
+#### `streamPort`
+
+Port from which the MJPEG stream is served
+
+#### `streamRequestPath`
+
+Path to the MJPEG stream at the given IP address
+
+Note: If any one of these settings is incorrect, no MJPEG stream will be displayed, but the rest of the DriverStationDisplay will work.
+
+#### Robot-related Settings
+
+#### `alfCmdPort`
+
+Port to which to send ALF commands, such as "reboot" or "reload"
+
+#### `dsDataPort`
+
+Port on which the DriverStationDisplay receives data from the robot
+
+#### `robotIP`
+
+Robot's IP address
+
+#### `robotDataPort`
+
+Port to which to send connection packets and autonomous mode selections
+
+###### IPSettings.txt
+    streamHost        = 10.35.12.11
+    streamPort        = 80
+    streamRequestPath = /mjpg/video.mjpg
+
+    alfCmdPort        = 3512
+
+    #the DS binds to this
+    dsDataPort        = 1130
+
+    #the DS sends to this
+    robotIP           = 10.35.12.2
+    robotDataPort     = 1130
 
 
 ## Usage
 
     1) Call DriverStationDisplay::getInstance() to create an instance of this class
-        * The argument to getInstance() should be the port 1130 since that's the port on which the DriverStationDisplay receives.
+        * The argument to getInstance() should be the port specified as "dsDataPort" in IPSettings.txt
     2) Call clear() to empty the internal packet
         * If clear() isn't called first, undefined behavior may result.
           (The header "display\r\n" isn't inserted when the packet isn't empty.)
@@ -39,9 +91,9 @@ IPSettings.txt HERE
 
 ### General Format
 
-### `[Element Name] [ID String 1],[ID String 2] [Column] ["Start Text"] ["Update Text"]`
+    `[Element Name] [ID String 1],[ID String 2] [Column] ["Start Text"] ["Update Text"]`
 
-### `[Element Name]`
+#### `[Element Name]`
 
 This represents the name of the GUI element to create on the display. The possible types at this time are:
 
@@ -50,25 +102,25 @@ This represents the name of the GUI element to create on the display. The possib
     3) PBAR
 
 
-### `[ID String 1]`
+#### `[ID String 1]`
 
 Every GUI element declaration must have at least one ID string. This may be any combination of characters that doesn't contain a newline (\n), a carriage return (\r), or a space.
 
-### `[ID String 2]`
+#### `[ID String 2]`
 
 GUI elements may have more than one ID string to represent parts of the element which may be manipulated. PBAR is an example of one.
 
-### `[Column]`
+#### `[Column]`
 
 This may be one of two values: "left" or "right" (no quotes). It determines which side on which to place the GUI element in the DriverStationDisplay's window.
 
 Note: The first element in the column will be placed at the top of the window with the rest placed below it in descending order of declaration. The DriverStationDisplay handles vertical spacing between the different elements automatically as they stack up.
 
-### `["Start Text"]`
+#### `["Start Text"]`
 
 This will be the text intially used by the GUI element from its creation until it receives new data, at which point the "Replacement Text" will be used instead.
 
-### `["Replacement Text"]`
+#### `["Replacement Text"]`
 
 After new data has arrived for the GUI element, this string will be used to update the element's text. When updating, the first instance of "%s" will be replaced with the received data as a string. "%i" and others may be passed since this line essentially acts like printf. "%%" escapes percent signs.
 
@@ -123,4 +175,5 @@ This element displays a progress bar with a line of text below it.
     STATUSLIGHT SHOOT_ON right "Shooter On" "Shooter On"
     STATUSLIGHT SHOOT_MAN right "Shooter Manual" "Shooter Manual"
     STATUSLIGHT ARMS_DOWN right "Arms Down" "Arms Down"
+
 
