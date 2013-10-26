@@ -74,17 +74,39 @@ Port to which to send connection packets and autonomous mode selections
 
 ## Usage
 
-    1) Call DriverStationDisplay::getInstance() to create an instance of this class
-        * The argument to getInstance() should be the port specified as "dsDataPort" in IPSettings.txt
-    2) Call clear() to empty the internal packet
-        * If clear() isn't called first, undefined behavior may result.
-          (The header "display\r\n" isn't inserted when the packet isn't empty.)
-    3) Call DS::AddElementData() as many times as necessary to add HUD data.
-    4) Call sendToDS() to send the data to the DriverStationDisplay.
+#### Sending HUD Data
 
-### Notes:
+1. Call DriverStationDisplay::getInstance() to create an instance of this class
+    * The argument to getInstance() should be the port specified as "dsDataPort" in IPSettings.txt
+2. Call clear() to empty the internal packet
+    * If clear() isn't called first, undefined behavior may result.
+      (The header "display\r\n" isn't inserted when the packet isn't empty.)
+3. Call DS::AddElementData() as many times as necessary to add HUD data.
+4. Call sendToDS() to send the data to the DriverStationDisplay.
+
+##### Notes:
 * It doesn't matter in which order the data is packed before sending the data.
 * The packets are always sent to 10.35.12.42 for testing purposes.
+
+### Autonomous Routines
+
+The DriverStationDisplay supports selection of an autonomous mode without needing to rebuild code or reboot the cRIO. To leverage this functionality, the appropriate autonomous functions must be made available to the DriverStationDisplay.
+
+#### Interface
+
+##### `void addAutonMethod( const std::string& methodName , void (T::*function)() , T* object)`
+
+Add the appropriate autonomous functions to the list available on the DriverStationDisplay
+
+##### `void deleteAllMethods()`
+
+Erases the current list of autonomous functions stored
+
+##### `void execAutonomous()`
+
+Executes the currently selected autonomous routine
+
+* Call this in the Autonomous() function of the Simple Robot Template
 
 
 ## GUISettings.txt Format
@@ -97,9 +119,9 @@ Port to which to send connection packets and autonomous mode selections
 
 This represents the name of the GUI element to create on the display. The possible types at this time are:
 
-    1) TEXT
-    2) STATUSLIGHT
-    3) PBAR
+1. TEXT
+2. STATUSLIGHT
+3. PBAR
 
 
 #### `[ID String 1]`
