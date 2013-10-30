@@ -112,6 +112,10 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_textureWidth( 0 ) ,
         m_textureHeight( 0 ) ,
 
+        m_extBuf( NULL ) ,
+        m_extWidth( 0 ) ,
+        m_extHeight( 0 ) ,
+
         m_firstImage( true ) ,
 
         m_streamInst( NULL ) ,
