@@ -37,6 +37,8 @@
 #include <GL/glu.h>
 
 #include <atomic>
+#include <map>
+#include <cstdint>
 
 #include "../SFML/Graphics/Image.hpp"
 
@@ -90,6 +92,16 @@ public:
     // Saves most recently received image to a file
     void saveCurrentImage( const std::string& fileName );
 
+    /* Copies the most recently received image into a secondary internal buffer
+     * and returns it to the user. After a call to this function, the new size
+     * should be retrieved since it may have changed. Do NOT access the buffer
+     * pointer returned while this function is executing.
+     */
+    uint8_t* getCurrentImage();
+
+    // Returns size image currently in secondary buffer
+    Vector2i getCurrentSize();
+
 protected:
     static void doneCallback( void* optarg );
     static void readCallback( char* buf , int bufsize , void* optarg );
@@ -133,8 +145,16 @@ private:
     uint8_t* m_pxlBuf;
     unsigned int m_imgWidth;
     unsigned int m_imgHeight;
-    unsigned int m_dispWidth;
-    unsigned int m_dispHeight;
+    unsigned int m_textureWidth;
+    unsigned int m_textureHeight;
+
+    /* Stores copy of image for use by external programs. It only updates when
+     * getCurrentImage() is called.
+     */
+    uint8_t* m_extBuf;
+    unsigned int m_extWidth;
+    unsigned int m_extHeight;
+    sf::Mutex m_extMutex;
 
     /* Used to determine when to draw the "Connecting..." message
      * (when the stream first starts)

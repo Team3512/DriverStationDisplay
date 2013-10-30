@@ -7,9 +7,9 @@ mainIcon ICON "Spartatroniks.ico"
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "DriverStationDisplay.manifest"
 
 ////////// About Dialog
-IDD_ABOUTBOX DIALOGEX (320 - 85) / 2 - 18, (240 - 31) / 2 - 22, 170, 62
+IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
-CAPTION "About KinectBoard"
+CAPTION "About DriverStationDisplay"
 FONT 10, "MS Shell Dlg"
 BEGIN
     ICON             mainIcon,                               IDC_STATIC, 30, 8,  32,  32
