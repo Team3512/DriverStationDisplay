@@ -79,13 +79,13 @@ public:
     static void clearNetValues();
 
     // Returns the corresponding network value of a keyword
-    static netValue_t* getValue( const std::wstring& key );
+    static netValue_t* getValue( const std::string& key );
 
     // All elements' values are updated from the table of network values
     static void updateElements();
 
     // Updates keys which are used to retrieve the network variables
-    void updateKeys( std::vector<std::wstring>& keys );
+    void updateKeys( std::vector<std::string>& keys );
 
     /* Insert value into update text and output it to a buffer
      * 'size' is how many bytes wide 'buffer' is
@@ -96,11 +96,11 @@ public:
     virtual void updateValue() = 0;
 
 protected:
-    std::vector<std::wstring> m_varIds;
+    std::vector<std::string> m_varIds;
 
 private:
     static std::list<NetUpdate*> m_netObjs;
-    static std::map<std::wstring , netValue_t*> m_netValues;
+    static std::map<std::string , netValue_t*> m_netValues;
 
     std::wstring m_updateText;
 

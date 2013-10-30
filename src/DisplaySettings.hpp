@@ -45,26 +45,26 @@ public:
 private:
     std::list<Drawable*> m_drawables;
 
-    std::wstring m_line;
-    std::wstring m_substring;
+    std::string m_line;
+    std::string m_substring;
     size_t m_start;
     size_t m_length;
 
-    std::wstring m_delimiter;
+    std::string m_delimiter;
 
-    std::wstring m_lastType;
-    std::wstring m_currentType;
-    std::wstring m_column;
+    std::string m_lastType;
+    std::string m_currentType;
+    std::string m_column;
     std::wstring m_startText;
     std::wstring m_updateText;
-    std::vector<std::wstring> m_tempVarIds;
+    std::vector<std::string> m_tempVarIds;
 
     /* ===== Column-specific vars ===== */
-    std::wstring m_lLastType;
-    std::wstring m_lCurrentType;
+    std::string m_lLastType;
+    std::string m_lCurrentType;
 
-    std::wstring m_rLastType;
-    std::wstring m_rCurrentType;
+    std::string m_rLastType;
+    std::string m_rCurrentType;
 
     int m_tempX;
     int m_tempY;
@@ -82,7 +82,7 @@ private:
      * incrementing the global position variables for the column to which
      * the element was added
      */
-    void parseLine( std::wstring line );
+    void parseLine( std::string line );
 
     // Resets all temporary variables to be reused during a call to update(1)
     void resetAllTemps();
