@@ -469,7 +469,19 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
                 break;
             }
 
-            case IDC_FALLBACK: {
+            case IDC_ALF_SAVE: {
+                std::strcpy( data , "save\r\n" );
+
+                if ( gCmdSocketPtr != NULL ) {
+                    gCmdSocketPtr->connect( robotIP , alfCmdPort , sf::milliseconds( 500 ) );
+                    gCmdSocketPtr->send( data , 16 );
+                    gCmdSocketPtr->disconnect();
+                }
+
+                break;
+            }
+
+            case IDC_ALF_FALLBACK: {
                 std::strcpy( data , "fallback\r\n" );
 
                 if ( gCmdSocketPtr != NULL ) {

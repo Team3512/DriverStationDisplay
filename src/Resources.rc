@@ -8,7 +8,8 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "DriverStationDisplay.manifest"
 
 ////////// Accelerators
 KeyAccel ACCELERATORS {
-    "R", IDC_FALLBACK, CONTROL, VIRTKEY
+    "R", IDC_ALF_FALLBACK, CONTROL, VIRTKEY
+    "S", IDC_ALF_SAVE, CONTROL, VIRTKEY
 }
 
 ////////// About Dialog

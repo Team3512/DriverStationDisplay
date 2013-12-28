@@ -18,17 +18,20 @@
 // reboots cRIO controller
 #define IDC_REBOOT_BUTTON     203
 
+// saves currently running robot code kernel module as the fallback version
+#define IDC_ALF_SAVE          204
+
 // unloads the current robot code kernel module and loads the fallback version
-#define IDC_FALLBACK          204
+#define IDC_ALF_FALLBACK      205
 
 // exits program
-#define IDC_EXIT_BUTTON       205
+#define IDC_EXIT_BUTTON       206
 
 // allows selection of autonomous routine
-#define IDC_AUTON_COMBOBOX    206
+#define IDC_AUTON_COMBOBOX    207
 
 // toggles color blind mode
-#define IDC_COLORBLIND_CHK    207
+#define IDC_COLORBLIND_CHK    208
 
 #define IDC_STATIC            -1
 
