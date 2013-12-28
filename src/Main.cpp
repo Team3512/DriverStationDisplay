@@ -87,6 +87,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     RegisterClassEx(&WindowClass);
 
     MSG message;
+    HACCEL hAccel;
 
     int mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 240;
 
@@ -103,6 +104,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             NULL ,
             Instance ,
             NULL );
+
+    // Load keyboard accelerators
+    hAccel = LoadAccelerators( Instance , "KeyAccel" );
 
     /* If this isn't allocated on the heap, it can't be destroyed soon enough.
      * If it were allocated on the stack, it would be destroyed when it leaves
@@ -161,9 +165,14 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     while ( !isExiting ) {
         if ( PeekMessage( &message , NULL , 0 , 0 , PM_REMOVE ) ) {
             if ( message.message != WM_QUIT ) {
-                // If a message was waiting in the message queue, process it
-                TranslateMessage( &message );
-                DispatchMessage( &message );
+                if ( !TranslateAccelerator(
+                        mainWindow,   // Handle to receiving window
+                        hAccel,       // Handle to active accelerator table
+                        &message) ) { // Message data
+                    // If a message was waiting in the message queue, process it
+                    TranslateMessage( &message );
+                    DispatchMessage( &message );
+                }
             }
             else {
                 isExiting = true;
@@ -450,6 +459,18 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
 
             case IDC_REBOOT_BUTTON: {
                 std::strcpy( data , "reboot\r\n" );
+
+                if ( gCmdSocketPtr != NULL ) {
+                    gCmdSocketPtr->connect( robotIP , alfCmdPort , sf::milliseconds( 500 ) );
+                    gCmdSocketPtr->send( data , 16 );
+                    gCmdSocketPtr->disconnect();
+                }
+
+                break;
+            }
+
+            case IDC_FALLBACK: {
+                std::strcpy( data , "fallback\r\n" );
 
                 if ( gCmdSocketPtr != NULL ) {
                     gCmdSocketPtr->connect( robotIP , alfCmdPort , sf::milliseconds( 500 ) );
