@@ -180,7 +180,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
         }
         else {
             // If timeout has passed, remove GUI and attempt reconnect
-            if ( connectClock.getElapsedTime().asMilliseconds() > 2000 && !connectDlgOpen ) {
+            if ( connectClock.getElapsedTime() > 2000 && !connectDlgOpen ) {
                 char data[16] = "connect\r\n";
 
                 if ( gDataSocketPtr != NULL ) {

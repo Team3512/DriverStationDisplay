@@ -433,7 +433,7 @@ void MjpegStream::readCallback( char* buf , int bufsize , void* optobj ) {
         streamPtr->m_imageAge.restart();
 
         // Send message to parent window about the new image
-        if ( streamPtr->m_displayTime.getElapsedTime().asMilliseconds() > 1000.f / streamPtr->m_frameRate ) {
+        if ( streamPtr->m_displayTime.getElapsedTime() > 1000.f / streamPtr->m_frameRate ) {
             PostMessage( streamPtr->m_parentWin , WM_MJPEGSTREAM_NEWIMAGE , 0 , 0 );
             streamPtr->m_displayTime.restart();
         }
@@ -661,7 +661,7 @@ void* MjpegStream::updateFunc( void* obj ) {
     int currentTime = 0;
 
     while ( !static_cast<MjpegStream*>(obj)->m_stopUpdate ) {
-        currentTime = static_cast<MjpegStream*>(obj)->m_imageAge.getElapsedTime().asMilliseconds();
+        currentTime = static_cast<MjpegStream*>(obj)->m_imageAge.getElapsedTime();
 
         // Make "Waiting..." graphic show up
         if ( currentTime > 1000 && lastTime <= 1000 ) {
@@ -746,7 +746,7 @@ void MjpegStream::paint( PAINTSTRUCT* ps ) {
         }
 
         // If it's been too long since we received our last image
-        else if ( m_imageAge.getElapsedTime().asMilliseconds() > 1000 ) {
+        else if ( m_imageAge.getElapsedTime() > 1000 ) {
             // Display "Waiting..." over the last image received
             mjpeg_mutex_lock( &m_imageMutex );
 
