@@ -4,12 +4,6 @@
 //Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
-/* TODO Get position of "DriverStation" window and adjust main window height
- * based upon that. Use a default height if not found.
- * TODO Put socket receiving in separate threads with signals and PostThreadMessage
- * (capture SIGQOUIT or SIGKILL?)
- */
-
 #define _WIN32_WINNT 0x0601
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -87,7 +81,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     RegisterClassEx(&WindowClass);
 
     MSG message;
-    HACCEL hAccel;
 
     int mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 240;
 
@@ -104,9 +97,6 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             NULL ,
             Instance ,
             NULL );
-
-    // Load keyboard accelerators
-    hAccel = LoadAccelerators( Instance , "KeyAccel" );
 
     /* If this isn't allocated on the heap, it can't be destroyed soon enough.
      * If it were allocated on the stack, it would be destroyed when it leaves
@@ -161,18 +151,17 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
     unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
 
+    // Reloads robot code kernel module
+    RegisterHotKey( mainWindow , HK_SAVE , MOD_CONTROL , 0x53 ); // Ctrl + S
+    RegisterHotKey( mainWindow , HK_FALLBACK , MOD_CONTROL , 0x46 ); // Ctrl + F
+
     bool isExiting = false;
     while ( !isExiting ) {
         if ( PeekMessage( &message , NULL , 0 , 0 , PM_REMOVE ) ) {
             if ( message.message != WM_QUIT ) {
-                if ( !TranslateAccelerator(
-                        mainWindow,   // Handle to receiving window
-                        hAccel,       // Handle to active accelerator table
-                        &message) ) { // Message data
-                    // If a message was waiting in the message queue, process it
-                    TranslateMessage( &message );
-                    DispatchMessage( &message );
-                }
+                // If a message was waiting in the message queue, process it
+                TranslateMessage( &message );
+                DispatchMessage( &message );
             }
             else {
                 isExiting = true;
@@ -331,22 +320,40 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
 
-
-        // Create "reboot robot" button
-        HWND rebootButton = CreateWindowEx( 0,
+        // Create "save code" button
+        HWND saveButton = CreateWindowEx( 0,
             "BUTTON",
-            "Reboot Robot",
+            "Save Code",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
             1 * ( 5 + 28 ) + 5,
             100,
             28,
             handle,
-            reinterpret_cast<HMENU>( IDC_REBOOT_BUTTON ),
+            reinterpret_cast<HMENU>( IDC_ALF_SAVE ),
             ((LPCREATESTRUCT)lParam)->hInstance,
             NULL);
 
-        SendMessage(rebootButton,
+        SendMessage(saveButton,
+            WM_SETFONT,
+            reinterpret_cast<WPARAM>( hfDefault ),
+            MAKELPARAM( FALSE , 0 ) );
+
+        // Create "fallback code" button
+        HWND fallbackButton = CreateWindowEx( 0,
+            "BUTTON",
+            "Fallback Code",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
+            2 * ( 5 + 28 ) + 5,
+            100,
+            28,
+            handle,
+            reinterpret_cast<HMENU>( IDC_ALF_FALLBACK ),
+            ((LPCREATESTRUCT)lParam)->hInstance,
+            NULL);
+
+        SendMessage(fallbackButton,
             WM_SETFONT,
             reinterpret_cast<WPARAM>( hfDefault ),
             MAKELPARAM( FALSE , 0 ) );
@@ -357,7 +364,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             "Exit",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            2 * ( 5 + 28 ) + 5,
+            3 * ( 5 + 28 ) + 5,
             100,
             28,
             handle,
@@ -376,7 +383,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             "Autonomous Mode",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWN,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            3 * ( 5 + 28 ) + 5,
+            4 * ( 5 + 28 ) + 5,
             100,
             GetSystemMetrics(SM_CYSCREEN) - 240 - ( 4 * ( 5 + 28 ) + 5 ),
             handle,
@@ -403,7 +410,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             "Color Blind Mode",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
             GetSystemMetrics(SM_CXSCREEN) - 100 - 5,
-            4 * ( 5 + 28 ) + 5,
+            5 * ( 5 + 28 ) + 5,
             100,
             13,
             handle,
@@ -447,18 +454,6 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
             // These other commands get sent to ALF rather than the robot
             case IDC_RELOAD_BUTTON: {
                 std::strcpy( data , "reload\r\n" );
-
-                if ( gCmdSocketPtr != NULL ) {
-                    gCmdSocketPtr->connect( robotIP , alfCmdPort , sf::milliseconds( 500 ) );
-                    gCmdSocketPtr->send( data , 16 );
-                    gCmdSocketPtr->disconnect();
-                }
-
-                break;
-            }
-
-            case IDC_REBOOT_BUTTON: {
-                std::strcpy( data , "reboot\r\n" );
 
                 if ( gCmdSocketPtr != NULL ) {
                     gCmdSocketPtr->connect( robotIP , alfCmdPort , sf::milliseconds( 500 ) );
@@ -586,6 +581,23 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
 
     case WM_DESTROY: {
         PostQuitMessage(0);
+
+        break;
+    }
+
+    case WM_HOTKEY: {
+        switch ( wParam ) {
+        case HK_SAVE: {
+            SendMessage( handle , WM_COMMAND , IDC_ALF_SAVE , 0 );
+
+            break;
+        }
+        case HK_FALLBACK: {
+            SendMessage( handle , WM_COMMAND , IDC_ALF_FALLBACK , 0 );
+
+            break;
+        }
+        }
 
         break;
     }

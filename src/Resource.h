@@ -15,9 +15,6 @@
 // reloads the robot code kernel module
 #define IDC_RELOAD_BUTTON     202
 
-// reboots cRIO controller
-#define IDC_REBOOT_BUTTON     203
-
 // saves currently running robot code kernel module as the fallback version
 #define IDC_ALF_SAVE          204
 
@@ -36,5 +33,9 @@
 #define IDC_STATIC            -1
 
 #define IDM_ABOUT             301
+
+// hotkeys
+#define HK_SAVE               401
+#define HK_FALLBACK           402
 
 #endif // RESOURCE_H

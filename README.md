@@ -199,3 +199,14 @@ This element displays a progress bar with a line of text below it.
     STATUSLIGHT ARMS_DOWN right "Arms Down" "Arms Down"
 
 
+## Keyboard Shortcuts
+
+This program registers several keyboard shortcuts with Windows to make certain actions easier for drivers.
+
+#### Ctrl + S
+
+Saves the currently running robot code kernel module using ALF
+
+#### Ctrl + F
+
+Loads the robot code kernel module previously saved by ALF
