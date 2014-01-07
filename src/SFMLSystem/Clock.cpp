@@ -31,10 +31,12 @@
 
 #include "../SFML/System/Clock.hpp"
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 LARGE_INTEGER getFrequency();
+#endif
 
 namespace sf
 {
@@ -55,6 +57,7 @@ unsigned int Clock::restart() {
     return elapsed;
 }
 
+#ifdef _WIN32
 unsigned int Clock::getCurrentTime() {
     // Force the following code to run on first core
     // (see http://msdn.microsoft.com/en-us/library/windows/desktop/ms644904(v=vs.85).aspx)
@@ -84,3 +87,10 @@ LARGE_INTEGER getFrequency() {
     QueryPerformanceFrequency( &frequency );
     return frequency;
 }
+#else
+unsigned int Clock::getCurrentTime() {
+    // POSIX implementation
+    timespec time;
+    clock_gettime(CLOCK_MONOTONIC, &time);
+    return sf::microseconds(static_cast<Uint64>(time.tv_sec) * 1000000 + time.tv_nsec / 1000);
+#endif

@@ -37,7 +37,7 @@
 ////////////////////////////////////////////////////////////
 #include "../System/NonCopyable.hpp"
 #include <cstdint>
-#include <winsock2.h>
+#include "../../MJPEG/mjpeg_sck.h"
 #include <vector>
 
 
@@ -177,7 +177,7 @@ protected :
     /// \param handle OS-specific handle of the socket to wrap
     ///
     ////////////////////////////////////////////////////////////
-    void create(unsigned int handle);
+    void create(mjpeg_socket_t handle);
 
     ////////////////////////////////////////////////////////////
     /// \brief Close the socket gracefully
@@ -203,7 +203,7 @@ private :
     // Member data
     ////////////////////////////////////////////////////////////
     Type         m_type;       ///< Type of the socket (TCP or UDP)
-    unsigned int m_socket;     ///< Socket descriptor
+    mjpeg_socket_t m_socket;   ///< Socket descriptor
     bool         m_isBlocking; ///< Current blocking mode of the socket
 };
 

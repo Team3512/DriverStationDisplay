@@ -33,7 +33,11 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include "../SFML/Network/Packet.hpp"
+#ifdef _WIN32
 #include <winsock2.h>
+#else
+#include <netinet/in.h>
+#endif
 #include <cstring>
 
 uint64_t htonll( uint64_t value ) {

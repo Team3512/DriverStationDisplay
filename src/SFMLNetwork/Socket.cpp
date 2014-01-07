@@ -42,7 +42,11 @@ namespace sf
 ////////////////////////////////////////////////////////////
 Socket::Socket(Type type) :
 m_type      (type),
+#ifdef _WIN32
 m_socket    (INVALID_SOCKET),
+#else
+m_socket    (-1),
+#endif
 m_isBlocking(true)
 {
 
@@ -60,11 +64,7 @@ Socket::~Socket()
 ////////////////////////////////////////////////////////////
 void Socket::setBlocking(bool blocking)
 {
-    // Apply if the socket is already created
-    if ( m_socket != INVALID_SOCKET ) {
-        u_long block = blocking ? 0 : 1;
-        ioctlsocket( m_socket , FIONBIO , &block );
-    }
+    mjpeg_sck_setnonblocking(m_socket, blocking ? 0 : 1);
 
     m_isBlocking = blocking;
 }
@@ -88,19 +88,19 @@ unsigned int Socket::getHandle() const
 void Socket::create()
 {
     // Don't create the socket if it already exists
-    if (m_socket == INVALID_SOCKET)
+    if (!mjpeg_sck_valid(m_socket))
     {
-        unsigned int handle = socket(PF_INET, m_type == Tcp ? SOCK_STREAM : SOCK_DGRAM, 0);
+        mjpeg_socket_t handle = socket(PF_INET, m_type == Tcp ? SOCK_STREAM : SOCK_DGRAM, 0);
         create(handle);
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-void Socket::create(unsigned int handle)
+void Socket::create(mjpeg_socket_t handle)
 {
     // Don't create the socket if it already exists
-    if (m_socket == INVALID_SOCKET)
+    if (!mjpeg_sck_valid(m_socket))
     {
         // Assign the new handle
         m_socket = handle;
@@ -134,12 +134,7 @@ void Socket::create(unsigned int handle)
 ////////////////////////////////////////////////////////////
 void Socket::close()
 {
-    // Close the socket
-    if (m_socket != INVALID_SOCKET)
-    {
-        closesocket( m_socket );
-        m_socket = INVALID_SOCKET;
-    }
+    mjpeg_sck_close(m_socket);
 }
 
 
@@ -158,6 +153,7 @@ sockaddr_in Socket::createAddress(uint32_t address, unsigned short port)
 ////////////////////////////////////////////////////////////
 Socket::Status Socket::getErrorStatus()
 {
+#ifdef _WIN32
     switch (WSAGetLastError())
     {
         case WSAEWOULDBLOCK :  return Socket::NotReady;
@@ -168,13 +164,28 @@ Socket::Status Socket::getErrorStatus()
         case WSAENOTCONN :     return Socket::Disconnected;
         default :              return Socket::Error;
     }
+#else
+    // The followings are sometimes equal to EWOULDBLOCK,
+    // so we have to make a special case for them in order
+    // to avoid having double values in the switch case
+    if ((errno == EAGAIN) || (errno == EINPROGRESS))
+        return Socket::NotReady;
+
+    switch (errno)
+    {
+        case EWOULDBLOCK :  return Socket::NotReady;
+        case ECONNABORTED : return Socket::Disconnected;
+        case ECONNRESET :   return Socket::Disconnected;
+        case ETIMEDOUT :    return Socket::Disconnected;
+        case ENETRESET :    return Socket::Disconnected;
+        case ENOTCONN :     return Socket::Disconnected;
+        case EPIPE :        return Socket::Disconnected;
+        default :           return Socket::Error;
+    }
+#endif
 }
 
-////////////////////////////////////////////////////////////
-// Windows needs some initialization and cleanup to get
-// sockets working properly... so let's create a class that will
-// do it automatically
-////////////////////////////////////////////////////////////
+#ifdef _WIN32
 struct SocketInitializer
 {
     SocketInitializer()
@@ -190,5 +201,6 @@ struct SocketInitializer
 };
 
 SocketInitializer globalInitializer;
+#endif
 
 } // namespace sf
