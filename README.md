@@ -12,7 +12,7 @@ The robot module which runs in cooperation with this program requires SFML for V
 
 To use this program with a new robot, copy the contents of the DSDisplay folder in our [modules repository](https://github.com/Team3512/RobotModules) into the source tree and include DriverStationDisplay.hpp.
 
-A GUISettings.txt file should be placed in /ni-rt/system on the cRIO. Its contents inform the DriverStationDisplay what GUI elements it should create. The format of this file will be described later.
+A GUISettings.txt file should be placed in /c on the cRIO. Its contents inform the DriverStationDisplay what GUI elements it should create. The format of this file will be described later.
 
 
 ## DriverStation Client Setup
