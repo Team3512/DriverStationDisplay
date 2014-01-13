@@ -7,6 +7,7 @@
 
 #include "Settings.hpp"
 #include <fstream>
+#include <iostream>
 
 Settings::Settings( std::string fileName ) :
         m_fileName( fileName ) ,
@@ -25,6 +26,7 @@ void Settings::update() {
 
     std::ifstream settings( m_fileName.c_str() );
     if ( !settings.is_open() ) {
+        std::cout << "Failed to open " << m_fileName << "\n";
         return;
     }
 
@@ -40,6 +42,8 @@ void Settings::update() {
     } while ( !settings.eof() );
 
     settings.close();
+
+    std::cout << "Settings loaded from " << m_fileName << "\n";
 }
 
 std::string Settings::getValueFor( const std::string& key ) {
@@ -47,6 +51,7 @@ std::string Settings::getValueFor( const std::string& key ) {
 
     // If the element wasn't found
     if ( index == m_values.end() ) {
+        std::cout << "Settings Error: '" << key << "' not found\n";
         return "NOT_FOUND";
     }
 

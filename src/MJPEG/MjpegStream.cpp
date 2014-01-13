@@ -167,7 +167,7 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_parentWin,
         reinterpret_cast<HMENU>( IDC_STREAM_BUTTON ),
         GetModuleHandle( NULL ),
-        NULL);
+        NULL );
 
     SendMessage(m_toggleButton,
         WM_SETFONT,
@@ -224,6 +224,8 @@ MjpegStream::~MjpegStream() {
     mjpeg_mutex_destroy( &m_imageMutex );
     mjpeg_mutex_destroy( &m_extMutex );
     mjpeg_mutex_destroy( &m_windowMutex );
+
+    DisableOpenGL();
 
     DestroyWindow( m_streamWin );
     DestroyWindow( m_toggleButton );
@@ -678,12 +680,6 @@ void* MjpegStream::updateFunc( void* obj ) {
 
 LRESULT CALLBACK MjpegStream::WindowProc( HWND handle , UINT message , WPARAM wParam , LPARAM lParam ) {
     switch ( message ) {
-    case WM_DESTROY: {
-        m_map[handle]->DisableOpenGL();
-
-        break;
-    }
-
     case WM_PAINT: {
         PAINTSTRUCT ps;
         BeginPaint( handle , &ps );
