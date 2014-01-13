@@ -17,7 +17,7 @@ StatusLight::StatusLight( const Vector2i& position , std::wstring message , bool
         Drawable( position , Vector2i( 0 , 0 ) , 0 , 0 , 0 ) ,
         NetUpdate( netUpdate ) ,
         m_status( StatusLight::inactive ) ,
-        m_text( position , UIFont::getInstance().segoeUI14() , message , RGB( 0 , 0 , 0 ) , RGB( 236 , 233 , 216 ) , false ) {
+        m_text( position , UIFont::getInstance().segoeUI14() , message , RGB( 0 , 0 , 0 ) , RGB( GetRValue(GetSysColor(COLOR_3DFACE)) , GetGValue(GetSysColor(COLOR_3DFACE)) , GetBValue(GetSysColor(COLOR_3DFACE)) ) , false ) {
     setOutlineThickness( 2 );
     setOutlineColor( RGB( 50 , 50 , 50 ) );
     setPosition( position );

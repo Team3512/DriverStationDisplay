@@ -303,7 +303,7 @@ void DisplaySettings::parseLine( std::string line ) {
 
     // Create element
     if ( m_currentType == std::string( "TEXT" ) ) {
-        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , RGB( 0 , 0 , 0 ) , RGB( 236 , 233 , 216 ) , true );
+        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , RGB( 0 , 0 , 0 ) , RGB( GetRValue(GetSysColor(COLOR_3DFACE)) , GetGValue(GetSysColor(COLOR_3DFACE)) , GetBValue(GetSysColor(COLOR_3DFACE)) ) , true );
         elemPtr = temp;
         netPtr = temp;
     }
