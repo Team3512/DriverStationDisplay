@@ -39,7 +39,10 @@ public:
     // Updates values of elements from packet
     void updateGuiTable( sf::Packet& packet );
 
-    // Draw all drawables in the internal list to the given device context
+    /* Draw all drawables in the internal list to the given device context. If
+     * an HDC is passed, WinGDI objects are drawn. If NULL is passed, OpenGL
+     * objects are drawn.
+     */
     void drawDisplay( HDC hdc );
 
 private:

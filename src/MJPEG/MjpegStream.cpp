@@ -6,6 +6,7 @@
 //=============================================================================
 
 #include "../WinGDI/UIFont.hpp"
+#include "../Util.hpp"
 #include "../Resource.h"
 #include "MjpegStream.hpp"
 #include "mjpeg_sleep.h"
@@ -19,32 +20,6 @@
 #include <cstring>
 
 std::map<HWND , MjpegStream*> MjpegStream::m_map;
-
-// Bit-twiddling hack: Return the next power of two
-int npot( int num ) {
-    num--;
-    num |= num >> 1;
-    num |= num >> 2;
-    num |= num >> 4;
-    num |= num >> 8;
-    num |= num >> 16;
-    num++;
-
-    return num;
-}
-
-void BMPtoPXL( HDC dc , HBITMAP bmp , int width , int height , BYTE* pxlData ) {
-    BITMAPINFOHEADER bmi = {0};
-    bmi.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.biPlanes = 1;
-    bmi.biBitCount = 32;
-    bmi.biWidth = width;
-    bmi.biHeight = -height;
-    bmi.biCompression = BI_RGB;
-    bmi.biSizeImage = 0;// 3 * ScreenX * ScreenY; for PNG or JPEG
-
-    GetDIBits( dc , bmp , 0 , height , pxlData , (BITMAPINFO*)&bmi , DIB_RGB_COLORS );
-}
 
 // Convert a string to lower case
 std::string toLower( std::string str ) {
@@ -104,15 +79,15 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_bufferDC( NULL ) ,
 
         m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() ,
-                L"Connecting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) ,
+                L"Connecting..." , Colorf( 0 , 0 , 0 ) , Colorf( 255 , 255 , 255 ) ,
                 false ) ,
         m_connectPxl( NULL ) ,
         m_disconnectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() ,
-                L"Disconnected" , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) ,
+                L"Disconnected" , Colorf( 0 , 0 , 0 ) , Colorf( 255 , 255 , 255 ) ,
                 false ) ,
         m_disconnectPxl( NULL ) ,
         m_waitMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() ,
-                L"Waiting..." , RGB( 0 , 0 , 0 ) , RGB( 255 , 255 , 255 ) ,
+                L"Waiting..." , Colorf( 0 , 0 , 0 ) , Colorf( 255 , 255 , 255 ) ,
                 false ) ,
         m_waitPxl( NULL ) ,
         m_backgroundPxl( NULL ) ,
@@ -499,6 +474,7 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     // Free the brushes and regions
     DeleteObject( backgroundBrush );
     DeleteObject( backgroundRegion );
+    DeleteObject( transparentBrush );
     DeleteObject( waitRegion );
     DeleteObject( waitBrush );
 
@@ -580,9 +556,6 @@ void MjpegStream::EnableOpenGL() {
     // Stores pixel format
     int format;
 
-    // GL error
-    GLenum glError;
-
     // Set the pixel format for the DC
     PIXELFORMATDESCRIPTOR pfd = {
         sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd
@@ -612,41 +585,8 @@ void MjpegStream::EnableOpenGL() {
     format = ChoosePixelFormat( m_bufferDC , &pfd );
     SetPixelFormat( m_bufferDC , format , &pfd );
 
-    // Create and enable the render context (RC)
+    // Create the render context (RC)
     m_threadRC = wglCreateContext( m_bufferDC );
-    wglMakeCurrent( m_bufferDC , m_threadRC );
-
-    /* ===== Initialize OpenGL ===== */
-    glClearColor( 0.f , 0.f , 0.f , 0.f );
-    glClearDepth( 1.f );
-    glClear( GL_COLOR_BUFFER_BIT );
-
-    glDepthFunc( GL_LESS );
-    glDepthMask( GL_FALSE );
-    glDisable( GL_DEPTH_TEST );
-    glDisable( GL_BLEND );
-    glDisable( GL_ALPHA_TEST );
-    glEnable( GL_TEXTURE_2D );
-    glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
-    glShadeModel( GL_FLAT );
-
-    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR );
-
-    // Set up screen
-    glViewport( 0 , 0 , getSize().X , getSize().Y );
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-    glOrtho( 0 , getSize().X , getSize().Y , 0 , -1.f , 1.f );
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-
-    // Check for OpenGL errors
-    glError = glGetError();
-    if( glError != GL_NO_ERROR ) {
-        std::cerr << "Error initializing OpenGL: " << gluErrorString( glError ) << "\n";
-    }
-    /* ============================= */
 
     m_imgWidth = getSize().X;
     m_imgHeight = getSize().Y;
@@ -701,13 +641,45 @@ LRESULT CALLBACK MjpegStream::WindowProc( HWND handle , UINT message , WPARAM wP
 
 void MjpegStream::paint( PAINTSTRUCT* ps ) {
     GLenum glError;
-    int textureSize;
+    wglMakeCurrent( m_bufferDC , m_threadRC );
+
+    /* ===== Initialize OpenGL ===== */
+    glClearColor( 1.f , 1.f , 1.f , 1.f );
+    glClearDepth( 1.f );
+    glClear( GL_COLOR_BUFFER_BIT );
+
+    glDepthFunc( GL_LESS );
+    glDepthMask( GL_FALSE );
+    glDisable( GL_DEPTH_TEST );
+    glDisable( GL_BLEND );
+    glDisable( GL_ALPHA_TEST );
+    glEnable( GL_TEXTURE_2D );
+    glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
+    glShadeModel( GL_FLAT );
+
+    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR );
+
+    // Set up screen
+    glViewport( 0 , 0 , getSize().X , getSize().Y );
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+    glOrtho( 0 , getSize().X , getSize().Y , 0 , -1.f , 1.f );
+    glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+
+    // Check for OpenGL errors
+    glError = glGetError();
+    if( glError != GL_NO_ERROR ) {
+        std::cerr << "MjpegStream.cpp OpenGL failure: " << gluErrorString( glError ) << "\n";
+    }
+    /* ============================= */
 
     /* If our image won't fit in the texture, make a bigger one whose width and
      * height are a power of two.
      */
     if( m_imgWidth > m_textureWidth || m_imgHeight > m_textureHeight ) {
-        textureSize = npot( std::max( m_imgWidth , m_imgHeight ) );
+        int textureSize = npot( std::max( m_imgWidth , m_imgHeight ) );
 
         uint8_t* tmpBuf = new uint8_t[textureSize * textureSize * 3];
         glTexImage2D( GL_TEXTURE_2D , 0 , 3 , textureSize , textureSize , 0 ,

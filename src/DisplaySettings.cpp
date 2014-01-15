@@ -7,8 +7,8 @@
 
 #include "DisplaySettings.hpp"
 
-#include "WinGDI/ProgressBar.hpp"
-#include "WinGDI/StatusLight.hpp"
+#include "OpenGL/ProgressBar.hpp"
+#include "OpenGL/StatusLight.hpp"
 #include "WinGDI/Text.hpp"
 #include "WinGDI/UIFont.hpp"
 
@@ -303,7 +303,7 @@ void DisplaySettings::parseLine( std::string line ) {
 
     // Create element
     if ( m_currentType == std::string( "TEXT" ) ) {
-        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , RGB( 0 , 0 , 0 ) , RGB( GetRValue(GetSysColor(COLOR_3DFACE)) , GetGValue(GetSysColor(COLOR_3DFACE)) , GetBValue(GetSysColor(COLOR_3DFACE)) ) , true );
+        Text* temp =  new Text( Vector2i( m_tempX , m_tempY ) , UIFont::getInstance().segoeUI14() , m_startText , Colorf( 0 , 0 , 0 ) , Colorf( GetRValue(GetSysColor(COLOR_3DFACE)) , GetGValue(GetSysColor(COLOR_3DFACE)) , GetBValue(GetSysColor(COLOR_3DFACE)) ) , true );
         elemPtr = temp;
         netPtr = temp;
     }
@@ -313,7 +313,7 @@ void DisplaySettings::parseLine( std::string line ) {
         netPtr = temp;
     }
     else if ( m_currentType == std::string( "PBAR" ) ) {
-        ProgressBar* temp = new ProgressBar( Vector2i( m_tempX , m_tempY ) , m_startText , RGB( 0 , 120 , 0 ) , RGB( 255 , 255 , 255 ) , RGB( 50 , 50 , 50 ) , true );
+        ProgressBar* temp = new ProgressBar( Vector2i( m_tempX , m_tempY ) , m_startText , Colorf( 0 , 120 , 0 ) , Colorf( 255 , 255 , 255 ) , Colorf( 50 , 50 , 50 ) , true );
         elemPtr = temp;
         netPtr = temp;
     }

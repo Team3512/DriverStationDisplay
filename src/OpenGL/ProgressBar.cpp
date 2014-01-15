@@ -5,23 +5,27 @@
 //=============================================================================
 
 #include "ProgressBar.hpp"
-#include "UIFont.hpp"
+#include "../WinGDI/UIFont.hpp"
 
 #include <wingdi.h>
 
-ProgressBar::ProgressBar( const Vector2i& position , std::wstring text , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , bool netUpdate ) :
+ProgressBar::ProgressBar( const Vector2i& position , std::wstring text , Colorf fullFillColor , Colorf emptyFillColor , Colorf outlineColor , bool netUpdate ) :
         RectangleShape( position , Vector2i( 100 , 18 ) , emptyFillColor , outlineColor , 1 ) ,
         NetUpdate( netUpdate ) ,
-        m_barFill( Vector2i( position.X + 1 , position.Y + 1 ) , Vector2i( 98 , 16 ) , fullFillColor , RGB( 0 , 70 , 0 ) , 0 ) ,
-        m_text( Vector2i( position.X , position.Y + 18 + 2 ) , UIFont::getInstance().segoeUI14() , text.c_str() , RGB( 0 , 0 , 0 ) , RGB( GetRValue(GetSysColor(COLOR_3DFACE)) , GetGValue(GetSysColor(COLOR_3DFACE)) , GetBValue(GetSysColor(COLOR_3DFACE)) ) , false ) {
+        m_barFill( Vector2i( position.X + 1 , position.Y + 1 ) , Vector2i( 98 , 16 ) , fullFillColor , Colorf( 0 , 70 , 0 ) , 0 ) ,
+        m_text( Vector2i( position.X , position.Y + 18 + 2 ) , UIFont::getInstance().segoeUI14() , text.c_str() , Colorf( 0 , 0 , 0 ) , Colorf( GetRValue(GetSysColor(COLOR_3DFACE)) , GetGValue(GetSysColor(COLOR_3DFACE)) , GetBValue(GetSysColor(COLOR_3DFACE)) ) , false ) {
 
     setPercent( 0.f );
 }
 
 void ProgressBar::draw( HDC hdc ) {
-    RectangleShape::draw( hdc );
-    m_barFill.draw( hdc );
-    m_text.draw( hdc );
+    if ( hdc == NULL ) {
+        RectangleShape::draw( NULL );
+        m_barFill.draw( NULL );
+    }
+    else {
+        m_text.draw( hdc );
+    }
 }
 
 void ProgressBar::setPercent( float percentFull ) {
@@ -73,11 +77,11 @@ const std::wstring& ProgressBar::getString() {
     return m_text.getString();
 }
 
-void ProgressBar::setBarFillColor( COLORREF fill ) {
+void ProgressBar::setBarFillColor( Colorf fill ) {
     m_barFill.setFillColor( fill );
 }
 
-COLORREF ProgressBar::getBarFillColor() {
+Colorf ProgressBar::getBarFillColor() {
     return m_barFill.getFillColor();
 }
 

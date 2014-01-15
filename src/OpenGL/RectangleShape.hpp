@@ -8,10 +8,13 @@
 #define RECTANGLE_SHAPE_HPP
 
 #include "Drawable.hpp"
+#include "Color.hpp"
+
+#include <GL/gl.h>
 
 class RectangleShape : public Drawable {
 public:
-    RectangleShape( const Vector2i& position , const Vector2i& size , COLORREF fillColor , COLORREF outlineColor , int outlineThickness );
+    RectangleShape( const Vector2i& position , const Vector2i& size , Colorf fillColor , Colorf outlineColor , int outlineThickness );
 
     void draw( HDC hdc );
 };

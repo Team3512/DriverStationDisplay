@@ -8,6 +8,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+
 #include "SFML/Network/IpAddress.hpp"
 #include "SFML/Network/Packet.hpp"
 #include "SFML/Network/TcpSocket.hpp"
@@ -16,6 +19,7 @@
 #include "SFML/System/Clock.hpp"
 #include "SFML/System/Thread.hpp"
 
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -23,9 +27,10 @@
 #include <atomic>
 
 #include "MJPEG/MjpegStream.hpp"
-#include "WinGDI/StatusLight.hpp"
+#include "OpenGL/StatusLight.hpp"
 #include "Settings.hpp"
 #include "DisplaySettings.hpp"
+#include "Util.hpp"
 #include "Resource.h"
 
 #include <wingdi.h>
@@ -48,6 +53,68 @@ MjpegStream* gStreamWinPtr = NULL;
 // Allows usage of socket in CALLBACK OnEvent
 sf::UdpSocket* gDataSocketPtr = NULL;
 sf::TcpSocket* gCmdSocketPtr = NULL;
+
+extern "C" struct GLWindow {
+    HWND window;
+    HDC dc;
+    HGLRC threadRC;
+};
+
+GLWindow gMainGLWin;
+
+GLWindow enableOpenGL( HWND window ) {
+    // Initialize OpenGL window
+    GLWindow winStruct;
+    winStruct.window = window;
+
+    // Get dimensions of window
+    RECT windowPos;
+    GetClientRect( winStruct.window , &windowPos );
+    Vector2i size( windowPos.right , windowPos.bottom );
+
+    // Stores pixel format
+    int format;
+
+    // Set the pixel format for the DC
+    PIXELFORMATDESCRIPTOR pfd = {
+        sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd
+        1,                     // version number
+        PFD_DRAW_TO_WINDOW |   // support winStruct.window
+        PFD_SUPPORT_OPENGL |   // support OpenGL
+        PFD_DOUBLEBUFFER,      // double buffered
+        PFD_TYPE_RGBA,         // RGBA type
+        24,                    // 24-bit color depth
+        8, 0, 8, 8, 8, 16,     // 8 bits per color component, evenly spaced
+        0,                     // no alpha buffer
+        0,                     // shift bit ignored
+        0,                     // no accumulation buffer
+        0, 0, 0, 0,            // accum bits ignored
+        16,                    // 16-bit z-buffer
+        0,                     // no stencil buffer
+        0,                     // no auxiliary buffer
+        PFD_MAIN_PLANE,        // main layer
+        0,                     // reserved
+        0, 0, 0                // layer masks ignored
+    };
+
+    // Get the device context (DC)
+    winStruct.dc = GetDC( winStruct.window );
+
+    // Get the best available match of pixel format for the device context
+    format = ChoosePixelFormat( winStruct.dc , &pfd );
+    SetPixelFormat( winStruct.dc , format , &pfd );
+
+    // Create the render context (RC)
+    winStruct.threadRC = wglCreateContext( winStruct.dc );
+
+    return winStruct;
+}
+
+void disableOpenGL( GLWindow winStruct ) {
+    wglMakeCurrent( NULL , NULL );
+    wglDeleteContext( winStruct.threadRC );
+    ReleaseDC( winStruct.window , winStruct.dc );
+}
 
 LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lParam );
 
@@ -97,6 +164,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             NULL ,
             Instance ,
             NULL );
+
+    gMainGLWin = enableOpenGL( mainWindow );
 
     /* If this isn't allocated on the heap, it can't be destroyed soon enough.
      * If it were allocated on the stack, it would be destroyed when it leaves
@@ -288,6 +357,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     // Delete MJPEG stream window
     delete gStreamWinPtr;
+
+    // Clean up OpenGL before destroying main window
+    disableOpenGL( gMainGLWin );
 
     // Clean up windows
     DestroyWindow( mainWindow );
@@ -540,39 +612,175 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
     }
 
     case WM_PAINT: {
+        GLenum glError;
+
+        // Get dimensions of window
+        RECT windowPos;
+        GetClientRect( handle , &windowPos );
+        Vector2i size( windowPos.right , windowPos.bottom );
+
+        wglMakeCurrent( gMainGLWin.dc , gMainGLWin.threadRC );
+
+        // Check for OpenGL errors
+        glError = glGetError();
+        if( glError != GL_NO_ERROR ) {
+            std::cerr << "wglMakeCurrent: " << gluErrorString( glError ) << "\n";
+        }
+
         PAINTSTRUCT ps;
-        HDC hdc = BeginPaint( handle , &ps );
+        BeginPaint( handle , &ps );
 
-        /* ===== Create buffer DC ===== */
-        RECT rect;
-        GetClientRect( handle , &rect );
+        static int bufWidth = size.X;
+        static int bufHeight = size.Y;
+        static BYTE* pxlBuf = new BYTE[size.X * size.Y * 4];
 
-        HDC bufferDC = CreateCompatibleDC( hdc );
-        HBITMAP bufferBmp = CreateCompatibleBitmap( hdc , rect.right , rect.bottom );
+        if ( bufWidth != size.X || bufHeight != size.Y ) {
+            delete[] pxlBuf;
+            pxlBuf = new BYTE[size.X * size.Y * 4];
 
-        HBITMAP oldBmp = static_cast<HBITMAP>( SelectObject( bufferDC , bufferBmp ) );
-        /* ============================ */
+            bufWidth = size.X;
+            bufHeight = size.Y;
+        }
 
-        // Fill buffer DC with a background color
-        HRGN region = CreateRectRgn( 0 , 0 , rect.right , rect.bottom );
-        FillRgn( bufferDC , region , GetSysColorBrush(COLOR_3DFACE) );
-        DeleteObject( region );
+        /* ===== Draw WinGDI objects ===== */
+        // Create new device context
+        HDC gdiDC = CreateCompatibleDC( gMainGLWin.dc );
 
-        // Creates 1:1 relationship between logical units and pixels
-        int oldMapMode = SetMapMode( bufferDC , MM_TEXT );
+        // Create the bitmap used for graphics
+        HBITMAP gdiBmp = CreateCompatibleBitmap( gMainGLWin.dc , size.X , size.Y );
 
-        gDrawables->drawDisplay( bufferDC );
+        // Give each graphic a bitmap to use
+        HBITMAP oldgdiBmp = static_cast<HBITMAP>(SelectObject( gdiDC , gdiBmp ));
 
-        BitBlt( hdc , 0 , 0 , rect.right , rect.bottom , bufferDC , 0 , 0 , SRCCOPY );
+        // Create region for background
+        HRGN backgroundRegion = CreateRectRgn( 0 , 0 , size.X , size.Y );
 
-        // Restore old DC mapping mode
-        SetMapMode( bufferDC , oldMapMode );
+        // Fill graphic with background color
+        FillRgn( gdiDC , backgroundRegion , GetSysColorBrush( COLOR_3DFACE ) );
 
-        // Replace the old bitmap and delete the created one
-        DeleteObject( SelectObject( bufferDC , oldBmp ) );
+        // Free the region
+        DeleteObject( backgroundRegion );
 
-        // Free the buffer DC
-        DeleteDC( bufferDC );
+        // Draw WinGDI objects
+        gDrawables->drawDisplay( gdiDC );
+
+        // Store bits from graphics in another buffer
+        BMPtoPXL( gdiDC , gdiBmp , size.X , size.Y , pxlBuf );
+
+        // Put old bitmaps back in DCs before deleting them
+        SelectObject( gdiDC , oldgdiBmp );
+
+        // Free WinGDI objects
+        DeleteDC( gdiDC );
+        DeleteObject( gdiBmp );
+        /* =============================== */
+
+        /* ===== Initialize OpenGL ===== */
+        glClearDepth( 1.f );
+
+        glDepthFunc( GL_LESS );
+        glDepthMask( GL_FALSE );
+        glDisable( GL_DEPTH_TEST );
+        glDisable( GL_BLEND );
+        glDisable( GL_ALPHA_TEST );
+        glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
+        glShadeModel( GL_FLAT );
+
+        // Set up screen
+        glViewport( 0 , 0 , size.X , size.Y );
+        glMatrixMode( GL_PROJECTION );
+        glLoadIdentity();
+        glOrtho( 0 , size.X , size.Y , 0 , -1.f , 1.f );
+        glMatrixMode( GL_MODELVIEW );
+        glLoadIdentity();
+
+        // Check for OpenGL errors
+        glError = glGetError();
+        if( glError != GL_NO_ERROR ) {
+            std::cerr << "Main.cpp OpenGL: " << gluErrorString( glError ) << "\n";
+        }
+        /* ============================= */
+
+        /* ===== Convert BGRA image to RGBA ===== */
+        /*BYTE temp;
+        for ( int pos = 0 ; pos < size.X * size.Y ; pos++ ) {
+            temp = pxlBuf[4*pos+0];
+            // Swap R and B channels
+            pxlBuf[4*pos+0] = pxlBuf[4*pos+2];
+            pxlBuf[4*pos+2] = temp;
+        }*/
+        /* ====================================== */
+
+        static int textureSize = 0;
+
+        glEnable( GL_TEXTURE_2D );
+        glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR );
+        glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR );
+
+        /* If our image won't fit in the texture, make a bigger one whose width and
+         * height are a power of two.
+         */
+        if( size.X > textureSize || size.Y > textureSize ) {
+            textureSize = npot( std::max( size.X , size.Y ) );
+
+            uint8_t* tmpBuf = new uint8_t[textureSize * textureSize * 3];
+            glTexImage2D( GL_TEXTURE_2D , 0 , 3 , textureSize , textureSize , 0 ,
+                    GL_RGB , GL_UNSIGNED_BYTE , tmpBuf );
+            delete[] tmpBuf;
+        }
+
+        /* Represents the amount of the texture to display. These are ratios
+         * between the dimensions of the image in the texture and the actual
+         * texture dimensions. Once these are set for the specific image to be
+         * displayed, they are passed into glTexCoord2f.
+         */
+        double wratio = 0.f;
+        double hratio = 0.f;
+
+        glTexSubImage2D( GL_TEXTURE_2D , 0 , 0 , 0 , size.X , size.Y ,
+                GL_RGBA , GL_UNSIGNED_BYTE , pxlBuf );
+
+        wratio = (float)size.X / (float)textureSize;
+        hratio = (float)size.Y / (float)textureSize;
+
+        // Position the GL texture in the Win32 window
+        glBegin( GL_TRIANGLE_FAN );
+        glColor4f( 1.f , 1.f , 1.f , 1.f );
+        glTexCoord2f( 0 , 0 ); glVertex3f( 0 , 0 , 0 );
+        glTexCoord2f( wratio , 0 ); glVertex3f( size.X , 0 , 0 );
+        glTexCoord2f( wratio , hratio ); glVertex3f( size.X , size.Y , 0 );
+        glTexCoord2f( 0 , hratio ); glVertex3f( 0 , size.Y , 0 );
+        glEnd();
+
+        /*glBegin( GL_TRIANGLES );
+        glColor4f( backColor.glR() , backColor.glG() , backColor.glB() , backColor.glA() );
+        glVertex3f( 0 , 0 , 0 );
+        glVertex3f( size.X , 0 , 0 );
+        glVertex3f( size.X , size.Y , 0 );
+
+        glVertex3f( 0 , 0 , 0 );
+        glVertex3f( size.X , size.Y , 0 );
+        glVertex3f( 0 , size.Y , 0 );
+        glEnd();*/
+
+        // Check for OpenGL errors
+        glError = glGetError();
+        if( glError != GL_NO_ERROR ) {
+            std::cerr << "Main.cpp OpenGL failure: " << gluErrorString( glError ) << "\n";
+        }
+
+        glDisable( GL_TEXTURE_2D );
+
+        gDrawables->drawDisplay( NULL );
+
+        // Check for OpenGL errors
+        glError = glGetError();
+        if( glError != GL_NO_ERROR ) {
+            std::cerr << "Drawables OpenGL failure: " << gluErrorString( glError ) << "\n";
+        }
+
+        // Display OpenGL drawing
+        SwapBuffers( gMainGLWin.dc );
 
         EndPaint( handle , &ps );
 

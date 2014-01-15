@@ -10,9 +10,10 @@
 
 #include "Drawable.hpp"
 #include "NetUpdate.hpp"
-#include "Text.hpp"
+#include "../WinGDI/Text.hpp"
 
 #include <string>
+#include <GL/gl.h>
 
 class StatusLight : public Drawable , public NetUpdate {
 public:

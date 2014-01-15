@@ -43,7 +43,7 @@
 #include "../SFML/System/Clock.hpp"
 
 #include "../WinGDI/Text.hpp"
-#include "../WinGDI/Vector.hpp"
+#include "../OpenGL/Vector.hpp"
 
 #include "mjpegrx.h"
 #include "mjpeg_thread.h"

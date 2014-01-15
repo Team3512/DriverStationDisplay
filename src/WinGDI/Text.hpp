@@ -11,13 +11,13 @@
 #ifndef TEXT_HPP
 #define TEXT_HPP
 
-#include "Drawable.hpp"
-#include "NetUpdate.hpp"
+#include "../OpenGL/Drawable.hpp"
+#include "../OpenGL/NetUpdate.hpp"
 #include <string>
 
 class Text : public Drawable , public NetUpdate {
 public:
-    Text( const Vector2i& position , HFONT font , std::wstring text , COLORREF fillColor , COLORREF outlineColor , bool netUpdate );
+    Text( const Vector2i& position , HFONT font , std::wstring text , Colorf fillColor , Colorf outlineColor , bool netUpdate );
 
     void setFont( HFONT font );
 
@@ -25,7 +25,7 @@ public:
 
     void setString( std::wstring text );
 
-    const std::wstring& getString();
+    const std::wstring& getString() const;
 
     void draw( HDC hdc );
 

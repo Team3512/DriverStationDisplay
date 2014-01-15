@@ -9,12 +9,12 @@
 
 #include "RectangleShape.hpp"
 #include "NetUpdate.hpp"
-#include "Text.hpp"
+#include "../WinGDI/Text.hpp"
 #include <string>
 
 class ProgressBar : public RectangleShape , public NetUpdate {
 public:
-    ProgressBar( const Vector2i& position , std::wstring text , COLORREF fullFillColor , COLORREF emptyFillColor , COLORREF outlineColor , bool netUpdate );
+    ProgressBar( const Vector2i& position , std::wstring text , Colorf fullFillColor , Colorf emptyFillColor , Colorf outlineColor , bool netUpdate );
 
     void setPercent( float percentFull );
     float getPercent();
@@ -28,8 +28,8 @@ public:
     void setString( const std::wstring& message );
     const std::wstring& getString();
 
-    void setBarFillColor( COLORREF fill );
-    COLORREF getBarFillColor();
+    void setBarFillColor( Colorf fill );
+    Colorf getBarFillColor();
 
     void draw( HDC hdc );
 
