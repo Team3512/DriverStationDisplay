@@ -8,6 +8,7 @@
 #include "Settings.hpp"
 #include <fstream>
 #include <iostream>
+#include <cstdlib>
 
 Settings::Settings( std::string fileName ) :
         m_fileName( fileName ) ,
@@ -46,8 +47,8 @@ void Settings::update() {
     std::cout << "Settings loaded from " << m_fileName << "\n";
 }
 
-std::string Settings::getValueFor( const std::string& key ) {
-    std::map<std::string , std::string>::iterator index = m_values.find( key );
+const std::string Settings::getString( const std::string& key ) const {
+    std::map<std::string , std::string>::const_iterator const index = m_values.find( key );
 
     // If the element wasn't found
     if ( index == m_values.end() ) {
@@ -57,6 +58,33 @@ std::string Settings::getValueFor( const std::string& key ) {
 
     // Else return the value for that element
     return index->second;
+}
+
+const float Settings::getFloat( const std::string& key ) const {
+    std::map<std::string , std::string>::const_iterator index = m_values.find( key );
+
+    // If the element wasn't found
+    if ( index == m_values.end() ) {
+        std::cout << "Settings Error: '" << key << "' not found\n";
+        return 0.f;
+    }
+
+    // Else return the value for that element
+    return atof( index->second.c_str() );
+}
+
+const int Settings::getInt( const std::string& key ) const {
+    std::map<std::string , std::string>::const_iterator index = m_values.find( key );
+
+    // If the element wasn't found
+    if ( index == m_values.end() ) {
+        std::cout << "Settings Error: '" << key << "' not found\n";
+        return 0;
+    }
+
+    // Else return the value for that element
+    return atoi( index->second.c_str() );
+
 }
 
 void Settings::saveToFile( const std::string& fileName ) {

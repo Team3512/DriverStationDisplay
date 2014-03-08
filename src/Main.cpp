@@ -173,9 +173,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
      * causes the cleanup in this object's destructor to not complete
      * successfully.
      */
-    gStreamWinPtr = new MjpegStream( gSettings.getValueFor( "streamHost" ) ,
-            std::atoi( gSettings.getValueFor( "streamPort" ).c_str() ) ,
-            gSettings.getValueFor( "streamRequestPath" ) ,
+    gStreamWinPtr = new MjpegStream( gSettings.getString( "streamHost" ) ,
+            gSettings.getInt( "streamPort" ) ,
+            gSettings.getString( "streamRequestPath" ) ,
             mainWindow ,
             ( GetSystemMetrics(SM_CXSCREEN) - 320 ) / 2 ,
             60 ,
@@ -185,7 +185,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     /* ===== Robot Data Sending Variables ===== */
     sf::UdpSocket robotData;
-    robotData.bind( std::atoi( gSettings.getValueFor( "dsDataPort" ).c_str() ) );
+    robotData.bind( gSettings.getInt( "dsDataPort" ) );
     robotData.setBlocking( false );
     gDataSocketPtr = &robotData;
 
@@ -217,8 +217,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     ShowWindow( mainWindow , SW_SHOW );
 
     // Used for sending connect packets to robot
-    sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
-    unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
+    sf::IpAddress robotIP( gSettings.getString( "robotIP" ) );
+    unsigned short robotDataPort = gSettings.getInt( "robotDataPort" );
 
     // Reloads robot code kernel module
     RegisterHotKey( mainWindow , HK_SAVE , MOD_CONTROL , 0x53 ); // Ctrl + S
@@ -503,9 +503,9 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
     case WM_COMMAND: {
         char data[16];
 
-        sf::IpAddress robotIP( gSettings.getValueFor( "robotIP" ) );
-        unsigned short robotDataPort = std::atoi( gSettings.getValueFor( "robotDataPort" ).c_str() );
-        unsigned short alfCmdPort = std::atoi( gSettings.getValueFor( "alfCmdPort" ).c_str() );
+        sf::IpAddress robotIP( gSettings.getString( "robotIP" ) );
+        unsigned short robotDataPort = gSettings.getInt( "robotDataPort" );
+        unsigned short alfCmdPort = gSettings.getInt( "alfCmdPort" );
 
         switch( LOWORD(wParam) ) {
             case IDC_STREAM_BUTTON: {
