@@ -182,16 +182,16 @@ private:
     // Locks window so only one thread can access or draw to it at a time
     mjpeg_mutex_t m_windowMutex;
 
-    /* If true:
+    /* If false:
      *     Lets receive thread run
-     * If false:
+     * If true:
      *     Closes receive thread
      */
     std::atomic<bool> m_stopReceive;
 
-    /* If true:
+    /* If false:
      *     Lets update thread run
-     * If false:
+     * If true:
      *     Closes update thread
      */
     std::atomic<bool> m_stopUpdate;

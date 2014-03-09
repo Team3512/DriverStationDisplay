@@ -327,15 +327,22 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                     // Change local selection to match sent one
                     SendMessage( gAutonComboBox , CB_SELECTSTRING , -1 , namePtr );
 
-                    // Delete old thread before spawning new one
-                    delete msgBoxThrPtr;
+                    /* Don't let the message box thread attempt to spawn again
+                     * before the previous one has exited; it will hang on
+                     * joining the previous thread and crash due to window
+                     * messages no longer being processed.
+                     */
+                    if ( !connectDlgOpen ) {
+                        // Delete old thread before spawning new one
+                        delete msgBoxThrPtr;
 
-                    msgBoxThrPtr = new sf::Thread( [&]{ connectDlgOpen = true;
-                            MessageBox( mainWindow , autoName.c_str() , "Autonomous Change" , MB_ICONINFORMATION | MB_OK );
-                            connectDlgOpen = false;
-                    } );
+                        msgBoxThrPtr = new sf::Thread( [&]{ connectDlgOpen = true;
+                                MessageBox( mainWindow , autoName.c_str() , "Autonomous Change" , MB_ICONINFORMATION | MB_OK );
+                                connectDlgOpen = false;
+                        } );
 
-                    msgBoxThrPtr->launch();
+                        msgBoxThrPtr->launch();
+                    }
                 }
 
                 // Make the window redraw the controls
