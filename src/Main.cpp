@@ -149,7 +149,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     MSG message;
 
-    int mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 200;
+    int mainWinHeight = GetSystemMetrics(SM_CYSCREEN) - 240;
 
     // Create a new window to be used for the lifetime of the application
     HWND mainWindow = CreateWindowEx( 0 ,
