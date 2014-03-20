@@ -154,7 +154,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     // Create a new window to be used for the lifetime of the application
     HWND mainWindow = CreateWindowEx( 0 ,
             mainClassName ,
-            "" ,
+            "DriverStationDisplay" ,
             WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN ,
             0 ,
             0 ,
