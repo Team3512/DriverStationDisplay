@@ -257,8 +257,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                     gDrawables->updateGuiTable( dataPacket );
                     NetUpdate::updateElements();
 
-                    /* Only allow keep-alive if we have a valid GUI; we need to
-                     * connect and create the GUI before accepting display data
+                    /* Only allow keep-alive (resetting timer) if we have a
+                     * valid GUI; we need to connect and create the GUI before
+                     * accepting display data
                      */
                     if ( connectedBefore ) {
                         connectClock.restart();
