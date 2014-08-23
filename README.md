@@ -57,7 +57,7 @@ Robot's IP address
 
 Port to which to send connection packets and autonomous mode selections
 
-###### IPSettings.txt
+###### Example IPSettings.txt
     streamHost        = 10.35.12.11
     streamPort        = 80
     streamRequestPath = /mjpg/video.mjpg
