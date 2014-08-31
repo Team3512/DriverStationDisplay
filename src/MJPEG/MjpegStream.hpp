@@ -37,16 +37,17 @@
 #include <GL/glu.h>
 
 #include <atomic>
+#include <chrono>
 #include <map>
 #include <cstdint>
-
-#include "../SFML/System/Clock.hpp"
 
 #include "../WinGDI/Text.hpp"
 #include "../OpenGL/Vector.hpp"
 
 #include "mjpegrx.h"
 #include "mjpeg_thread.h"
+
+#include "WindowCallbacks.hpp"
 
 #define WM_MJPEGSTREAM_START     (WM_APP + 0x0001)
 #define WM_MJPEGSTREAM_STOP      (WM_APP + 0x0002)
@@ -64,7 +65,8 @@ public:
             int yPosition ,
             int width ,
             int height ,
-            HINSTANCE appInstance
+            HINSTANCE appInstance,
+            WindowCallbacks* windowCallbacks
             );
     virtual ~MjpegStream();
 
@@ -173,10 +175,10 @@ private:
     struct mjpeg_inst_t* m_streamInst;
 
     // Determines when a video frame is old
-    sf::Clock m_imageAge;
+    std::chrono::time_point<std::chrono::system_clock> m_imageAge;
 
     // Used to limit display frame rate
-    sf::Clock m_displayTime;
+    std::chrono::time_point<std::chrono::system_clock> m_displayTime;
     unsigned int m_frameRate;
 
     // Locks window so only one thread can access or draw to it at a time
@@ -196,9 +198,16 @@ private:
      */
     std::atomic<bool> m_stopUpdate;
 
+    WindowCallbacks* m_windowCallbacks;
+
+    /* Mouse position state variables */
+    int m_lx;
+    int m_ly;
+    int m_cx;
+    int m_cy;
+
     // Makes sure "Waiting..." graphic is drawn after timeout
     mjpeg_thread_t m_updateThread;
-    static void* (*m_updateFunc)(void*);
 
     /* Recreates the graphics that display messages in the stream window
      * (Resizes them and recenters the text in the window)

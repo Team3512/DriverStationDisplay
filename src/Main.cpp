@@ -16,15 +16,14 @@
 #include "SFML/Network/TcpSocket.hpp"
 #include "SFML/Network/UdpSocket.hpp"
 
-#include "SFML/System/Clock.hpp"
-#include "SFML/System/Thread.hpp"
-
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <cstring>
 #include <atomic>
+#include <thread>
+#include <chrono>
 
 #include "MJPEG/MjpegStream.hpp"
 #include "OpenGL/StatusLight.hpp"
@@ -167,6 +166,9 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
 
     gMainGLWin = enableOpenGL( mainWindow );
 
+    WindowCallbacks streamCallback;
+    streamCallback.clickEvent = [&](int x , int y) {};
+
     /* If this isn't allocated on the heap, it can't be destroyed soon enough.
      * If it were allocated on the stack, it would be destroyed when it leaves
      * WinMain's scope, which is after its parent window is destroyed. This
@@ -181,7 +183,8 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             60 ,
             320 ,
             240 ,
-            Instance );
+            Instance ,
+            &streamCallback );
 
     /* ===== Robot Data Sending Variables ===== */
     sf::UdpSocket robotData;
@@ -201,7 +204,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     gDrawables = new DisplaySettings( "" , 12 , 12 , gStreamWinPtr->getPosition().X + gStreamWinPtr->getSize().X + 10 , 12 );
 
     // Used for displaying message box to user while also updating the display
-    sf::Thread* msgBoxThrPtr = NULL;
+    std::thread* msgBoxThrPtr = NULL;
 
     // Packet data
     std::string header;
@@ -209,7 +212,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     std::vector<std::string> autonNames;
 
     // Used for auto-connect with robot
-    sf::Clock connectClock;
+    std::chrono::time_point<std::chrono::system_clock> connectTime;
     bool connectedBefore = false;
     std::atomic<bool> connectDlgOpen( false );
 
@@ -238,14 +241,14 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
         }
         else {
             // If timeout has passed, remove GUI and attempt reconnect
-            if ( connectClock.getElapsedTime() > 2000 && !connectDlgOpen ) {
+            if ( std::chrono::system_clock::now() - connectTime  > std::chrono::milliseconds(2000) && !connectDlgOpen ) {
                 char data[16] = "connect\r\n";
 
                 if ( gDataSocketPtr != NULL ) {
                     gDataSocketPtr->send( data , 16 , robotIP , robotDataPort );
                 }
 
-                connectClock.restart();
+                connectTime = std::chrono::system_clock::now();
             }
 
             // Retrieve data sent from robot and unpack it
@@ -262,7 +265,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                      * accepting display data
                      */
                     if ( connectedBefore ) {
-                        connectClock.restart();
+                        connectTime = std::chrono::system_clock::now();
                     }
                 }
 
@@ -273,7 +276,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                         connectedBefore = true;
                     }
 
-                    connectClock.restart();
+                    connectTime = std::chrono::system_clock::now();
                 }
 
                 else if ( std::strcmp( header.c_str() , "autonList\r\n" ) == 0 ) {
@@ -337,12 +340,11 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
                         // Delete old thread before spawning new one
                         delete msgBoxThrPtr;
 
-                        msgBoxThrPtr = new sf::Thread( [&]{ connectDlgOpen = true;
+                        msgBoxThrPtr = new std::thread( [&]{ connectDlgOpen = true;
                                 MessageBox( mainWindow , autoName.c_str() , "Autonomous Change" , MB_ICONINFORMATION | MB_OK );
                                 connectDlgOpen = false;
                         } );
-
-                        msgBoxThrPtr->launch();
+                        msgBoxThrPtr->detach();
                     }
                 }
 
@@ -353,7 +355,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             // Make the window redraw the controls
             InvalidateRect( mainWindow , NULL , FALSE );
 
-            Sleep( 100 );
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 
