@@ -35,13 +35,13 @@ LD := g++
 # Platform specific variables
 ifeq ($(OS), Windows_NT)
         # Specify Windows libs with -l directives here
-	LDFLAGS := -lGlu32 -lOpengl32 -lGdi32 -lWs2_32 -lcomctl32 -static-libgcc -static-libstdc++ -Xlinker -subsystem -Xlinker windows
+	LDFLAGS := -lGlu32 -lOpengl32 -lGdi32 -lWs2_32 -lcomctl32 -static -Xlinker -subsystem -Xlinker windows
 
         # Assign executable name
 	EXEC := $(NAME).exe
 else
         # Specify Linux libs with -l directives here
-	LDFLAGS := -lglu32 -lopengl32 -lgdi32 -lws2_32 -lcomctl32 -static-libgcc -static-libstdc++ -Xlinker -subsystem -Xlinker windows
+	LDFLAGS := -lglu32 -lopengl32 -lgdi32 -lws2_32 -lcomctl32 -static -Xlinker -subsystem -Xlinker windows
 
 ifeq ($(strip $(PREFIX)),)
         # Assign executable name
@@ -51,7 +51,7 @@ else
 	EXEC := $(NAME).exe
 endif
 
-	# Append optional prefix
+	# Prepend optional prefix
 	CC := $(PREFIX)$(strip $(CC))
 	CXX := $(PREFIX)$(strip $(CXX))
 	RC := $(PREFIX)$(strip $(RC))
