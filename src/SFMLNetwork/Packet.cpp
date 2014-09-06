@@ -41,33 +41,33 @@
 #include <cstring>
 
 uint64_t htonll( uint64_t value ) {
-	// The answer is 42
-	static const int num = 42;
+    // The answer is 42
+    static const int num = 42;
 
-	// Check the endianness
-	if ( *reinterpret_cast<const char*>(&num) == num ) { // if little endian
-		const uint32_t high_part = htonl( static_cast<uint32_t>(value >> 32) );
-		const uint32_t low_part = htonl( static_cast<uint32_t>(value & 0xFFFFFFFFLL) );
+    // Check the endianness
+    if ( *reinterpret_cast<const char*>(&num) == num ) { // if little endian
+        const uint32_t high_part = htonl( static_cast<uint32_t>(value >> 32) );
+        const uint32_t low_part = htonl( static_cast<uint32_t>(value & 0xFFFFFFFFLL) );
 
-		return ( static_cast<uint64_t>(low_part) << 32 ) | high_part;
-	}
-	else
-		return value;
+        return ( static_cast<uint64_t>(low_part) << 32 ) | high_part;
+    }
+    else
+        return value;
 }
 
 uint64_t ntohll( uint64_t value ) {
-	// The answer is 42
-	static const int num = 42;
+    // The answer is 42
+    static const int num = 42;
 
-	// Check the endianness
-	if ( *reinterpret_cast<const char*>(&num) == num ) // if little endian
-		return value;
-	else {
-		const uint32_t high_part = ntohl( static_cast<uint32_t>(value << 32) );
-		const uint32_t low_part = ntohl( static_cast<uint32_t>(value & (0xFFFFFFFFLL) ) );
+    // Check the endianness
+    if ( *reinterpret_cast<const char*>(&num) == num ) // if little endian
+        return value;
+    else {
+        const uint32_t high_part = ntohl( static_cast<uint32_t>(value << 32) );
+        const uint32_t low_part = ntohl( static_cast<uint32_t>(value & (0xFFFFFFFFLL) ) );
 
-		return ( static_cast<uint64_t>(low_part) >> 32 ) | high_part;
-	}
+        return ( static_cast<uint64_t>(low_part) >> 32 ) | high_part;
+    }
 }
 
 namespace sf
@@ -229,26 +229,26 @@ Packet& Packet::operator >>(uint32_t& data)
 ////////////////////////////////////////////////////////////
 Packet& Packet::operator >>(int64_t& data)
 {
-	if(checkSize(sizeof(data)))
-	{
-		data = ntohll(*reinterpret_cast<const int64_t*>(&m_data[m_readPos]));
-		m_readPos += sizeof(data);
-	}
+    if(checkSize(sizeof(data)))
+    {
+        data = ntohll(*reinterpret_cast<const int64_t*>(&m_data[m_readPos]));
+        m_readPos += sizeof(data);
+    }
 
-	return *this;
+    return *this;
 }
 
 
 ////////////////////////////////////////////////////////////
 Packet& Packet::operator >>(uint64_t& data)
 {
-	if(checkSize(sizeof(data)))
-	{
-		data = ntohll(*reinterpret_cast<const uint64_t*>(&m_data[m_readPos]));
-		m_readPos += sizeof(data);
-	}
+    if(checkSize(sizeof(data)))
+    {
+        data = ntohll(*reinterpret_cast<const uint64_t*>(&m_data[m_readPos]));
+        m_readPos += sizeof(data);
+    }
 
-	return *this;
+    return *this;
 }
 
 

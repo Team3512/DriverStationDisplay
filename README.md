@@ -153,9 +153,9 @@ The start text and replacement text both support Unicode character insertions wh
 ###### Example:
 
     Gyro: 0\u00b0
-    
+
     becomes
-    
+
     Gyro: 0º
 
 Warning: The identifiers must belong to UTF-16 because Windows wide strings use UTF-16.
