@@ -15,7 +15,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include "Vector.hpp"
+#include "../Vector.hpp"
 #include "Color.hpp"
 
 class Drawable {
