@@ -4,9 +4,11 @@
 //Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
-#define _WIN32_WINNT 0x0601
+#include <sdkddkver.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <commctrl.h>
+#include <wingdi.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -31,11 +33,6 @@
 #include "DisplaySettings.hpp"
 #include "Util.hpp"
 #include "Resource.h"
-
-#include <wingdi.h>
-
-#define _WIN32_IE 0x0400
-#include <commctrl.h>
 
 // Global because the window is closed by a button in CALLBACK OnEvent
 HWND gAutonComboBox = NULL;
