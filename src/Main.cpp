@@ -566,7 +566,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         GetClientRect( handle , &windowPos );
         Vector2i size( windowPos.right , windowPos.bottom );
 
-        wglMakeCurrent( gMainGLWin->m_dc , gMainGLWin->m_threadRC );
+        gMainGLWin->makeContextCurrent();
 
         // Check for OpenGL errors
         glError = glGetError();
@@ -699,7 +699,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         }
 
         // Display OpenGL drawing
-        SwapBuffers( gMainGLWin->m_dc );
+        gMainGLWin->swapBuffers();
 
         EndPaint( handle , &ps );
 
