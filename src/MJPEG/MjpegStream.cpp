@@ -89,9 +89,6 @@ MjpegStream::MjpegStream( const std::string& hostName ,
         m_port( port ) ,
         m_requestPath( requestPath ) ,
 
-        m_threadRC( NULL ) ,
-        m_bufferDC( NULL ) ,
-
         m_connectMsg( Vector2i( 0 , 0 ) , UIFont::getInstance().segoeUI18() ,
                 L"Connecting..." , Colorf( 0 , 0 , 0 ) , Colorf( 255 , 255 , 255 ) ,
                 false ) ,
@@ -191,7 +188,10 @@ MjpegStream::MjpegStream( const std::string& hostName ,
      * message queue immediately upon creation of the window, which is before
      * this constructor has a chance to add the entry.
      */
-    EnableOpenGL();
+    m_glWin = new GLWindow( m_streamWin );
+
+    m_imgWidth = getSize().X;
+    m_imgHeight = getSize().Y;
 
     m_stopUpdate = false;
     if ( mjpeg_thread_create( &m_updateThread , &MjpegStream::updateFunc , this ) == -1 ) {
@@ -218,7 +218,7 @@ MjpegStream::~MjpegStream() {
     mjpeg_mutex_destroy( &m_extMutex );
     mjpeg_mutex_destroy( &m_windowMutex );
 
-    DisableOpenGL();
+    delete m_glWin;
 
     DestroyWindow( m_streamWin );
     DestroyWindow( m_toggleButton );
@@ -570,52 +570,6 @@ void MjpegStream::recreateGraphics( const Vector2i& windowSize ) {
     DeleteObject( backgroundBmp );
 }
 
-void MjpegStream::EnableOpenGL() {
-    // Stores pixel format
-    int format;
-
-    // Set the pixel format for the DC
-    PIXELFORMATDESCRIPTOR pfd = {
-        sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd
-        1,                     // version number
-        PFD_DRAW_TO_WINDOW |   // support window
-        PFD_SUPPORT_OPENGL |   // support OpenGL
-        PFD_DOUBLEBUFFER,      // double buffered
-        PFD_TYPE_RGBA,         // RGBA type
-        24,                    // 24-bit color depth
-        8, 0, 8, 8, 8, 16,     // 8 bits per color component, evenly spaced
-        0,                     // no alpha buffer
-        0,                     // shift bit ignored
-        0,                     // no accumulation buffer
-        0, 0, 0, 0,            // accum bits ignored
-        16,                    // 16-bit z-buffer
-        0,                     // no stencil buffer
-        0,                     // no auxiliary buffer
-        PFD_MAIN_PLANE,        // main layer
-        0,                     // reserved
-        0, 0, 0                // layer masks ignored
-    };
-
-    // Get the device context (DC)
-    m_bufferDC = GetDC( m_streamWin );
-
-    // Get the best available match of pixel format for the device context
-    format = ChoosePixelFormat( m_bufferDC , &pfd );
-    SetPixelFormat( m_bufferDC , format , &pfd );
-
-    // Create the render context (RC)
-    m_threadRC = wglCreateContext( m_bufferDC );
-
-    m_imgWidth = getSize().X;
-    m_imgHeight = getSize().Y;
-}
-
-void MjpegStream::DisableOpenGL() {
-    wglMakeCurrent( NULL , NULL );
-    wglDeleteContext( m_threadRC );
-    ReleaseDC( m_streamWin , m_bufferDC );
-}
-
 void* MjpegStream::updateFunc( void* obj ) {
     std::chrono::duration<double> lastTime( 0.0 );
     std::chrono::duration<double> currentTime( 0.0 );
@@ -638,12 +592,6 @@ void* MjpegStream::updateFunc( void* obj ) {
 
 LRESULT CALLBACK MjpegStream::WindowProc( HWND handle , UINT message , WPARAM wParam , LPARAM lParam ) {
     switch ( message ) {
-    case WM_DESTROY: {
-        m_map[handle]->DisableOpenGL();
-
-        break;
-    }
-
     case WM_PAINT: {
         PAINTSTRUCT ps;
         BeginPaint( handle , &ps );
@@ -682,39 +630,8 @@ LRESULT CALLBACK MjpegStream::WindowProc( HWND handle , UINT message , WPARAM wP
 
 void MjpegStream::paint( PAINTSTRUCT* ps ) {
     GLenum glError;
-    wglMakeCurrent( m_bufferDC , m_threadRC );
-
-    /* ===== Initialize OpenGL ===== */
-    glClearColor( 1.f , 1.f , 1.f , 1.f );
-    glClearDepth( 1.f );
-    glClear( GL_COLOR_BUFFER_BIT );
-
-    glDepthFunc( GL_LESS );
-    glDepthMask( GL_FALSE );
-    glDisable( GL_DEPTH_TEST );
-    glDisable( GL_BLEND );
-    glDisable( GL_ALPHA_TEST );
-    glEnable( GL_TEXTURE_2D );
-    glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
-    glShadeModel( GL_FLAT );
-
-    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR );
-
-    // Set up screen
-    glViewport( 0 , 0 , getSize().X , getSize().Y );
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-    glOrtho( 0 , getSize().X , getSize().Y , 0 , -1.f , 1.f );
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-
-    // Check for OpenGL errors
-    glError = glGetError();
-    if( glError != GL_NO_ERROR ) {
-        std::cerr << "MjpegStream.cpp OpenGL failure: " << gluErrorString( glError ) << "\n";
-    }
-    /* ============================= */
+    m_glWin->makeBufferCurrent();
+    m_glWin->initGL( getSize().X , getSize().Y );
 
     int textureSize;
 
@@ -816,7 +733,7 @@ void MjpegStream::paint( PAINTSTRUCT* ps ) {
     }
 
     // Display OpenGL drawing
-    SwapBuffers( m_bufferDC );
+    m_glWin->swapBuffers();
 
     char buttonText[13];
     GetWindowText( m_toggleButton , buttonText , 13 );

@@ -8,7 +8,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commctrl.h>
-#include <wingdi.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -27,6 +26,7 @@
 #include <thread>
 #include <chrono>
 
+#include "GLWindow.hpp"
 #include "MJPEG/MjpegStream.hpp"
 #include "OpenGL/StatusLight.hpp"
 #include "Settings.hpp"
@@ -50,67 +50,7 @@ MjpegStream* gStreamWinPtr = NULL;
 sf::UdpSocket* gDataSocketPtr = NULL;
 sf::TcpSocket* gCmdSocketPtr = NULL;
 
-extern "C" struct GLWindow {
-    HWND window;
-    HDC dc;
-    HGLRC threadRC;
-};
-
-GLWindow gMainGLWin;
-
-GLWindow enableOpenGL( HWND window ) {
-    // Initialize OpenGL window
-    GLWindow winStruct;
-    winStruct.window = window;
-
-    // Get dimensions of window
-    RECT windowPos;
-    GetClientRect( winStruct.window , &windowPos );
-    Vector2i size( windowPos.right , windowPos.bottom );
-
-    // Stores pixel format
-    int format;
-
-    // Set the pixel format for the DC
-    PIXELFORMATDESCRIPTOR pfd = {
-        sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd
-        1,                     // version number
-        PFD_DRAW_TO_WINDOW |   // support winStruct.window
-        PFD_SUPPORT_OPENGL |   // support OpenGL
-        PFD_DOUBLEBUFFER,      // double buffered
-        PFD_TYPE_RGBA,         // RGBA type
-        24,                    // 24-bit color depth
-        8, 0, 8, 8, 8, 16,     // 8 bits per color component, evenly spaced
-        0,                     // no alpha buffer
-        0,                     // shift bit ignored
-        0,                     // no accumulation buffer
-        0, 0, 0, 0,            // accum bits ignored
-        16,                    // 16-bit z-buffer
-        0,                     // no stencil buffer
-        0,                     // no auxiliary buffer
-        PFD_MAIN_PLANE,        // main layer
-        0,                     // reserved
-        0, 0, 0                // layer masks ignored
-    };
-
-    // Get the device context (DC)
-    winStruct.dc = GetDC( winStruct.window );
-
-    // Get the best available match of pixel format for the device context
-    format = ChoosePixelFormat( winStruct.dc , &pfd );
-    SetPixelFormat( winStruct.dc , format , &pfd );
-
-    // Create the render context (RC)
-    winStruct.threadRC = wglCreateContext( winStruct.dc );
-
-    return winStruct;
-}
-
-void disableOpenGL( GLWindow winStruct ) {
-    wglMakeCurrent( NULL , NULL );
-    wglDeleteContext( winStruct.threadRC );
-    ReleaseDC( winStruct.window , winStruct.dc );
-}
+GLWindow* gMainGLWin;
 
 LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lParam );
 
@@ -161,7 +101,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
             Instance ,
             NULL );
 
-    gMainGLWin = enableOpenGL( mainWindow );
+    gMainGLWin = new GLWindow( mainWindow );
 
     WindowCallbacks streamCallback;
     streamCallback.clickEvent = [&](int x , int y) {};
@@ -366,7 +306,7 @@ INT WINAPI WinMain( HINSTANCE Instance , HINSTANCE , LPSTR , INT ) {
     delete gStreamWinPtr;
 
     // Clean up OpenGL before destroying main window
-    disableOpenGL( gMainGLWin );
+    delete gMainGLWin;
 
     // Clean up windows
     DestroyWindow( mainWindow );
@@ -626,7 +566,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         GetClientRect( handle , &windowPos );
         Vector2i size( windowPos.right , windowPos.bottom );
 
-        wglMakeCurrent( gMainGLWin.dc , gMainGLWin.threadRC );
+        wglMakeCurrent( gMainGLWin->m_dc , gMainGLWin->m_threadRC );
 
         // Check for OpenGL errors
         glError = glGetError();
@@ -651,10 +591,10 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
 
         /* ===== Draw WinGDI objects ===== */
         // Create new device context
-        HDC gdiDC = CreateCompatibleDC( gMainGLWin.dc );
+        HDC gdiDC = CreateCompatibleDC( gMainGLWin->m_dc );
 
         // Create the bitmap used for graphics
-        HBITMAP gdiBmp = CreateCompatibleBitmap( gMainGLWin.dc , size.X , size.Y );
+        HBITMAP gdiBmp = CreateCompatibleBitmap( gMainGLWin->m_dc , size.X , size.Y );
 
         // Give each graphic a bitmap to use
         HBITMAP oldgdiBmp = static_cast<HBITMAP>(SelectObject( gdiDC , gdiBmp ));
@@ -682,31 +622,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         DeleteObject( gdiBmp );
         /* =============================== */
 
-        /* ===== Initialize OpenGL ===== */
-        glClearDepth( 1.f );
-
-        glDepthFunc( GL_LESS );
-        glDepthMask( GL_FALSE );
-        glDisable( GL_DEPTH_TEST );
-        glDisable( GL_BLEND );
-        glDisable( GL_ALPHA_TEST );
-        glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
-        glShadeModel( GL_FLAT );
-
-        // Set up screen
-        glViewport( 0 , 0 , size.X , size.Y );
-        glMatrixMode( GL_PROJECTION );
-        glLoadIdentity();
-        glOrtho( 0 , size.X , size.Y , 0 , -1.f , 1.f );
-        glMatrixMode( GL_MODELVIEW );
-        glLoadIdentity();
-
-        // Check for OpenGL errors
-        glError = glGetError();
-        if( glError != GL_NO_ERROR ) {
-            std::cerr << "Main.cpp OpenGL: " << gluErrorString( glError ) << "\n";
-        }
-        /* ============================= */
+        gMainGLWin->initGL( size.X , size.Y );
 
         /* ===== Convert BGRA image to RGBA ===== */
         /*BYTE temp;
@@ -719,10 +635,6 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         /* ====================================== */
 
         static int textureSize = 0;
-
-        glEnable( GL_TEXTURE_2D );
-        glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR );
-        glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR );
 
         /* If our image won't fit in the texture, make a bigger one whose width and
          * height are a power of two.
@@ -787,7 +699,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         }
 
         // Display OpenGL drawing
-        SwapBuffers( gMainGLWin.dc );
+        SwapBuffers( gMainGLWin->m_dc );
 
         EndPaint( handle , &ps );
 
