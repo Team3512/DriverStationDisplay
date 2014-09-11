@@ -612,7 +612,7 @@ LRESULT CALLBACK OnEvent( HWND handle , UINT message , WPARAM wParam , LPARAM lP
         gDrawables->drawDisplay( gdiDC );
 
         // Store bits from graphics in another buffer
-        BMPtoPXL( gdiDC , gdiBmp , size.X , size.Y , pxlBuf );
+        BMPtoPXL( gdiDC , gdiBmp , pxlBuf );
 
         // Put old bitmaps back in DCs before deleting them
         SelectObject( gdiDC , oldgdiBmp );
