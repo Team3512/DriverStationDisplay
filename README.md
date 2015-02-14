@@ -81,7 +81,7 @@ Port to which to send connection packets and autonomous mode selections
 2. Call clear() to empty the internal packet
     * If clear() isn't called first, undefined behavior may result.
       (The header "display\r\n" isn't inserted when the packet isn't empty.)
-3. Call DS::AddElementData() as many times as necessary to add HUD data.
+3. Call addElementData() as many times as necessary to add HUD data.
 4. Call sendToDS() to send the data to the DriverStationDisplay.
 
 ##### Notes:
