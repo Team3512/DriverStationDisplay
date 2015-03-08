@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: Color.inl
-//Description: A utility class for storing OpenGL color data
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: Color.inl
+// Description: A utility class for storing OpenGL color data
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 template <class T>
 Color<T>::Color() {
@@ -13,7 +13,7 @@ Color<T>::Color() {
 }
 
 template <class T>
-Color<T>::Color( T r , T g , T b , T a ) {
+Color<T>::Color(T r, T g, T b, T a) {
     R = r;
     G = g;
     B = b;
@@ -26,7 +26,7 @@ Color<T>::~Color() {
 
 template <class T>
 COLORREF Color<T>::win32() {
-    return RGB( R , G , B );
+    return RGB(R, G, B);
 }
 
 template <class T>
@@ -46,3 +46,4 @@ template <class T>
 T Color<T>::glA() {
     return A / 255;
 }
+

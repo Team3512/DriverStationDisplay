@@ -48,3 +48,4 @@ int mjpeg_sck_close(mjpeg_socket_t sd);
 #endif
 
 #endif /* _MJPEG_SCK_H */
+

@@ -1,9 +1,9 @@
-//=============================================================================
-//File Name: MjpegStream.hpp
-//Description: Receives an MJPEG stream and displays it in a child window with
+// =============================================================================
+// File Name: MjpegStream.hpp
+// Description: Receives an MJPEG stream and displays it in a child window with
 //             the specified properties
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef MJPEG_STREAM_HPP
 #define MJPEG_STREAM_HPP
@@ -50,7 +50,7 @@
 
 #include "WindowCallbacks.hpp"
 
-void BMPtoPXL( HDC dc , HBITMAP bmp , uint8_t* pxlData );
+void BMPtoPXL(HDC dc, HBITMAP bmp, uint8_t* pxlData);
 
 #define WM_MJPEGSTREAM_START     (WM_APP + 0x0001)
 #define WM_MJPEGSTREAM_STOP      (WM_APP + 0x0002)
@@ -60,24 +60,23 @@ class StreamClassInit;
 
 class MjpegStream {
 public:
-    MjpegStream( const std::string& hostName ,
-            unsigned short port ,
-            const std::string& reqPath,
-            HWND parentWin ,
-            int xPosition ,
-            int yPosition ,
-            int width ,
-            int height ,
-            HINSTANCE appInstance,
-            WindowCallbacks* windowCallbacks
-            );
+    MjpegStream(const std::string& hostName,
+                unsigned short port,
+                const std::string& reqPath,
+                HWND parentWin,
+                int xPosition,
+                int yPosition,
+                int width,
+                int height,
+                HINSTANCE appInstance,
+                WindowCallbacks* windowCallbacks);
     virtual ~MjpegStream();
 
     Vector2i getPosition();
-    void setPosition( const Vector2i& position );
+    void setPosition(const Vector2i& position);
 
     Vector2i getSize();
-    void setSize( const Vector2i& size );
+    void setSize(const Vector2i& size);
 
     // Request MJPEG stream and begin displaying it
     void startStream();
@@ -89,13 +88,13 @@ public:
     bool isStreaming();
 
     // Set max frame rate of images displaying in window
-    void setFPS( unsigned int fps );
+    void setFPS(unsigned int fps);
 
     // Displays the stream or a message if the stream isn't working
     void repaint();
 
     // Saves most recently received image to a file
-    void saveCurrentImage( const std::string& fileName );
+    void saveCurrentImage(const std::string& fileName);
 
     /* Copies the most recently received image into a secondary internal buffer
      * and returns it to the user. After a call to this function, the new size
@@ -113,8 +112,8 @@ public:
     bool newImageAvailable();
 
 protected:
-    static void doneCallback( void* optarg );
-    static void readCallback( char* buf , int bufsize , void* optarg );
+    static void doneCallback(void* optarg);
+    static void readCallback(char* buf, int bufsize, void* optarg);
 
 private:
     std::string m_hostName;
@@ -212,15 +211,19 @@ private:
     /* Recreates the graphics that display messages in the stream window
      * (Resizes them and recenters the text in the window)
      */
-    void recreateGraphics( const Vector2i& windowSize );
+    void recreateGraphics(const Vector2i& windowSize);
 
-    static void* updateFunc( void* obj );
+    static void* updateFunc(void* obj);
 
-    static std::map<HWND , MjpegStream*> m_map;
-    static LRESULT CALLBACK WindowProc( HWND handle , UINT message , WPARAM wParam , LPARAM lParam );
-    void paint( PAINTSTRUCT* ps );
+    static std::map<HWND, MjpegStream*> m_map;
+    static LRESULT CALLBACK WindowProc(HWND handle,
+                                       UINT message,
+                                       WPARAM wParam,
+                                       LPARAM lParam);
+    void paint(PAINTSTRUCT* ps);
 
     friend StreamClassInit;
 };
 
 #endif // MJPEG_STREAM_HPP
+

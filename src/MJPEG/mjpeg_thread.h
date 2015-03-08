@@ -21,28 +21,26 @@ extern "C" {
 
 typedef struct mjpeg_thread_t_ {
 #ifdef _WIN32
-  HANDLE thread;
-  void *optarg;
-  void *retval;
-  void *(*start_routine) (void *);
-  unsigned int threadId;
+    HANDLE thread;
+    void* optarg;
+    void* retval;
+    void*(*start_routine)(void*);
+    unsigned int threadId;
 #else
-  pthread_t thread;
+    pthread_t thread;
 #endif
 } mjpeg_thread_t;
 
-int
-mjpeg_thread_create(mjpeg_thread_t *thread,
-  void *(*start_routine) (void *),
-  void *arg);
+int mjpeg_thread_create(mjpeg_thread_t* thread,
+                        void*(*start_routine)(void*),
+                        void* arg);
 
-int
-mjpeg_thread_join(mjpeg_thread_t *thread,
-  void **retval);
+int mjpeg_thread_join(mjpeg_thread_t* thread,
+                      void** retval);
 
 #ifdef _WIN32
 unsigned int
-__stdcall win32_threadfunc(void *optarg);
+__stdcall win32_threadfunc(void* optarg);
 #endif
 
 #ifdef __cplusplus
@@ -50,3 +48,4 @@ __stdcall win32_threadfunc(void *optarg);
 #endif
 
 #endif /* _MJPEG_THREAD_H */
+

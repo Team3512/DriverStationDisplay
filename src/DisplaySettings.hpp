@@ -1,9 +1,9 @@
-//=============================================================================
-//File Name: DisplaySettings.hpp
-//Description: Parses a stream of bytes into a list of UI elements to create on
+// =============================================================================
+// File Name: DisplaySettings.hpp
+// Description: Parses a stream of bytes into a list of UI elements to create on
 //             the DriverStationDisplay
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef DISPLAY_SETTINGS_HPP
 #define DISPLAY_SETTINGS_HPP
@@ -24,26 +24,30 @@ class Drawable;
 
 class DisplaySettings {
 public:
-    DisplaySettings( std::string fileName , int leftX , int leftY , int rightX , int rightY );
+    DisplaySettings(std::string fileName,
+                    int leftX,
+                    int leftY,
+                    int rightX,
+                    int rightY);
     virtual ~DisplaySettings();
 
     // Updates list of elements from packet and recreates them
-    void reloadGUI( sf::Packet& packet );
+    void reloadGUI(sf::Packet& packet);
 
     // Updates list of elements from file and recreates them
-    void reloadGUI( const std::string& fileName );
+    void reloadGUI(const std::string& fileName);
 
     // Removes all elements from list
     void clearGUI();
 
     // Updates values of elements from packet
-    void updateGuiTable( sf::Packet& packet );
+    void updateGuiTable(sf::Packet& packet);
 
     /* Draw all drawables in the internal list to the given device context. If
      * an HDC is passed, WinGDI objects are drawn. If NULL is passed, OpenGL
      * objects are drawn.
      */
-    void drawDisplay( HDC hdc );
+    void drawDisplay(HDC hdc);
 
 private:
     std::list<Drawable*> m_drawables;
@@ -85,10 +89,11 @@ private:
      * incrementing the global position variables for the column to which
      * the element was added
      */
-    void parseLine( std::string line );
+    void parseLine(std::string line);
 
     // Resets all temporary variables to be reused during a call to update(1)
     void resetAllTemps();
 };
 
 #endif // DISPLAY_SETTINGS_HPP
+

@@ -1,20 +1,20 @@
-//=============================================================================
-//File Name: GLWindow.cpp
-//Description: Manages OpenGL drawing contexts
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: GLWindow.cpp
+// Description: Manages OpenGL drawing contexts
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #include "GLWindow.hpp"
 #include <iostream>
 
-GLWindow::GLWindow( HWND window ) {
+GLWindow::GLWindow(HWND window) {
     // Initialize OpenGL window
     m_window = window;
 
     // Get dimensions of window
     RECT windowPos;
-    GetClientRect( m_window , &windowPos );
-    Vector2i size( windowPos.right , windowPos.bottom );
+    GetClientRect(m_window, &windowPos);
+    Vector2i size(windowPos.right, windowPos.bottom);
 
     // Stores pixel format
     int format;
@@ -42,63 +42,65 @@ GLWindow::GLWindow( HWND window ) {
     };
 
     // Get the device context (DC)
-    m_dc = GetDC( m_window );
+    m_dc = GetDC(m_window);
 
     // Get the best available match of pixel format for the device context
-    format = ChoosePixelFormat( m_dc , &pfd );
-    SetPixelFormat( m_dc , format , &pfd );
+    format = ChoosePixelFormat(m_dc, &pfd);
+    SetPixelFormat(m_dc, format, &pfd);
 
     // Create the render context (RC)
-    m_threadRC = wglCreateContext( m_dc );
+    m_threadRC = wglCreateContext(m_dc);
 }
 
 GLWindow::~GLWindow() {
-    wglMakeCurrent( NULL , NULL );
-    wglDeleteContext( m_threadRC );
-    ReleaseDC( m_window , m_dc );
+    wglMakeCurrent(NULL, NULL);
+    wglDeleteContext(m_threadRC);
+    ReleaseDC(m_window, m_dc);
 }
 
 void GLWindow::makeContextCurrent() {
-    wglMakeCurrent( m_dc , m_threadRC );
+    wglMakeCurrent(m_dc, m_threadRC);
 }
 
 void GLWindow::swapBuffers() {
-    SwapBuffers( m_dc );
+    SwapBuffers(m_dc);
 }
 
-void GLWindow::initGL( int x , int y ) {
+void GLWindow::initGL(int x, int y) {
     GLenum glError;
 
     /* ===== Initialize OpenGL ===== */
-    glClearColor( 1.f , 1.f , 1.f , 1.f );
-    glClearDepth( 1.f );
-    glClear( GL_COLOR_BUFFER_BIT );
+    glClearColor(1.f, 1.f, 1.f, 1.f);
+    glClearDepth(1.f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    glDepthFunc( GL_LESS );
-    glDepthMask( GL_FALSE );
-    glDisable( GL_DEPTH_TEST );
-    glDisable( GL_BLEND );
-    glDisable( GL_ALPHA_TEST );
-    glEnable( GL_TEXTURE_2D );
-    glBlendFunc( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
-    glShadeModel( GL_FLAT );
+    glDepthFunc(GL_LESS);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    glDisable(GL_ALPHA_TEST);
+    glEnable(GL_TEXTURE_2D);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glShadeModel(GL_FLAT);
 
-    glEnable( GL_TEXTURE_2D );
-    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR );
+    glEnable(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Set up screen
-    glViewport( 0 , 0 , x , y );
-    glMatrixMode( GL_PROJECTION );
+    glViewport(0, 0, x, y);
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho( 0 , x , y , 0 , -1.f , 1.f );
-    glMatrixMode( GL_MODELVIEW );
+    glOrtho(0, x, y, 0, -1.f, 1.f);
+    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     // Check for OpenGL errors
     glError = glGetError();
-    if( glError != GL_NO_ERROR ) {
-        std::cerr << "GLWindow.cpp OpenGL failure: " << gluErrorString( glError ) << "\n";
+    if (glError != GL_NO_ERROR) {
+        std::cerr << "GLWindow.cpp OpenGL failure: " <<
+            gluErrorString(glError) << "\n";
     }
     /* ============================= */
 }
+

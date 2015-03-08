@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: Resource.h
-//Description: Holds all resource IDs for win32 GUI components
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: Resource.h
+// Description: Holds all resource IDs for win32 GUI components
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef RESOURCE_H
 #define RESOURCE_H
@@ -39,3 +39,4 @@
 #define HK_FALLBACK           402
 
 #endif // RESOURCE_H
+

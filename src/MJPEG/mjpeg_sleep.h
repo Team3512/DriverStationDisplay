@@ -12,3 +12,4 @@ void mjpeg_sleep(unsigned int milliseconds);
 #endif
 
 #endif /* _MJPEG_SLEEP_H */
+

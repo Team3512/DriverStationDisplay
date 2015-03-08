@@ -38,15 +38,13 @@
 #include <cstdint>
 
 
-namespace sf
-{
+namespace sf {
 ////////////////////////////////////////////////////////////
 /// \brief Represents a time value
 ///
 ////////////////////////////////////////////////////////////
-class Time
-{
-public :
+class Time {
+public:
 
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
@@ -91,7 +89,7 @@ public :
     ////////////////////////////////////////////////////////////
     static const Time Zero; ///< Predefined "zero" time value
 
-private :
+private:
 
     friend Time seconds(float);
     friend Time milliseconds(int32_t);
@@ -108,7 +106,7 @@ private :
     ////////////////////////////////////////////////////////////
     explicit Time(int64_t microseconds);
 
-private :
+private:
 
     ////////////////////////////////////////////////////////////
     // Member data
@@ -165,7 +163,7 @@ Time microseconds(int64_t amount);
 /// \return True if both time values are equal
 ///
 ////////////////////////////////////////////////////////////
-bool operator ==(Time left, Time right);
+bool operator==(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -177,7 +175,7 @@ bool operator ==(Time left, Time right);
 /// \return True if both time values are different
 ///
 ////////////////////////////////////////////////////////////
-bool operator !=(Time left, Time right);
+bool operator!=(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -189,7 +187,7 @@ bool operator !=(Time left, Time right);
 /// \return True if \a left is lesser than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator <(Time left, Time right);
+bool operator<(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -201,7 +199,7 @@ bool operator <(Time left, Time right);
 /// \return True if \a left is greater than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator >(Time left, Time right);
+bool operator>(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -213,7 +211,7 @@ bool operator >(Time left, Time right);
 /// \return True if \a left is lesser or equal than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator <=(Time left, Time right);
+bool operator<=(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -225,7 +223,7 @@ bool operator <=(Time left, Time right);
 /// \return True if \a left is greater or equal than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator >=(Time left, Time right);
+bool operator>=(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -236,7 +234,7 @@ bool operator >=(Time left, Time right);
 /// \return Opposite of the time value
 ///
 ////////////////////////////////////////////////////////////
-Time operator -(Time right);
+Time operator-(Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -248,7 +246,7 @@ Time operator -(Time right);
 /// \return Sum of the two times values
 ///
 ////////////////////////////////////////////////////////////
-Time operator +(Time left, Time right);
+Time operator+(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -260,7 +258,7 @@ Time operator +(Time left, Time right);
 /// \return Sum of the two times values
 ///
 ////////////////////////////////////////////////////////////
-Time& operator +=(Time& left, Time right);
+Time& operator+=(Time& left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -272,7 +270,7 @@ Time& operator +=(Time& left, Time right);
 /// \return Difference of the two times values
 ///
 ////////////////////////////////////////////////////////////
-Time operator -(Time left, Time right);
+Time operator-(Time left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -284,7 +282,7 @@ Time operator -(Time left, Time right);
 /// \return Difference of the two times values
 ///
 ////////////////////////////////////////////////////////////
-Time& operator -=(Time& left, Time right);
+Time& operator-=(Time& left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -296,7 +294,7 @@ Time& operator -=(Time& left, Time right);
 /// \return \a left multiplied by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time operator *(Time left, float right);
+Time operator*(Time left, float right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -308,19 +306,7 @@ Time operator *(Time left, float right);
 /// \return \a left multiplied by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time operator *(Time left, int64_t right);
-
-////////////////////////////////////////////////////////////
-/// \relates Time
-/// \brief Overload of binary * operator to scale a time value
-///
-/// \param left  Left operand (a number)
-/// \param right Right operand (a time)
-///
-/// \return \a left multiplied by \a right
-///
-////////////////////////////////////////////////////////////
-Time operator *(float left, Time right);
+Time operator*(Time left, int64_t right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -332,7 +318,19 @@ Time operator *(float left, Time right);
 /// \return \a left multiplied by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time operator *(int64_t left, Time right);
+Time operator*(float left, Time right);
+
+////////////////////////////////////////////////////////////
+/// \relates Time
+/// \brief Overload of binary * operator to scale a time value
+///
+/// \param left  Left operand (a number)
+/// \param right Right operand (a time)
+///
+/// \return \a left multiplied by \a right
+///
+////////////////////////////////////////////////////////////
+Time operator*(int64_t left, Time right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -344,7 +342,7 @@ Time operator *(int64_t left, Time right);
 /// \return \a left multiplied by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time& operator *=(Time& left, float right);
+Time& operator*=(Time& left, float right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -356,7 +354,7 @@ Time& operator *=(Time& left, float right);
 /// \return \a left multiplied by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time& operator *=(Time& left, int64_t right);
+Time& operator*=(Time& left, int64_t right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -368,7 +366,7 @@ Time& operator *=(Time& left, int64_t right);
 /// \return \a left divided by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time operator /(Time left, float right);
+Time operator/(Time left, float right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -380,7 +378,7 @@ Time operator /(Time left, float right);
 /// \return \a left divided by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time operator /(Time left, int64_t right);
+Time operator/(Time left, int64_t right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -392,7 +390,7 @@ Time operator /(Time left, int64_t right);
 /// \return \a left divided by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time& operator /=(Time& left, float right);
+Time& operator/=(Time& left, float right);
 
 ////////////////////////////////////////////////////////////
 /// \relates Time
@@ -404,8 +402,7 @@ Time& operator /=(Time& left, float right);
 /// \return \a left divided by \a right
 ///
 ////////////////////////////////////////////////////////////
-Time& operator /=(Time& left, int64_t right);
-
+Time& operator/=(Time& left, int64_t right);
 } // namespace sf
 
 
@@ -457,3 +454,4 @@ Time& operator /=(Time& left, int64_t right);
 /// \see sf::Clock
 ///
 ////////////////////////////////////////////////////////////
+

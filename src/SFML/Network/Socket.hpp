@@ -41,17 +41,15 @@
 #include <vector>
 
 
-namespace sf
-{
+namespace sf {
 class SocketSelector;
 
 ////////////////////////////////////////////////////////////
 /// \brief Base class for all the socket types
 ///
 ////////////////////////////////////////////////////////////
-class Socket : NonCopyable
-{
-public :
+class Socket : NonCopyable {
+public:
     ////////////////////////////////////////////////////////////
     // Types
     ////////////////////////////////////////////////////////////
@@ -61,8 +59,7 @@ public :
     /// \brief Status codes that may be returned by socket functions
     ///
     ////////////////////////////////////////////////////////////
-    enum Status
-    {
+    enum Status {
         Done,         ///< The socket has sent / received the data
         NotReady,     ///< The socket is not ready to send / receive data yet
         Disconnected, ///< The TCP socket has been disconnected
@@ -73,12 +70,11 @@ public :
     /// \brief Some special values used by sockets
     ///
     ////////////////////////////////////////////////////////////
-    enum
-    {
+    enum {
         AnyPort = 0 ///< Special value that tells the system to pick any available port
     };
 
-public :
+public:
 
     ////////////////////////////////////////////////////////////
     /// \brief Destructor
@@ -126,14 +122,13 @@ public :
     ////////////////////////////////////////////////////////////
     static sockaddr_in createAddress(uint32_t address, unsigned short port);
 
-protected :
+protected:
 
     ////////////////////////////////////////////////////////////
     /// \brief Types of protocols that the socket can use
     ///
     ////////////////////////////////////////////////////////////
-    enum Type
-    {
+    enum Type {
         Tcp, ///< TCP protocol
         Udp  ///< UDP protocol
     };
@@ -195,18 +190,17 @@ protected :
     ////////////////////////////////////////////////////////////
     static Status getErrorStatus();
 
-private :
+private:
 
     friend class SocketSelector;
 
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    Type         m_type;       ///< Type of the socket (TCP or UDP)
+    Type m_type;       ///< Type of the socket (TCP or UDP)
     mjpeg_socket_t m_socket;   ///< Socket descriptor
-    bool         m_isBlocking; ///< Current blocking mode of the socket
+    bool m_isBlocking; ///< Current blocking mode of the socket
 };
-
 } // namespace sf
 
 
@@ -246,3 +240,4 @@ private :
 /// \see sf::TcpListener, sf::TcpSocket, sf::UdpSocket
 ///
 ////////////////////////////////////////////////////////////
+

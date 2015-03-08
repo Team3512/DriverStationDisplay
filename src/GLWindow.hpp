@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: GLWindow.hpp
-//Description: Manages OpenGL drawing contexts
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: GLWindow.hpp
+// Description: Manages OpenGL drawing contexts
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef GL_WINDOW_HPP
 #define GL_WINDOW_HPP
@@ -17,14 +17,14 @@
 
 class GLWindow {
 public:
-    GLWindow( HWND window );
+    GLWindow(HWND window);
     virtual ~GLWindow();
 
     void makeContextCurrent();
     void swapBuffers();
 
     // Arguments are buffer dimensions
-    void initGL( int x , int y );
+    void initGL(int x, int y);
 
     HWND m_window;
     HDC m_dc;
@@ -32,3 +32,4 @@ public:
 };
 
 #endif // GL_WINDOW_HPP
+

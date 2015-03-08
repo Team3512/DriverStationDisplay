@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: Drawable.hpp
-//Description: Provides interface for WinGDI drawable objects
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: Drawable.hpp
+// Description: Provides interface for WinGDI drawable objects
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef DRAWABLE_HPP
 #define DRAWABLE_HPP
@@ -20,29 +20,33 @@
 
 class Drawable {
 public:
-    Drawable( const Vector2i& position , const Vector2i& size , Colorf fillColor , Colorf outlineColor , int outlineThickness );
+    Drawable(const Vector2i& position,
+             const Vector2i& size,
+             Colorf fillColor,
+             Colorf outlineColor,
+             int outlineThickness);
     virtual ~Drawable();
 
     // Draws the drawable to the currently stored device context
-    virtual void draw( HDC hdc ) = 0;
+    virtual void draw(HDC hdc) = 0;
 
-    virtual void setPosition( const Vector2i& position );
-    virtual void setPosition( short x , short y );
+    virtual void setPosition(const Vector2i& position);
+    virtual void setPosition(short x, short y);
 
     const Vector2i getPosition();
 
-    virtual void setSize( const Vector2i& size );
-    virtual void setSize( short width , short height );
+    virtual void setSize(const Vector2i& size);
+    virtual void setSize(short width, short height);
 
     const Vector2i getSize();
 
-    virtual void setFillColor( Colorf color );
+    virtual void setFillColor(Colorf color);
     Colorf getFillColor();
 
-    virtual void setOutlineColor( Colorf color );
+    virtual void setOutlineColor(Colorf color);
     Colorf getOutlineColor();
 
-    virtual void setOutlineThickness( int thickness );
+    virtual void setOutlineThickness(int thickness);
     int getOutlineThickness();
 
 protected:
@@ -57,3 +61,4 @@ private:
 };
 
 #endif // DRAWABLE_HPP
+

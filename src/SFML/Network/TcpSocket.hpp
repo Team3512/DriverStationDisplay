@@ -40,8 +40,7 @@
 #include "../System/Time.hpp"
 
 
-namespace sf
-{
+namespace sf {
 class TcpListener;
 class IpAddress;
 class Packet;
@@ -50,9 +49,8 @@ class Packet;
 /// \brief Specialized socket using the TCP protocol
 ///
 ////////////////////////////////////////////////////////////
-class TcpSocket : public Socket
-{
-public :
+class TcpSocket : public Socket {
+public:
 
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
@@ -115,7 +113,9 @@ public :
     /// \see disconnect
     ///
     ////////////////////////////////////////////////////////////
-    Status connect(const IpAddress& remoteAddress, unsigned short remotePort, Time timeout = Time::Zero);
+    Status connect(const IpAddress& remoteAddress,
+                   unsigned short remotePort,
+                   Time timeout = Time::Zero);
 
     ////////////////////////////////////////////////////////////
     /// \brief Disconnect the socket from its remote peer
@@ -199,12 +199,11 @@ private:
     /// \brief Structure holding the data of a pending packet
     ///
     ////////////////////////////////////////////////////////////
-    struct PendingPacket
-    {
+    struct PendingPacket {
         PendingPacket();
 
-        uint32_t            Size;         ///< Data of packet size
-        std::size_t       SizeReceived; ///< Number of size bytes received so far
+        uint32_t Size;         ///< Data of packet size
+        std::size_t SizeReceived; ///< Number of size bytes received so far
         std::vector<char> Data;         ///< Data of the packet
     };
 
@@ -213,7 +212,6 @@ private:
     ////////////////////////////////////////////////////////////
     PendingPacket m_pendingPacket; ///< Temporary data of the packet currently being received
 };
-
 } // namespace sf
 
 
@@ -297,3 +295,4 @@ private:
 /// \see sf::Socket, sf::UdpSocket, sf::Packet
 ///
 ////////////////////////////////////////////////////////////
+

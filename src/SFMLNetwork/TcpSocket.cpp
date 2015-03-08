@@ -44,26 +44,21 @@
 #endif
 
 
-namespace sf
-{
+namespace sf {
 ////////////////////////////////////////////////////////////
 TcpSocket::TcpSocket() :
-Socket(Tcp)
-{
-
+    Socket(Tcp) {
 }
 
 
 ////////////////////////////////////////////////////////////
-unsigned short TcpSocket::getLocalPort() const
-{
-    if (getHandle() != INVALID_SOCKET)
-    {
+unsigned short TcpSocket::getLocalPort() const {
+    if (getHandle() != INVALID_SOCKET) {
         // Retrieve informations about the local end of the socket
         sockaddr_in address;
         AddrLength size = sizeof(address);
-        if (getsockname(getHandle(), reinterpret_cast<sockaddr*>(&address), &size) != -1)
-        {
+        if (getsockname(getHandle(), reinterpret_cast<sockaddr*>(&address),
+                        &size) != -1) {
             return ntohs(address.sin_port);
         }
     }
@@ -74,15 +69,13 @@ unsigned short TcpSocket::getLocalPort() const
 
 
 ////////////////////////////////////////////////////////////
-IpAddress TcpSocket::getRemoteAddress() const
-{
-    if (getHandle() != INVALID_SOCKET)
-    {
+IpAddress TcpSocket::getRemoteAddress() const {
+    if (getHandle() != INVALID_SOCKET) {
         // Retrieve informations about the remote end of the socket
         sockaddr_in address;
         AddrLength size = sizeof(address);
-        if (getpeername(getHandle(), reinterpret_cast<sockaddr*>(&address), &size) != -1)
-        {
+        if (getpeername(getHandle(), reinterpret_cast<sockaddr*>(&address),
+                        &size) != -1) {
             return IpAddress(ntohl(address.sin_addr.s_addr));
         }
     }
@@ -93,15 +86,13 @@ IpAddress TcpSocket::getRemoteAddress() const
 
 
 ////////////////////////////////////////////////////////////
-unsigned short TcpSocket::getRemotePort() const
-{
-    if (getHandle() != INVALID_SOCKET)
-    {
+unsigned short TcpSocket::getRemotePort() const {
+    if (getHandle() != INVALID_SOCKET) {
         // Retrieve informations about the remote end of the socket
         sockaddr_in address;
         AddrLength size = sizeof(address);
-        if (getpeername(getHandle(), reinterpret_cast<sockaddr*>(&address), &size) != -1)
-        {
+        if (getpeername(getHandle(), reinterpret_cast<sockaddr*>(&address),
+                        &size) != -1) {
             return ntohs(address.sin_port);
         }
     }
@@ -112,39 +103,42 @@ unsigned short TcpSocket::getRemotePort() const
 
 
 ////////////////////////////////////////////////////////////
-Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short remotePort, Time timeout)
-{
+Socket::Status TcpSocket::connect(const IpAddress& remoteAddress,
+                                  unsigned short remotePort,
+                                  Time timeout) {
     // Create the internal socket if it doesn't exist
     create();
 
     // Create the remote address
-    sockaddr_in address = Socket::createAddress(remoteAddress.toInteger(), remotePort);
+    sockaddr_in address = Socket::createAddress(
+        remoteAddress.toInteger(), remotePort);
 
-    if (timeout <= Time::Zero)
-    {
+    if (timeout <= Time::Zero) {
         // ----- We're not using a timeout: just try to connect -----
 
         // Connect the socket
-        if (::connect(getHandle(), reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1)
+        if (::connect(getHandle(), reinterpret_cast<sockaddr*>(&address),
+                      sizeof(address)) == -1) {
             return Socket::getErrorStatus();
+        }
 
         // Connection succeeded
         return Done;
     }
-    else
-    {
+    else {
         // ----- We're using a timeout: we'll need a few tricks to make it work -----
 
         // Save the previous blocking state
         bool blocking = isBlocking();
 
         // Switch to non-blocking to enable our connection timeout
-        if (blocking)
+        if (blocking) {
             setBlocking(false);
+        }
 
         // Try to connect to the remote address
-        if (::connect(getHandle(), reinterpret_cast<sockaddr*>(&address), sizeof(address)) >= 0)
-        {
+        if (::connect(getHandle(), reinterpret_cast<sockaddr*>(&address),
+                      sizeof(address)) >= 0) {
             // We got instantly connected! (it may no happen a lot...)
             return Done;
         }
@@ -153,12 +147,12 @@ Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short
         Status status = Socket::getErrorStatus();
 
         // If we were in non-blocking mode, return immediatly
-        if (!blocking)
+        if (!blocking) {
             return status;
+        }
 
         // Otherwise, wait until something happens to our socket (success, timeout or error)
-        if (status == Socket::NotReady)
-        {
+        if (status == Socket::NotReady) {
             // Setup the selector
             fd_set selector;
             FD_ZERO(&selector);
@@ -166,27 +160,26 @@ Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short
 
             // Setup the timeout
             timeval time;
-            time.tv_sec  = static_cast<long>(timeout.asMicroseconds() / 1000000);
-            time.tv_usec = static_cast<long>(timeout.asMicroseconds() % 1000000);
+            time.tv_sec  =
+                static_cast<long>(timeout.asMicroseconds() / 1000000);
+            time.tv_usec =
+                static_cast<long>(timeout.asMicroseconds() % 1000000);
 
             // Wait for something to write on our socket (which means that the connection request has returned)
-            if (select(static_cast<int>(getHandle() + 1), NULL, &selector, NULL, &time) > 0)
-            {
+            if (select(static_cast<int>(getHandle() + 1), NULL, &selector, NULL,
+                       &time) > 0) {
                 // At this point the connection may have been either accepted or refused.
                 // To know whether it's a success or a failure, we must check the address of the connected peer
-                if (getRemoteAddress() != sf::IpAddress::None)
-                {
+                if (getRemoteAddress() != sf::IpAddress::None) {
                     // Connection accepted
                     status = Done;
                 }
-                else
-                {
+                else {
                     // Connection refused
                     status = Socket::getErrorStatus();
                 }
             }
-            else
-            {
+            else {
                 // Failed to connect before timeout is over
                 status = Socket::getErrorStatus();
             }
@@ -201,8 +194,7 @@ Socket::Status TcpSocket::connect(const IpAddress& remoteAddress, unsigned short
 
 
 ////////////////////////////////////////////////////////////
-void TcpSocket::disconnect()
-{
+void TcpSocket::disconnect() {
     // Close the socket
     close();
 
@@ -212,26 +204,27 @@ void TcpSocket::disconnect()
 
 
 ////////////////////////////////////////////////////////////
-Socket::Status TcpSocket::send(const void* data, std::size_t size)
-{
+Socket::Status TcpSocket::send(const void* data, std::size_t size) {
     // Check the parameters
-    if (!data || (size == 0))
-    {
-        std::cerr << "Cannot send data over the network (no data to send)" << std::endl;
+    if (!data || (size == 0)) {
+        std::cerr << "Cannot send data over the network (no data to send)" <<
+            std::endl;
         return Error;
     }
 
     // Loop until every byte has been sent
     int sent = 0;
     int sizeToSend = static_cast<int>(size);
-    for (int length = 0; length < sizeToSend; length += sent)
-    {
+    for (int length = 0; length < sizeToSend; length += sent) {
         // Send a chunk of data
-        sent = ::send(getHandle(), static_cast<const char*>(data) + length, sizeToSend - length, 0);
+        sent = ::send(
+            getHandle(), static_cast<const char*>(data) + length, sizeToSend - length,
+            0);
 
         // Check for errors
-        if (sent < 0)
+        if (sent < 0) {
             return Socket::getErrorStatus();
+        }
     }
 
     return Done;
@@ -239,41 +232,40 @@ Socket::Status TcpSocket::send(const void* data, std::size_t size)
 
 
 ////////////////////////////////////////////////////////////
-Socket::Status TcpSocket::receive(void* data, std::size_t size, std::size_t& received)
-{
+Socket::Status TcpSocket::receive(void* data,
+                                  std::size_t size,
+                                  std::size_t& received) {
     // First clear the variables to fill
     received = 0;
 
     // Check the destination buffer
-    if (!data)
-    {
-        std::cerr << "Cannot receive data from the network (the destination buffer is invalid)" << std::endl;
+    if (!data) {
+        std::cerr <<
+            "Cannot receive data from the network (the destination buffer is invalid)"
+                  << std::endl;
         return Error;
     }
 
     // Receive a chunk of bytes
-    int sizeReceived = recv(getHandle(), static_cast<char*>(data), static_cast<int>(size), 0);
+    int sizeReceived =
+        recv(getHandle(), static_cast<char*>(data), static_cast<int>(size), 0);
 
     // Check the number of bytes received
-    if (sizeReceived > 0)
-    {
+    if (sizeReceived > 0) {
         received = static_cast<std::size_t>(sizeReceived);
         return Done;
     }
-    else if (sizeReceived == 0)
-    {
+    else if (sizeReceived == 0) {
         return Socket::Disconnected;
     }
-    else
-    {
+    else {
         return Socket::getErrorStatus();
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-Socket::Status TcpSocket::send(Packet& packet)
-{
+Socket::Status TcpSocket::send(Packet& packet) {
     // TCP is a stream protocol, it doesn't preserve messages boundaries.
     // This means that we have to send the packet size first, so that the
     // receiver knows the actual end of the packet in the data stream.
@@ -284,78 +276,82 @@ Socket::Status TcpSocket::send(Packet& packet)
 
     // First send the packet size
     uint32_t packetSize = htonl(static_cast<uint32_t>(size));
-    Status status = send(reinterpret_cast<const char*>(&packetSize), sizeof(packetSize));
+    Status status =
+        send(reinterpret_cast<const char*>(&packetSize), sizeof(packetSize));
 
     // Make sure that the size was properly sent
-    if (status != Done)
+    if (status != Done) {
         return status;
+    }
 
     // Send the packet data
-    if (packetSize > 0)
-    {
+    if (packetSize > 0) {
         return send(data, size);
     }
-    else
-    {
+    else {
         return Done;
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-Socket::Status TcpSocket::receive(Packet& packet)
-{
+Socket::Status TcpSocket::receive(Packet& packet) {
     // First clear the variables to fill
     packet.clear();
 
     // We start by getting the size of the incoming packet
     uint32_t packetSize = 0;
     std::size_t received = 0;
-    if (m_pendingPacket.SizeReceived < sizeof(m_pendingPacket.Size))
-    {
+    if (m_pendingPacket.SizeReceived < sizeof(m_pendingPacket.Size)) {
         // Loop until we've received the entire size of the packet
         // (even a 4 byte variable may be received in more than one call)
-        while (m_pendingPacket.SizeReceived < sizeof(m_pendingPacket.Size))
-        {
-            char* data = reinterpret_cast<char*>(&m_pendingPacket.Size) + m_pendingPacket.SizeReceived;
-            Status status = receive(data, sizeof(m_pendingPacket.Size) - m_pendingPacket.SizeReceived, received);
+        while (m_pendingPacket.SizeReceived < sizeof(m_pendingPacket.Size)) {
+            char* data = reinterpret_cast<char*>(&m_pendingPacket.Size) +
+                         m_pendingPacket.SizeReceived;
+            Status status = receive(data,
+                                    sizeof(m_pendingPacket.Size) - m_pendingPacket.SizeReceived,
+                                    received);
             m_pendingPacket.SizeReceived += received;
 
-            if (status != Done)
+            if (status != Done) {
                 return status;
+            }
         }
 
         // The packet size has been fully received
         packetSize = ntohl(m_pendingPacket.Size);
     }
-    else
-    {
+    else {
         // The packet size has already been received in a previous call
         packetSize = ntohl(m_pendingPacket.Size);
     }
 
     // Loop until we receive all the packet data
     char buffer[1024];
-    while (m_pendingPacket.Data.size() < packetSize)
-    {
+    while (m_pendingPacket.Data.size() < packetSize) {
         // Receive a chunk of data
-        std::size_t sizeToGet = std::min(static_cast<std::size_t>(packetSize - m_pendingPacket.Data.size()), sizeof(buffer));
+        std::size_t sizeToGet =
+            std::min(static_cast<std::size_t>(packetSize -
+                                              m_pendingPacket.Data.size()),
+                     sizeof(buffer));
         Status status = receive(buffer, sizeToGet, received);
-        if (status != Done)
+        if (status != Done) {
             return status;
+        }
 
         // Append it into the packet
-        if (received > 0)
-        {
+        if (received > 0) {
             m_pendingPacket.Data.resize(m_pendingPacket.Data.size() + received);
-            char* begin = &m_pendingPacket.Data[0] + m_pendingPacket.Data.size() - received;
+            char* begin = &m_pendingPacket.Data[0] +
+                          m_pendingPacket.Data.size() - received;
             std::memcpy(begin, buffer, received);
         }
     }
 
     // We have received all the packet data: we can copy it to the user packet
-    if (!m_pendingPacket.Data.empty())
+    if (!m_pendingPacket.Data.empty()) {
         packet.onReceive(&m_pendingPacket.Data[0], m_pendingPacket.Data.size());
+    }
 
     // Clear the pending packet data
     m_pendingPacket = PendingPacket();
@@ -366,11 +362,9 @@ Socket::Status TcpSocket::receive(Packet& packet)
 
 ////////////////////////////////////////////////////////////
 TcpSocket::PendingPacket::PendingPacket() :
-Size        (0),
-SizeReceived(0),
-Data        ()
-{
-
+    Size(0),
+    SizeReceived(0),
+    Data() {
 }
-
 } // namespace sf
+

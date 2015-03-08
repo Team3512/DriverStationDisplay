@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: MjpegServer.hpp
-//Description: An MJPEG server implementation
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: MjpegServer.hpp
+// Description: An MJPEG server implementation
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef MJPEG_SERVER_HPP
 #define MJPEG_SERVER_HPP
@@ -24,13 +24,13 @@ struct selector_t {
 
 class MjpegServer {
 public:
-    MjpegServer( unsigned short port );
+    MjpegServer(unsigned short port);
     virtual ~MjpegServer();
 
     void start();
     void stop();
 
-    void serveImage( uint8_t* image , size_t size );
+    void serveImage(uint8_t* image, size_t size);
 
 private:
     struct selector_t m_clientSelector;
@@ -40,8 +40,9 @@ private:
     unsigned short m_port;
 
     mjpeg_thread_t m_serverThread;
-    static void* serverFunc( void* obj );
+    static void* serverFunc(void* obj);
     std::atomic<bool> m_isRunning;
 };
 
 #endif // MJPEG_SERVER_HPP
+

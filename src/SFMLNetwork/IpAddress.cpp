@@ -36,37 +36,34 @@
 #include "../SFML/Network/Socket.hpp"
 
 
-namespace
-{
-    uint32_t resolve(const std::string& address)
-    {
-        if (address == "255.255.255.255")
-        {
-            // The broadcast address needs to be handled explicitely,
-            // because it is also the value returned by inet_addr on error
-            return INADDR_BROADCAST;
-        }
-        else
-        {
-            // Try to convert the address as a byte representation ("xxx.xxx.xxx.xxx")
-            uint32_t ip = inet_addr(address.c_str());
-            if (ip != INADDR_NONE)
-                return ip;
-
-            // Not a valid address, try to convert it as a host name
-            hostent* host = gethostbyname(address.c_str());
-            if (host)
-                return reinterpret_cast<in_addr*>(host->h_addr)->s_addr;
-
-            // Not a valid address nor a host name
-            return 0;
-        }
+namespace {
+uint32_t resolve(const std::string& address) {
+    if (address == "255.255.255.255") {
+        // The broadcast address needs to be handled explicitely,
+        // because it is also the value returned by inet_addr on error
+        return INADDR_BROADCAST;
     }
+    else {
+        // Try to convert the address as a byte representation ("xxx.xxx.xxx.xxx")
+        uint32_t ip = inet_addr(address.c_str());
+        if (ip != INADDR_NONE) {
+            return ip;
+        }
+
+        // Not a valid address, try to convert it as a host name
+        hostent* host = gethostbyname(address.c_str());
+        if (host) {
+            return reinterpret_cast<in_addr*>(host->h_addr)->s_addr;
+        }
+
+        // Not a valid address nor a host name
+        return 0;
+    }
+}
 }
 
 
-namespace sf
-{
+namespace sf {
 ////////////////////////////////////////////////////////////
 const IpAddress IpAddress::None;
 const IpAddress IpAddress::LocalHost(127, 0, 0, 1);
@@ -75,8 +72,7 @@ const IpAddress IpAddress::Broadcast(255, 255, 255, 255);
 
 ////////////////////////////////////////////////////////////
 IpAddress::IpAddress() :
-m_address(0)
-{
+    m_address(0) {
     // We're using 0 (INADDR_ANY) instead of INADDR_NONE to represent the invalid address,
     // because the latter is also the broadcast address (255.255.255.255); it's ok because
     // SFML doesn't publicly use INADDR_ANY (it is always used implicitely)
@@ -85,35 +81,31 @@ m_address(0)
 
 ////////////////////////////////////////////////////////////
 IpAddress::IpAddress(const std::string& address) :
-m_address(resolve(address))
-{
+    m_address(resolve(address)) {
 }
 
 
 ////////////////////////////////////////////////////////////
 IpAddress::IpAddress(const char* address) :
-m_address(resolve(address))
-{
+    m_address(resolve(address)) {
 }
 
 
 ////////////////////////////////////////////////////////////
-IpAddress::IpAddress(uint8_t byte0, uint8_t byte1, uint8_t byte2, uint8_t byte3) :
-m_address(htonl((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3))
-{
+IpAddress::IpAddress(uint8_t byte0, uint8_t byte1, uint8_t byte2,
+                     uint8_t byte3) :
+    m_address(htonl((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3)) {
 }
 
 
 ////////////////////////////////////////////////////////////
 IpAddress::IpAddress(uint32_t address) :
-m_address(htonl(address))
-{
+    m_address(htonl(address)) {
 }
 
 
 ////////////////////////////////////////////////////////////
-std::string IpAddress::toString() const
-{
+std::string IpAddress::toString() const {
     in_addr address;
     address.s_addr = m_address;
 
@@ -122,15 +114,13 @@ std::string IpAddress::toString() const
 
 
 ////////////////////////////////////////////////////////////
-uint32_t IpAddress::toInteger() const
-{
+uint32_t IpAddress::toInteger() const {
     return ntohl(m_address);
 }
 
 
 ////////////////////////////////////////////////////////////
-IpAddress IpAddress::getLocalAddress()
-{
+IpAddress IpAddress::getLocalAddress() {
     // The method here is to connect a UDP socket to anyone (here to localhost),
     // and get the local socket address with the getsockname function.
     // UDP connection will not send anything to the network, so this function won't cause any overhead.
@@ -139,17 +129,17 @@ IpAddress IpAddress::getLocalAddress()
 
     // Create the socket
     unsigned int sock = socket(PF_INET, SOCK_DGRAM, 0);
-    if (sock == INVALID_SOCKET)
+    if (sock == INVALID_SOCKET) {
         return localAddress;
+    }
 
     // Connect the socket to localhost on any port
     sockaddr_in address = Socket::createAddress(ntohl(INADDR_LOOPBACK), 0);
-    if (connect(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1)
-    {
+    if (connect(sock, reinterpret_cast<sockaddr*>(&address),
+                sizeof(address)) == -1) {
         // Close the socket
-        if (sock != INVALID_SOCKET)
-        {
-            closesocket( sock );
+        if (sock != INVALID_SOCKET) {
+            closesocket(sock);
             sock = INVALID_SOCKET;
         }
 
@@ -158,12 +148,10 @@ IpAddress IpAddress::getLocalAddress()
 
     // Get the local address of the socket connection
     Socket::AddrLength size = sizeof(address);
-    if (getsockname(sock, reinterpret_cast<sockaddr*>(&address), &size) == -1)
-    {
+    if (getsockname(sock, reinterpret_cast<sockaddr*>(&address), &size) == -1) {
         // Close the socket
-        if (sock != INVALID_SOCKET)
-        {
-            closesocket( sock );
+        if (sock != INVALID_SOCKET) {
+            closesocket(sock);
             sock = INVALID_SOCKET;
         }
 
@@ -171,9 +159,8 @@ IpAddress IpAddress::getLocalAddress()
     }
 
     // Close the socket
-    if (sock != INVALID_SOCKET)
-    {
-        closesocket( sock );
+    if (sock != INVALID_SOCKET) {
+        closesocket(sock);
         sock = INVALID_SOCKET;
     }
 
@@ -185,50 +172,43 @@ IpAddress IpAddress::getLocalAddress()
 
 
 ////////////////////////////////////////////////////////////
-bool operator ==(const IpAddress& left, const IpAddress& right)
-{
+bool operator==(const IpAddress& left, const IpAddress& right) {
     return left.toInteger() == right.toInteger();
 }
 
 
 ////////////////////////////////////////////////////////////
-bool operator !=(const IpAddress& left, const IpAddress& right)
-{
+bool operator!=(const IpAddress& left, const IpAddress& right) {
     return !(left == right);
 }
 
 
 ////////////////////////////////////////////////////////////
-bool operator <(const IpAddress& left, const IpAddress& right)
-{
+bool operator<(const IpAddress& left, const IpAddress& right) {
     return left.toInteger() < right.toInteger();
 }
 
 
 ////////////////////////////////////////////////////////////
-bool operator >(const IpAddress& left, const IpAddress& right)
-{
+bool operator>(const IpAddress& left, const IpAddress& right) {
     return right < left;
 }
 
 
 ////////////////////////////////////////////////////////////
-bool operator <=(const IpAddress& left, const IpAddress& right)
-{
+bool operator<=(const IpAddress& left, const IpAddress& right) {
     return !(right < left);
 }
 
 
 ////////////////////////////////////////////////////////////
-bool operator >=(const IpAddress& left, const IpAddress& right)
-{
+bool operator>=(const IpAddress& left, const IpAddress& right) {
     return !(left < right);
 }
 
 
 ////////////////////////////////////////////////////////////
-std::istream& operator >>(std::istream& stream, IpAddress& address)
-{
+std::istream& operator>>(std::istream& stream, IpAddress& address) {
     std::string str;
     stream >> str;
     address = IpAddress(str);
@@ -238,9 +218,8 @@ std::istream& operator >>(std::istream& stream, IpAddress& address)
 
 
 ////////////////////////////////////////////////////////////
-std::ostream& operator <<(std::ostream& stream, const IpAddress& address)
-{
+std::ostream& operator<<(std::ostream& stream, const IpAddress& address) {
     return stream << address.toString();
 }
-
 } // namespace sf
+

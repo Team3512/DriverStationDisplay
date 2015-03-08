@@ -1,9 +1,9 @@
-//=============================================================================
-//File Name: StatusLight.hpp
-//Description: Shows green, yellow, or red circle depending on its internal
+// =============================================================================
+// File Name: StatusLight.hpp
+// Description: Shows green, yellow, or red circle depending on its internal
 //             state
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef STATUS_LIGHT_HPP
 #define STATUS_LIGHT_HPP
@@ -15,7 +15,7 @@
 #include <string>
 #include <GL/gl.h>
 
-class StatusLight : public Drawable , public NetUpdate {
+class StatusLight : public Drawable, public NetUpdate {
 public:
     enum Status {
         active,
@@ -23,21 +23,21 @@ public:
         inactive
     };
 
-    StatusLight( const Vector2i& position , std::wstring message , bool netUpdate );
+    StatusLight(const Vector2i& position, std::wstring message, bool netUpdate);
 
-    void setActive( Status newStatus );
+    void setActive(Status newStatus);
     Status getActive();
 
-    void setPosition( const Vector2i& position );
-    void setPosition( short x , short y );
+    void setPosition(const Vector2i& position);
+    void setPosition(short x, short y);
 
-    void setString( const std::wstring& message );
+    void setString(const std::wstring& message);
     const std::wstring& getString();
 
-    static void setColorBlind( bool on );
+    static void setColorBlind(bool on);
     static bool isColorBlind();
 
-    void draw( HDC hdc );
+    void draw(HDC hdc);
 
     void updateValue();
 
@@ -50,3 +50,4 @@ private:
 };
 
 #endif // STATUS_LIGHT_HPP
+

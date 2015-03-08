@@ -39,11 +39,10 @@
 #include <string>
 #include <vector>
 
-uint64_t htonll( uint64_t value );
-uint64_t ntohll( uint64_t value );
+uint64_t htonll(uint64_t value);
+uint64_t ntohll(uint64_t value);
 
-namespace sf
-{
+namespace sf {
 class TcpSocket;
 class UdpSocket;
 
@@ -52,12 +51,11 @@ class UdpSocket;
 ///        over the network
 ///
 ////////////////////////////////////////////////////////////
-class Packet
-{
+class Packet {
     // A bool-like type that cannot be converted to integer or pointer types
-    typedef bool (Packet::*BoolType)(std::size_t);
+    typedef bool (Packet::* BoolType)(std::size_t);
 
-public :
+public:
 
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
@@ -182,41 +180,41 @@ public:
     /// Overloads of operator >> to read data from the packet
     ///
     ////////////////////////////////////////////////////////////
-    Packet& operator >>(bool&         data);
-    Packet& operator >>(int8_t&         data);
-    Packet& operator >>(uint8_t&        data);
-    Packet& operator >>(int16_t&        data);
-    Packet& operator >>(uint16_t&       data);
-    Packet& operator >>(int32_t&        data);
-    Packet& operator >>(uint32_t&       data);
-    Packet& operator >>(int64_t&        data);
-    Packet& operator >>(uint64_t&       data);
-    Packet& operator >>(float&        data);
-    Packet& operator >>(double&       data);
-    Packet& operator >>(char*         data);
-    Packet& operator >>(std::string&  data);
-    Packet& operator >>(wchar_t*      data);
-    Packet& operator >>(std::wstring& data);
+    Packet& operator>>(bool&         data);
+    Packet& operator>>(int8_t&         data);
+    Packet& operator>>(uint8_t&        data);
+    Packet& operator>>(int16_t&        data);
+    Packet& operator>>(uint16_t&       data);
+    Packet& operator>>(int32_t&        data);
+    Packet& operator>>(uint32_t&       data);
+    Packet& operator>>(int64_t&        data);
+    Packet& operator>>(uint64_t&       data);
+    Packet& operator>>(float&        data);
+    Packet& operator>>(double&       data);
+    Packet& operator>>(char*         data);
+    Packet& operator>>(std::string&  data);
+    Packet& operator>>(wchar_t*      data);
+    Packet& operator>>(std::wstring& data);
 
     ////////////////////////////////////////////////////////////
     /// Overloads of operator << to write data into the packet
     ///
     ////////////////////////////////////////////////////////////
-    Packet& operator <<(bool                data);
-    Packet& operator <<(int8_t                data);
-    Packet& operator <<(uint8_t               data);
-    Packet& operator <<(int16_t               data);
-    Packet& operator <<(uint16_t              data);
-    Packet& operator <<(int32_t               data);
-    Packet& operator <<(uint32_t              data);
-    Packet& operator <<(int64_t               data);
-    Packet& operator <<(uint64_t              data);
-    Packet& operator <<(float               data);
-    Packet& operator <<(double              data);
-    Packet& operator <<(const char*         data);
-    Packet& operator <<(const std::string&  data);
-    Packet& operator <<(const wchar_t*      data);
-    Packet& operator <<(const std::wstring& data);
+    Packet& operator<<(bool data);
+    Packet& operator<<(int8_t data);
+    Packet& operator<<(uint8_t data);
+    Packet& operator<<(int16_t data);
+    Packet& operator<<(uint16_t data);
+    Packet& operator<<(int32_t data);
+    Packet& operator<<(uint32_t data);
+    Packet& operator<<(int64_t data);
+    Packet& operator<<(uint64_t data);
+    Packet& operator<<(float data);
+    Packet& operator<<(double data);
+    Packet& operator<<(const char*         data);
+    Packet& operator<<(const std::string&  data);
+    Packet& operator<<(const wchar_t*      data);
+    Packet& operator<<(const std::wstring& data);
 
 protected:
 
@@ -262,14 +260,14 @@ protected:
     ////////////////////////////////////////////////////////////
     virtual void onReceive(const void* data, std::size_t size);
 
-private :
+private:
 
     ////////////////////////////////////////////////////////////
     /// Disallow comparisons between packets
     ///
     ////////////////////////////////////////////////////////////
-    bool operator ==(const Packet& right) const;
-    bool operator !=(const Packet& right) const;
+    bool operator==(const Packet& right) const;
+    bool operator!=(const Packet& right) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Check if the packet can extract a given number of bytes
@@ -287,10 +285,9 @@ private :
     // Member data
     ////////////////////////////////////////////////////////////
     std::vector<char> m_data;    ///< Data stored in the packet
-    std::size_t       m_readPos; ///< Current reading position in the packet
-    bool              m_isValid; ///< Reading state of the packet
+    std::size_t m_readPos; ///< Current reading position in the packet
+    bool m_isValid; ///< Reading state of the packet
 };
-
 } // namespace sf
 
 
@@ -415,3 +412,4 @@ private :
 /// \see sf::TcpSocket, sf::UdpSocket
 ///
 ////////////////////////////////////////////////////////////
+

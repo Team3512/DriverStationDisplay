@@ -29,6 +29,8 @@ void mjpeg_sleep(unsigned int milliseconds) {
      * sleeping until the complete duration has passed. We stop sleeping if it
      * was due to a different error.
      */
-    while ( nanosleep( &ti , &ti ) == -1 && errno == EINTR ) {}
+    while (nanosleep(&ti, &ti) == -1 && errno == EINTR) {
+    }
 #endif
 }
+

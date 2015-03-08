@@ -1,15 +1,13 @@
-//=============================================================================
-//File Name: NetUpdate.hpp
-//Description: Allows WinGDI drawable objects to update over the network
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: NetUpdate.hpp
+// Description: Allows WinGDI drawable objects to update over the network
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef NET_UPDATE_HPP
 #define NET_UPDATE_HPP
 
 #include <string>
-#include <list>
-#include <sstream>
 #include <map>
 
 #include <cstdlib> // For std::memcpy(3)
@@ -24,35 +22,12 @@
  * object.)
  */
 
-template <typename T>
-std::wstring numberToString( T number ) {
-    std::wstringstream ss;
-    std::wstring str;
+std::wstring replaceUnicodeChars(std::wstring text);
 
-    ss << number;
-    str = ss.str();
-
-    return str;
-}
-
-template <typename T>
-T stringToNumber( std::wstring str ) {
-    std::wstringstream ss;
-    T num;
-
-    ss << str;
-    ss >> num;
-
-    return num;
-}
-
-std::wstring replaceUnicodeChars( std::wstring text );
-
-typedef struct netValue_t {
+struct NetValue {
     unsigned char type;
     void* value;
-    size_t size;
-} netValue_t;
+};
 
 class NetUpdate {
 public:
@@ -60,37 +35,37 @@ public:
      * during a call to updateElements(). This may be desirable if the object is a
      * member of another class also deriving from the NetUpdate class.
      */
-    NetUpdate( bool trackUpdate );
+    NetUpdate(bool trackUpdate);
     virtual ~NetUpdate();
 
     // Sets string which determines how displayed text is updated
-    void setUpdateText( const std::wstring& text );
+    void setUpdateText(const std::wstring& text);
 
     // Returns template for value updates
     const std::wstring& getUpdateText();
 
     // Updates values currently in table and adds new ones if they don't exist
-    static void updateValues( sf::Packet& packet );
+    static void updateValues(sf::Packet& packet);
 
-    // Frees value storage for 'value' member of netValue_t
-    static void freeValue( netValue_t* netVal );
+    // Frees value storage for 'value' member of NetValue
+    static void freeValue(NetValue* netVal);
 
     // Clears all values from table
     static void clearNetValues();
 
     // Returns the corresponding network value of a keyword
-    static netValue_t* getValue( const std::string& key );
+    static NetValue* getValue(const std::string& key);
 
     // All elements' values are updated from the table of network values
     static void updateElements();
 
     // Updates keys which are used to retrieve the network variables
-    void updateKeys( std::vector<std::string>& keys );
+    void updateKeys(std::vector<std::string>& keys);
 
     /* Insert value into update text and output it to a buffer
      * 'size' is how many bytes wide 'buffer' is
      */
-    void fillValue( wchar_t* buffer , unsigned int size , netValue_t* value );
+    void fillValue(wchar_t* buffer, unsigned int size, NetValue* value);
 
     // Updates custom values of object to display
     virtual void updateValue() = 0;
@@ -99,8 +74,8 @@ protected:
     std::vector<std::string> m_varIds;
 
 private:
-    static std::list<NetUpdate*> m_netObjs;
-    static std::map<std::string , netValue_t*> m_netValues;
+    static std::vector<NetUpdate*> m_netObjs;
+    static std::map<std::string, NetValue*> m_netValues;
 
     std::wstring m_updateText;
 
@@ -108,3 +83,4 @@ private:
 };
 
 #endif // NET_UPDATE_HPP
+

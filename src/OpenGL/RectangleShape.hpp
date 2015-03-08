@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: RectangleShape.hpp
-//Description: Provides a wrapper for WinGDI rectangles
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: RectangleShape.hpp
+// Description: Provides a wrapper for WinGDI rectangles
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef RECTANGLE_SHAPE_HPP
 #define RECTANGLE_SHAPE_HPP
@@ -14,9 +14,14 @@
 
 class RectangleShape : public Drawable {
 public:
-    RectangleShape( const Vector2i& position , const Vector2i& size , Colorf fillColor , Colorf outlineColor , int outlineThickness );
+    RectangleShape(const Vector2i& position,
+                   const Vector2i& size,
+                   Colorf fillColor,
+                   Colorf outlineColor,
+                   int outlineThickness);
 
-    void draw( HDC hdc );
+    void draw(HDC hdc);
 };
 
 #endif // RECTANGLE_SHAPE_HPP
+

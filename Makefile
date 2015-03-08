@@ -21,8 +21,8 @@ CFLAGS_DEBUG := -O0 -g3 -Wall -std=c11
 CFLAGS_RELEASE := -O3 -Wall -s -std=c11
 
 CXX := g++
-CXXFLAGS_DEBUG := -O0 -g3 -Wall -std=c++11
-CXXFLAGS_RELEASE := -O3 -Wall -s -std=c++11
+CXXFLAGS_DEBUG := -O0 -g3 -Wall -std=c++1y
+CXXFLAGS_RELEASE := -O3 -Wall -s -std=c++1y
 
 RC := windres
 

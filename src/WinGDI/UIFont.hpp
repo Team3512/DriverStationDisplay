@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: UIFont.hpp
-//Description: Provides a collection of fonts for use by other classes
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: UIFont.hpp
+// Description: Provides a collection of fonts for use by other classes
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 /* Each font's size assumes a 1:1 relationship between logical units and pixels
  * in the device context. Use 'SetMapMode( hdc , MM_TEXT )' to achieve this.
@@ -36,8 +36,9 @@ private:
     HFONT m_segoeUI18;
 
     // Disallow copy and assignment
-    UIFont ( const UIFont& );
-    void operator=( const UIFont& );
+    UIFont(const UIFont&);
+    void operator=(const UIFont&);
 };
 
 #endif // UIFONT_HPP
+

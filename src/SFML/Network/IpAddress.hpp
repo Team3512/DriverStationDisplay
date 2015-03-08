@@ -41,15 +41,13 @@
 #include <string>
 
 
-namespace sf
-{
+namespace sf {
 ////////////////////////////////////////////////////////////
 /// \brief Encapsulate an IPv4 network address
 ///
 ////////////////////////////////////////////////////////////
-class IpAddress
-{
-public :
+class IpAddress {
+public:
 
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
@@ -167,7 +165,7 @@ public :
     static const IpAddress LocalHost; ///< The "localhost" address (for connecting a computer to itself locally)
     static const IpAddress Broadcast; ///< The "broadcast" address (for sending UDP messages to everyone on a local network)
 
-private :
+private:
 
     ////////////////////////////////////////////////////////////
     // Member data
@@ -184,7 +182,7 @@ private :
 /// \return True if both addresses are equal
 ///
 ////////////////////////////////////////////////////////////
-bool operator ==(const IpAddress& left, const IpAddress& right);
+bool operator==(const IpAddress& left, const IpAddress& right);
 
 ////////////////////////////////////////////////////////////
 /// \brief Overload of != operator to compare two IP addresses
@@ -195,7 +193,7 @@ bool operator ==(const IpAddress& left, const IpAddress& right);
 /// \return True if both addresses are different
 ///
 ////////////////////////////////////////////////////////////
-bool operator !=(const IpAddress& left, const IpAddress& right);
+bool operator!=(const IpAddress& left, const IpAddress& right);
 
 ////////////////////////////////////////////////////////////
 /// \brief Overload of < operator to compare two IP addresses
@@ -206,7 +204,7 @@ bool operator !=(const IpAddress& left, const IpAddress& right);
 /// \return True if \a left is lesser than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator <(const IpAddress& left, const IpAddress& right);
+bool operator<(const IpAddress& left, const IpAddress& right);
 
 ////////////////////////////////////////////////////////////
 /// \brief Overload of > operator to compare two IP addresses
@@ -217,7 +215,7 @@ bool operator <(const IpAddress& left, const IpAddress& right);
 /// \return True if \a left is greater than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator >(const IpAddress& left, const IpAddress& right);
+bool operator>(const IpAddress& left, const IpAddress& right);
 
 ////////////////////////////////////////////////////////////
 /// \brief Overload of <= operator to compare two IP addresses
@@ -228,7 +226,7 @@ bool operator >(const IpAddress& left, const IpAddress& right);
 /// \return True if \a left is lesser or equal than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator <=(const IpAddress& left, const IpAddress& right);
+bool operator<=(const IpAddress& left, const IpAddress& right);
 
 ////////////////////////////////////////////////////////////
 /// \brief Overload of >= operator to compare two IP addresses
@@ -239,7 +237,7 @@ bool operator <=(const IpAddress& left, const IpAddress& right);
 /// \return True if \a left is greater or equal than \a right
 ///
 ////////////////////////////////////////////////////////////
-bool operator >=(const IpAddress& left, const IpAddress& right);
+bool operator>=(const IpAddress& left, const IpAddress& right);
 
 ////////////////////////////////////////////////////////////
 /// \brief Overload of >> operator to extract an IP address from an input stream
@@ -250,7 +248,7 @@ bool operator >=(const IpAddress& left, const IpAddress& right);
 /// \return Reference to the input stream
 ///
 ////////////////////////////////////////////////////////////
-std::istream& operator >>(std::istream& stream, IpAddress& address);
+std::istream& operator>>(std::istream& stream, IpAddress& address);
 
 ////////////////////////////////////////////////////////////
 /// \brief Overload of << operator to print an IP address to an output stream
@@ -261,9 +259,9 @@ std::istream& operator >>(std::istream& stream, IpAddress& address);
 /// \return Reference to the output stream
 ///
 ////////////////////////////////////////////////////////////
-std::ostream& operator <<(std::ostream& stream, const IpAddress& address);
-
+std::ostream& operator<<(std::ostream& stream, const IpAddress& address);
 } // namespace sf
 
 
 #endif // SFML_IPADDRESS_HPP
+

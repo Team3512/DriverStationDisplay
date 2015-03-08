@@ -37,33 +37,28 @@
 #include <cstring>
 
 
-namespace sf
-{
+namespace sf {
 ////////////////////////////////////////////////////////////
 Socket::Socket(Type type) :
-m_type      (type),
+    m_type(type),
 #ifdef _WIN32
-m_socket    (INVALID_SOCKET),
+    m_socket(INVALID_SOCKET),
 #else
-m_socket    (-1),
+    m_socket(-1),
 #endif
-m_isBlocking(true)
-{
-
+    m_isBlocking(true) {
 }
 
 
 ////////////////////////////////////////////////////////////
-Socket::~Socket()
-{
+Socket::~Socket() {
     // Close the socket before it gets destructed
     close();
 }
 
 
 ////////////////////////////////////////////////////////////
-void Socket::setBlocking(bool blocking)
-{
+void Socket::setBlocking(bool blocking) {
     mjpeg_sck_setnonblocking(m_socket, blocking ? 0 : 1);
 
     m_isBlocking = blocking;
@@ -71,60 +66,56 @@ void Socket::setBlocking(bool blocking)
 
 
 ////////////////////////////////////////////////////////////
-bool Socket::isBlocking() const
-{
+bool Socket::isBlocking() const {
     return m_isBlocking;
 }
 
 
 ////////////////////////////////////////////////////////////
-unsigned int Socket::getHandle() const
-{
+unsigned int Socket::getHandle() const {
     return m_socket;
 }
 
 
 ////////////////////////////////////////////////////////////
-void Socket::create()
-{
+void Socket::create() {
     // Don't create the socket if it already exists
-    if (!mjpeg_sck_valid(m_socket))
-    {
-        mjpeg_socket_t handle = socket(PF_INET, m_type == Tcp ? SOCK_STREAM : SOCK_DGRAM, 0);
+    if (!mjpeg_sck_valid(m_socket)) {
+        mjpeg_socket_t handle = socket(PF_INET,
+                                       m_type == Tcp ? SOCK_STREAM : SOCK_DGRAM,
+                                       0);
         create(handle);
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-void Socket::create(mjpeg_socket_t handle)
-{
+void Socket::create(mjpeg_socket_t handle) {
     // Don't create the socket if it already exists
-    if (!mjpeg_sck_valid(m_socket))
-    {
+    if (!mjpeg_sck_valid(m_socket)) {
         // Assign the new handle
         m_socket = handle;
 
         // Set the current blocking state
         setBlocking(m_isBlocking);
 
-        if (m_type == Tcp)
-        {
+        if (m_type == Tcp) {
             // Disable the Nagle algorithm (ie. removes buffering of TCP packets)
             int yes = 1;
-            if (setsockopt(m_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&yes), sizeof(yes)) == -1)
-            {
+            if (setsockopt(m_socket, IPPROTO_TCP, TCP_NODELAY,
+                           reinterpret_cast<char*>(&yes), sizeof(yes)) == -1) {
                 std::cerr << "Failed to set socket option \"TCP_NODELAY\" ; "
-                      << "all your TCP packets will be buffered" << std::endl;
+                          << "all your TCP packets will be buffered" <<
+                    std::endl;
             }
         }
-        else
-        {
+        else {
             // Enable broadcast by default for UDP sockets
             int yes = 1;
-            if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char*>(&yes), sizeof(yes)) == -1)
-            {
-                std::cerr << "Failed to enable broadcast on UDP socket" << std::endl;
+            if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST,
+                           reinterpret_cast<char*>(&yes), sizeof(yes)) == -1) {
+                std::cerr << "Failed to enable broadcast on UDP socket" <<
+                    std::endl;
             }
         }
     }
@@ -132,15 +123,13 @@ void Socket::create(mjpeg_socket_t handle)
 
 
 ////////////////////////////////////////////////////////////
-void Socket::close()
-{
+void Socket::close() {
     mjpeg_sck_close(m_socket);
 }
 
 
 ////////////////////////////////////////////////////////////
-sockaddr_in Socket::createAddress(uint32_t address, unsigned short port)
-{
+sockaddr_in Socket::createAddress(uint32_t address, unsigned short port) {
     sockaddr_in addr;
     std::memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
     addr.sin_addr.s_addr = htonl(address);
@@ -151,56 +140,51 @@ sockaddr_in Socket::createAddress(uint32_t address, unsigned short port)
 }
 
 ////////////////////////////////////////////////////////////
-Socket::Status Socket::getErrorStatus()
-{
+Socket::Status Socket::getErrorStatus() {
 #ifdef _WIN32
-    switch (WSAGetLastError())
-    {
-        case WSAEWOULDBLOCK :  return Socket::NotReady;
-        case WSAECONNABORTED : return Socket::Disconnected;
-        case WSAECONNRESET :   return Socket::Disconnected;
-        case WSAETIMEDOUT :    return Socket::Disconnected;
-        case WSAENETRESET :    return Socket::Disconnected;
-        case WSAENOTCONN :     return Socket::Disconnected;
-        default :              return Socket::Error;
+    switch (WSAGetLastError()) {
+    case WSAEWOULDBLOCK:  return Socket::NotReady;
+    case WSAECONNABORTED: return Socket::Disconnected;
+    case WSAECONNRESET:   return Socket::Disconnected;
+    case WSAETIMEDOUT:    return Socket::Disconnected;
+    case WSAENETRESET:    return Socket::Disconnected;
+    case WSAENOTCONN:     return Socket::Disconnected;
+    default:              return Socket::Error;
     }
 #else
     // The followings are sometimes equal to EWOULDBLOCK,
     // so we have to make a special case for them in order
     // to avoid having double values in the switch case
-    if ((errno == EAGAIN) || (errno == EINPROGRESS))
+    if ((errno == EAGAIN) || (errno == EINPROGRESS)) {
         return Socket::NotReady;
+    }
 
-    switch (errno)
-    {
-        case EWOULDBLOCK :  return Socket::NotReady;
-        case ECONNABORTED : return Socket::Disconnected;
-        case ECONNRESET :   return Socket::Disconnected;
-        case ETIMEDOUT :    return Socket::Disconnected;
-        case ENETRESET :    return Socket::Disconnected;
-        case ENOTCONN :     return Socket::Disconnected;
-        case EPIPE :        return Socket::Disconnected;
-        default :           return Socket::Error;
+    switch (errno) {
+    case EWOULDBLOCK:  return Socket::NotReady;
+    case ECONNABORTED: return Socket::Disconnected;
+    case ECONNRESET:   return Socket::Disconnected;
+    case ETIMEDOUT:    return Socket::Disconnected;
+    case ENETRESET:    return Socket::Disconnected;
+    case ENOTCONN:     return Socket::Disconnected;
+    case EPIPE:        return Socket::Disconnected;
+    default:           return Socket::Error;
     }
 #endif
 }
 
 #ifdef _WIN32
-struct SocketInitializer
-{
-    SocketInitializer()
-    {
+struct SocketInitializer {
+    SocketInitializer() {
         WSADATA init;
         WSAStartup(MAKEWORD(2, 2), &init);
     }
 
-    ~SocketInitializer()
-    {
+    ~SocketInitializer() {
         WSACleanup();
     }
 };
 
 SocketInitializer globalInitializer;
 #endif
-
 } // namespace sf
+

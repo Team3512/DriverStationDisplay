@@ -20,12 +20,13 @@ typedef struct mjpeg_mutex_t_ {
 #endif
 } mjpeg_mutex_t;
 
-void mjpeg_mutex_init( mjpeg_mutex_t* mutex );
+void mjpeg_mutex_init(mjpeg_mutex_t* mutex);
 
-void mjpeg_mutex_destroy( mjpeg_mutex_t* mutex );
+void mjpeg_mutex_destroy(mjpeg_mutex_t* mutex);
 
-void mjpeg_mutex_lock( mjpeg_mutex_t* mutex );
+void mjpeg_mutex_lock(mjpeg_mutex_t* mutex);
 
-void mjpeg_mutex_unlock( mjpeg_mutex_t* mutex );
+void mjpeg_mutex_unlock(mjpeg_mutex_t* mutex);
 
 #endif /* _MJPEG_MUTEX_H */
+

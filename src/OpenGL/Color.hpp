@@ -1,8 +1,8 @@
-//=============================================================================
-//File Name: Color.hpp
-//Description: A utility class for storing OpenGL color data
-//Author: FRC Team 3512, Spartatroniks
-//=============================================================================
+// =============================================================================
+// File Name: Color.hpp
+// Description: A utility class for storing OpenGL color data
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
 
 #ifndef COLOR_HPP
 #define COLOR_HPP
@@ -13,7 +13,7 @@ template <class T>
 class Color {
 public:
     Color();
-    Color( T r , T g , T b , T a = 1 );
+    Color(T r, T g, T b, T a = 1);
 
     virtual ~Color();
 
@@ -40,3 +40,4 @@ typedef Color<int> Colori;
 #include "Color.inl"
 
 #endif // COLOR_HPP
+

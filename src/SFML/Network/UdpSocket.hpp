@@ -39,8 +39,7 @@
 #include <vector>
 
 
-namespace sf
-{
+namespace sf {
 class IpAddress;
 class Packet;
 
@@ -48,15 +47,13 @@ class Packet;
 /// \brief Specialized socket using the UDP protocol
 ///
 ////////////////////////////////////////////////////////////
-class UdpSocket : public Socket
-{
-public :
+class UdpSocket : public Socket {
+public:
 
     ////////////////////////////////////////////////////////////
     // Constants
     ////////////////////////////////////////////////////////////
-    enum
-    {
+    enum {
         MaxDatagramSize = 65507 ///< The maximum number of bytes that can be sent in a single UDP datagram
     };
 
@@ -126,7 +123,10 @@ public :
     /// \see receive
     ///
     ////////////////////////////////////////////////////////////
-    Status send(const void* data, std::size_t size, const IpAddress& remoteAddress, unsigned short remotePort);
+    Status send(const void* data,
+                std::size_t size,
+                const IpAddress& remoteAddress,
+                unsigned short remotePort);
 
     ////////////////////////////////////////////////////////////
     /// \brief Receive raw data from a remote peer
@@ -149,7 +149,11 @@ public :
     /// \see send
     ///
     ////////////////////////////////////////////////////////////
-    Status receive(void* data, std::size_t size, std::size_t& received, IpAddress& remoteAddress, unsigned short& remotePort);
+    Status receive(void* data,
+                   std::size_t size,
+                   std::size_t& received,
+                   IpAddress& remoteAddress,
+                   unsigned short& remotePort);
 
     ////////////////////////////////////////////////////////////
     /// \brief Send a formatted packet of data to a remote peer
@@ -167,7 +171,9 @@ public :
     /// \see receive
     ///
     ////////////////////////////////////////////////////////////
-    Status send(Packet& packet, const IpAddress& remoteAddress, unsigned short remotePort);
+    Status send(Packet& packet,
+                const IpAddress& remoteAddress,
+                unsigned short remotePort);
 
     ////////////////////////////////////////////////////////////
     /// \brief Receive a formatted packet of data from a remote peer
@@ -184,7 +190,9 @@ public :
     /// \see send
     ///
     ////////////////////////////////////////////////////////////
-    Status receive(Packet& packet, IpAddress& remoteAddress, unsigned short& remotePort);
+    Status receive(Packet& packet,
+                   IpAddress& remoteAddress,
+                   unsigned short& remotePort);
 
 private:
 
@@ -193,7 +201,6 @@ private:
     ////////////////////////////////////////////////////////////
     std::vector<char> m_buffer; ///< Temporary buffer holding the received data in Receive(Packet)
 };
-
 } // namespace sf
 
 
@@ -287,3 +294,4 @@ private:
 /// \see sf::Socket, sf::TcpSocket, sf::Packet
 ///
 ////////////////////////////////////////////////////////////
+
