@@ -13,8 +13,6 @@
 #include "WinGDI/UIFont.hpp"
 
 #include <fstream>
-#include <cstdio>
-#include <cstring>
 
 DisplaySettings::DisplaySettings(std::string fileName,
                                  int leftX,
@@ -25,7 +23,7 @@ DisplaySettings::DisplaySettings(std::string fileName,
     m_lStartY(leftY),
     m_rStartX(rightX),
     m_rStartY(rightY) {
-    if (fileName != std::string("")) {
+    if (fileName != "") {
         reloadGUI(fileName);
     }
 }
@@ -35,48 +33,23 @@ DisplaySettings::~DisplaySettings() {
 }
 
 void DisplaySettings::reloadGUI(sf::Packet& packet) {
-    std::string* elementLine;
-    unsigned int filesize;
-    char* tmpbuf;
-    unsigned char tmpbyte;
-    unsigned int i;
-    char* curLine;
-
     // Remove old elements before creating new ones
     clearGUI();
 
     resetAllTemps();
 
-    // Read the file out of the packet
-    packet >> filesize;
+    // Read the file into a string
+    std::string tmpbuf;
+    packet >> tmpbuf;
 
-    // Read the file into a char buffer
-    tmpbuf = new char[filesize + 1];
-    for (i = 0; i < filesize; i++) {
-        packet >> tmpbyte;
-        tmpbuf[i] = tmpbyte;
+    std::vector<std::string> lines = split(tmpbuf, "\r\n");
+    for (auto& str : lines) {
+        parseLine(str);
     }
-    tmpbuf[i] = '\0';
-
-    // Send individual lines for processing
-    curLine = std::strtok(tmpbuf, "\r\n");
-    while (curLine != nullptr) {
-        elementLine = new std::string(curLine);
-        if (elementLine->length() > 0) {
-            parseLine(*elementLine);
-        }
-        delete elementLine;
-
-        curLine = std::strtok(nullptr, "\r\n");
-    }
-
-    // Free the file buffer
-    delete[] tmpbuf;
 }
 
 void DisplaySettings::reloadGUI(const std::string& fileName) {
-    std::string tempName = fileName;
-    std::ifstream guiSettings(tempName);
+    std::ifstream guiSettings(fileName);
 
     // Remove old elements before creating new ones
     clearGUI();
@@ -86,21 +59,12 @@ void DisplaySettings::reloadGUI(const std::string& fileName) {
 
         while (!guiSettings.eof()) {
             std::getline(guiSettings, m_line);
-
             parseLine(m_line);
         }
-
-        guiSettings.close();
     }
 }
 
 void DisplaySettings::clearGUI() {
-    for (auto i = m_drawables.begin();
-         i != m_drawables.end();
-         i++) {
-        delete *i;
-    }
-
     m_drawables.clear();
 }
 
@@ -109,9 +73,24 @@ void DisplaySettings::updateGuiTable(sf::Packet& packet) {
 }
 
 void DisplaySettings::drawDisplay(HDC hdc) {
-    for (auto i : m_drawables) {
+    for (auto& i : m_drawables) {
         i->draw(hdc);
     }
+}
+
+std::vector<std::string> DisplaySettings::split(const std::string& s,
+                                                const std::string& delim) {
+    std::vector<std::string> elems;
+
+    unsigned int pos = 0;
+    unsigned int nextPos = 0;
+    while (nextPos != std::string::npos) {
+        nextPos = s.find_first_of(delim, pos);
+        elems.emplace_back(s.substr(pos, nextPos - pos));
+        pos = nextPos + delim.length();
+    }
+
+    return elems;
 }
 
 void DisplaySettings::parseLine(std::string line) {
@@ -140,7 +119,8 @@ void DisplaySettings::parseLine(std::string line) {
         }
 
         // Find end of next argument
-        while (m_line.substr(m_start + m_length, 1) != m_delimiter) {
+        while (m_line.substr(m_start + m_length, m_delimiter.length()) !=
+               m_delimiter) {
             if (m_start < m_line.length() - 1) {
                 m_length++;
             }
@@ -161,18 +141,10 @@ void DisplaySettings::parseLine(std::string line) {
             // While there are still characters to parse
             while (start < m_substring.size() - 1) {
                 // Find next argument
-                while (m_substring.substr(start,
-                                          1) == delimiter &&
-                       start < m_substring.length() - 1) {
-                    start++;
-                }
+                start = m_substring.find_first_not_of(delimiter, start);
 
                 // Find end of next argument
-                while (m_substring.substr(start + length,
-                                          1) != delimiter &&
-                       start + length < m_substring.length() - 1) {
-                    length++;
-                }
+                length = m_substring.find_first_of(delimiter, length);
 
                 // Make sure the last character of the end of the string is included in a key
                 if (start + length == m_substring.length() - 1) {
@@ -192,12 +164,12 @@ void DisplaySettings::parseLine(std::string line) {
             m_column = m_line.substr(m_start, m_length);
 
             // Store the element IDs in the correct columns
-            if (m_column == std::string("left")) {
+            if (m_column == "left") {
                 // Store previous "current type" before updating it
                 m_lLastType = m_lCurrentType;
                 m_lCurrentType = m_currentType;
             }
-            else if (m_column == std::string("right")) {
+            else if (m_column == "right") {
                 // Store previous "current type" before updating it
                 m_rLastType = m_rCurrentType;
                 m_rCurrentType = m_currentType;
@@ -214,11 +186,7 @@ void DisplaySettings::parseLine(std::string line) {
     // Get last two arguments in quotes
     for (size_t i = 2; i < 4; i++) {
         // Find delimiter at start of next argument
-        while (m_line.substr(m_start, 1) != m_delimiter) {
-            if (m_start < m_line.length() - 1) {
-                m_start++;
-            }
-        }
+        m_start = m_line.find_first_of(m_delimiter, m_start);
 
         // Advance past delimiter
         if (m_start < m_line.length() - 1) {
@@ -226,9 +194,7 @@ void DisplaySettings::parseLine(std::string line) {
         }
 
         // Find end of next argument
-        while (m_line.substr(m_start + m_length, 1) != m_delimiter) {
-            m_length++;
-        }
+        m_length = m_line.find_first_of(m_delimiter, m_start + m_length);
 
         // Get current argument
         if (i == 2) {
@@ -257,36 +223,31 @@ void DisplaySettings::parseLine(std::string line) {
     /* Set appropriate X and Y coordinates for new element and use
      * correct column's previous element ID
      */
-    if (m_column == std::string("left")) {
+    if (m_column == "left") {
         m_tempX = m_lStartX;
         m_tempY = m_lTempY;
         m_lastType = m_lLastType;
     }
-    else if (m_column == std::string("right")) {
+    else if (m_column == "right") {
         m_tempX = m_rStartX;
         m_tempY = m_rTempY;
         m_lastType = m_rLastType;
     }
 
     // Increase Y for new element
-    if (m_lastType == std::string("TEXT") &&
-        m_currentType == std::string("TEXT")) {
+    if (m_lastType == "TEXT" && m_currentType == "TEXT") {
         m_tempY += 33;
     }
-    else if (m_lastType == std::string("TEXT") &&
-             m_currentType == std::string("STATUSLIGHT")) {
+    else if (m_lastType == "TEXT" && m_currentType == "STATUSLIGHT") {
         m_tempY += 44;
     }
-    else if (m_lastType == std::string("STATUSLIGHT") &&
-             m_currentType == std::string("STATUSLIGHT")) {
+    else if (m_lastType == "STATUSLIGHT" && m_currentType == "STATUSLIGHT") {
         m_tempY += 40;
     }
-    else if (m_lastType == std::string("PBAR") &&
-             m_currentType == std::string("PBAR")) {
+    else if (m_lastType == "PBAR" && m_currentType == "PBAR") {
         m_tempY += 56;
     }
-    else if (m_lastType == std::string("PBAR") &&
-             m_currentType == std::string("STATUSLIGHT")) {
+    else if (m_lastType == "PBAR" && m_currentType == "STATUSLIGHT") {
         m_tempY += 61;
     }
     else if (m_lastType != "") {
@@ -303,7 +264,7 @@ void DisplaySettings::parseLine(std::string line) {
     NetUpdate* netPtr = nullptr;
 
     // Create element
-    if (m_currentType == std::string("TEXT")) {
+    if (m_currentType == "TEXT") {
         Text* temp =  new Text(Vector2i(m_tempX, m_tempY),
                                UIFont::getInstance().segoeUI14(), m_startText,
                                Colorf(0,
@@ -316,16 +277,16 @@ void DisplaySettings::parseLine(std::string line) {
         elemPtr = temp;
         netPtr = temp;
     }
-    else if (m_currentType == std::string("STATUSLIGHT")) {
+    else if (m_currentType == "STATUSLIGHT") {
         StatusLight* temp = new StatusLight(Vector2i(m_tempX,
                                                      m_tempY), m_startText,
                                             true);
         elemPtr = temp;
         netPtr = temp;
     }
-    else if (m_currentType == std::string("PBAR")) {
-        ProgressBar* temp = new ProgressBar(Vector2i(m_tempX,
-                                                     m_tempY), m_startText,
+    else if (m_currentType == "PBAR") {
+        ProgressBar* temp = new ProgressBar(Vector2i(m_tempX, m_tempY),
+                                            m_startText,
                                             Colorf(0, 120, 0),
                                             Colorf(255, 255, 255),
                                             Colorf(50, 50, 50), true);
@@ -343,14 +304,14 @@ void DisplaySettings::parseLine(std::string line) {
 
     // Add element to gDrawables if it was created
     if (elemPtr != nullptr) {
-        m_drawables.push_back(elemPtr);
+        m_drawables.push_back(std::unique_ptr<Drawable>(elemPtr));
     }
 
     // Update Y position for future elements
-    if (m_column == std::string("left")) {
+    if (m_column == "left") {
         m_lTempY = m_tempY;
     }
-    else if (m_column == std::string("right")) {
+    else if (m_column == "right") {
         m_rTempY = m_tempY;
     }
 }

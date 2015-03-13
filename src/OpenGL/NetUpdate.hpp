@@ -9,10 +9,12 @@
 
 #include <string>
 #include <map>
+#include <iostream>
 
 #include <cstdlib> // For std::memcpy(3)
 
 #include "../SFML/Network/Packet.hpp"
+#include "NetValue.hpp"
 
 /* Usage:
  *
@@ -23,11 +25,6 @@
  */
 
 std::wstring replaceUnicodeChars(std::wstring text);
-
-struct NetValue {
-    unsigned char type;
-    void* value;
-};
 
 class NetUpdate {
 public:
@@ -46,12 +43,6 @@ public:
 
     // Updates values currently in table and adds new ones if they don't exist
     static void updateValues(sf::Packet& packet);
-
-    // Frees value storage for 'value' member of NetValue
-    static void freeValue(NetValue* netVal);
-
-    // Clears all values from table
-    static void clearNetValues();
 
     // Returns the corresponding network value of a keyword
     static NetValue* getValue(const std::string& key);
@@ -75,7 +66,7 @@ protected:
 
 private:
     static std::vector<NetUpdate*> m_netObjs;
-    static std::map<std::string, NetValue*> m_netValues;
+    static std::map<std::string, NetValue> m_netValues;
 
     std::wstring m_updateText;
 

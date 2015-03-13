@@ -74,7 +74,7 @@ void Text::draw(HDC hdc) {
 void Text::updateValue() {
     NetValue* printValue = getValue(m_varIds[0]);
 
-    if (printValue != NULL) {
+    if (printValue != nullptr) {
         // TODO Not secure
         wchar_t temp[128];
 

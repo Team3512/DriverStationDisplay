@@ -146,7 +146,7 @@ void StatusLight::updateValue() {
 
     if (lightValue != NULL) {
         unsigned char tempVal = 0;
-        std::memcpy(&tempVal, lightValue->value, sizeof(unsigned char));
+        std::memcpy(&tempVal, lightValue->getValue(), sizeof(unsigned char));
 
         setActive(Status(tempVal));
     }

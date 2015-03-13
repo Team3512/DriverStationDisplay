@@ -120,7 +120,7 @@ void ProgressBar::updateValue() {
     }
 
     if (percentValue != nullptr) {
-        setPercent(*static_cast<unsigned char*>(percentValue->value));
+        setPercent(*static_cast<unsigned char*>(percentValue->getValue()));
     }
 }
 

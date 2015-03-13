@@ -8,8 +8,9 @@
 #ifndef DISPLAY_SETTINGS_HPP
 #define DISPLAY_SETTINGS_HPP
 
+#include <vector>
 #include <string>
-#include <list>
+#include <memory>
 #include "SFML/Network/Packet.hpp"
 
 #ifdef _WIN32_WINNT
@@ -50,7 +51,7 @@ public:
     void drawDisplay(HDC hdc);
 
 private:
-    std::list<Drawable*> m_drawables;
+    std::vector<std::unique_ptr<Drawable>> m_drawables;
 
     std::string m_line;
     std::string m_substring;
@@ -84,6 +85,9 @@ private:
     const int m_rStartY;
     int m_rTempY;
     /* ================================ */
+
+    std::vector<std::string> split(const std::string& s,
+                                   const std::string& delim);
 
     /* Parses a given settings line, adding an element if applicable and
      * incrementing the global position variables for the column to which

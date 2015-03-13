@@ -39,7 +39,7 @@ std::wstring replaceUnicodeChars(std::wstring text) {
 }
 
 std::vector<NetUpdate*> NetUpdate::m_netObjs;
-std::map<std::string, NetValue*> NetUpdate::m_netValues;
+std::map<std::string, NetValue> NetUpdate::m_netValues;
 
 NetUpdate::NetUpdate(bool trackUpdate) :
     m_trackUpdate(trackUpdate) {
@@ -58,7 +58,7 @@ NetUpdate::~NetUpdate() {
     }
 
     if (m_netObjs.size() == 0) {
-        clearNetValues();
+        m_netValues.clear();
     }
 }
 
@@ -75,155 +75,58 @@ void NetUpdate::updateValues(sf::Packet& packet) {
     std::string key;
 
     NetValue* tempVal;
-    std::string str;
-    bool valAllocated = false;
 
-    bool haveValidData = true;
+    while (!packet.endOfPacket() && packet >> type && packet >> key) {
+        // If 'key' already has an entry
+        if (m_netValues.find(key) != m_netValues.end()) {
+            tempVal = &m_netValues[key];
 
-    while (!packet.endOfPacket() && haveValidData) {
-        if (packet >> type && packet >> key) {
-            // If 'key' already has an entry
-            if (m_netValues.find(key) != m_netValues.end()) {
-                /* If types aren't the same, free the value member for
-                 * later reallocation
-                 */
-                if (m_netValues[key]->type != type) {
-                    freeValue(m_netValues[key]);
-                    valAllocated = false;
-                }
-                else {
-                    // Key exists and value is right size
-                    valAllocated = true;
-                }
-            }
-            // Else make a new one
-            else {
-                NetValue* val = new NetValue;
-                val->type = '\0'; // Initialize type
-                val->value = nullptr;
-                m_netValues[key] = val;
-
-                tempVal = val;
-            }
-
-            /* Now that there is guaranteed to be a valid NetValue struct,
-             * get a pointer to it
+            /* If types aren't the same, free the value member for later
+             * reallocation
              */
-            tempVal = m_netValues[key];
-
-            /* Unlike the other types, the string must be retrieved
-             * early so we know how much memory to allocate for it
-             */
-            if (type == 's') {
-                packet >> str;
-            }
-
-            // Allocate the right amount of space if needed
-            if (!valAllocated) {
-                switch (type) {
-                case 'c': {
-                    tempVal->type = 'c';
-                    tempVal->value = new unsigned char;
-
-                    break;
-                }
-                case 'i': {
-                    tempVal->type = 'i';
-                    tempVal->value = new int;
-
-                    break;
-                }
-                case 'u': {
-                    tempVal->type = 'u';
-                    tempVal->value = new unsigned int;
-
-                    break;
-                }
-                case 's': {
-                    tempVal->type = 's';
-
-                    // 'str.length() + 1' provides room for the null terminator
-                    tempVal->value = new std::wstring;
-
-                    break;
-                }
-                default: {
-                    abort();
-                }
-                }
-            }
-
-            // Assign value to prepared space
-            switch (type) {
-            case 'c': {
-                unsigned char value = 0;
-                packet >> value;
-
-                std::memcpy(tempVal->value, &value, sizeof(value));
-
-                break;
-            }
-            case 'i': {
-                int value = 0;
-                packet >> value;
-
-                std::memcpy(tempVal->value, &value, sizeof(value));
-
-                break;
-            }
-            case 'u': {
-                unsigned int value = 0;
-                packet >> value;
-
-                std::memcpy(tempVal->value, &value, sizeof(value));
-
-                break;
-            }
-            case 's': {
-                // Convert std::string to std::wstring
-                static_cast<std::wstring*>(tempVal->value)->assign(
-                    str.begin(), str.end());
-
-                break;
-            }
+            if (tempVal->getType() != type) {
+                tempVal->reallocValue(type);
             }
         }
+        // Else make a new one
         else {
-            haveValidData = false;
+            m_netValues[key] = std::move(NetValue(type));
+
+            tempVal = &m_netValues[key];
+        }
+
+        // Assign value to prepared space
+        if (type == 'c') {
+            unsigned char value = 0;
+            packet >> value;
+
+            tempVal->setValue(&value);
+        }
+        else if (type == 'i') {
+            int value = 0;
+            packet >> value;
+
+            tempVal->setValue(&value);
+        }
+        else if (type == 'u') {
+            unsigned int value = 0;
+            packet >> value;
+
+            tempVal->setValue(&value);
+        }
+        else if (type == 's') {
+            std::string value;
+            packet >> value;
+
+            tempVal->setValue(&value);
         }
     }
-}
-
-void NetUpdate::freeValue(NetValue* netVal) {
-    // Free value in void*
-    if (netVal->type == 'c') {
-        delete static_cast<unsigned char*>(netVal->value);
-    }
-    else if (netVal->type == 'i') {
-        delete static_cast<int*>(netVal->value);
-    }
-    else if (netVal->type == 'u') {
-        delete static_cast<unsigned int*>(netVal->value);
-    }
-    else if (netVal->type == 's') {
-        delete[] static_cast<wchar_t*>(netVal->value);
-    }
-}
-
-void NetUpdate::clearNetValues() {
-    for (auto i : m_netValues) {
-        freeValue(i.second);
-
-        delete i.second; // Free NetValue object
-    }
-
-    m_netValues.clear(); // Remove freed objects from std::map m_netValues
 }
 
 NetValue* NetUpdate::getValue(const std::string& key) {
     // If there is a value for the given key, return it
     if (m_netValues.find(key) != m_netValues.end()) {
-        return m_netValues[key];
+        return &m_netValues[key];
     }
     else {
         return nullptr;
@@ -241,30 +144,32 @@ void NetUpdate::updateKeys(std::vector<std::string>& keys) {
 }
 
 void NetUpdate::fillValue(wchar_t* buffer, unsigned int size, NetValue* value) {
-    if (value->type == 'c') {
+    unsigned char type = value->getType();
+
+    if (type == 'c') {
         unsigned char tempVal = 0;
-        std::memcpy(&tempVal, value->value, sizeof(tempVal));
+        std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
 
-        _snwprintf(buffer, size, m_updateText.c_str(), std::to_string(
-                       tempVal).c_str());
+        swprintf(buffer, size, m_updateText.c_str(), std::to_wstring(
+                     tempVal).c_str());
     }
-    else if (value->type == 'u') {
+    else if (type == 'u') {
         unsigned int tempVal = 0;
-        std::memcpy(&tempVal, value->value, sizeof(tempVal));
+        std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
 
-        _snwprintf(buffer, size, m_updateText.c_str(), std::to_string(
-                       tempVal).c_str());
+        swprintf(buffer, size, m_updateText.c_str(), std::to_wstring(
+                     tempVal).c_str());
     }
-    else if (value->type == 'i') {
+    else if (type == 'i') {
         int tempVal = 0;
-        std::memcpy(&tempVal, value->value, sizeof(tempVal));
+        std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
 
-        _snwprintf(buffer, size, m_updateText.c_str(), std::to_string(
-                       tempVal).c_str());
+        swprintf(buffer, size, m_updateText.c_str(), std::to_wstring(
+                     tempVal).c_str());
     }
     // Else data is already in a string
     else {
-        _snwprintf(buffer, size, m_updateText.c_str(), value->value);
+        swprintf(buffer, size, m_updateText.c_str(), value->getValue());
     }
 }
 
