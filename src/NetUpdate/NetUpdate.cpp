@@ -63,7 +63,7 @@ NetUpdate::~NetUpdate() {
 }
 
 void NetUpdate::setUpdateText(const std::wstring& text) {
-    m_updateText = replaceUnicodeChars(text);
+    m_updateText = text;
 }
 
 const std::wstring& NetUpdate::getUpdateText() {

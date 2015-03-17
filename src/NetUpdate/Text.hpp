@@ -1,52 +1,29 @@
 // =============================================================================
 // File Name: Text.hpp
-// Description: Provides a wrapper for WinGDI text
+// Description: Provides a wrapper for QLabel
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
-
-/* In this class's case, outlineColor is actually the background color of the
- * text
- */
 
 #ifndef TEXT_HPP
 #define TEXT_HPP
 
-#include "Drawable.hpp"
+#include <QWidget>
+#include <QLabel>
+
 #include "NetUpdate.hpp"
-#include <string>
 
-class Text : public Drawable, public NetUpdate {
+class Text : public QWidget, public NetUpdate {
+    Q_OBJECT
 public:
-    Text(QFont& font,
-         std::wstring text,
-         QColor fillColor,
-         bool netUpdate,
-         const QPoint& position = QPoint());
+    explicit Text(bool netUpdate, QWidget* parent = nullptr);
 
-    void setFont(QFont& font);
-
-    const QFont& getFont() const;
-
-    void setString(std::wstring text);
-
-    const std::wstring& getString() const;
-
-    void paintEvent(QPaintEvent* event);
+    void setString(const std::wstring& text);
+    std::wstring getString() const;
 
     void updateValue();
 
 private:
-    // The following functions don't do anything
-    /* void setSize(const Vector& size);
-     * void setSize(short width, short height);
-     *
-     * const Vector& getSize();
-     *
-     * void setOutlineThickness(int thickness);
-     */
-
-    QFont& m_font;
-    std::wstring m_string;
+    QLabel* m_text;
 };
 
 #endif // TEXT_HPP

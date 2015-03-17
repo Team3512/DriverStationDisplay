@@ -51,7 +51,7 @@ public:
     static void updateElements();
 
     // Updates keys which are used to retrieve the network variables
-    void updateKeys(std::vector<std::string>& keys);
+    virtual void updateKeys(std::vector<std::string>& keys);
 
     // Insert value into update text and return the result
     std::wstring fillValue(NetValue* value);

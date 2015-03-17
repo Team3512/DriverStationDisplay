@@ -7,46 +7,29 @@
 #ifndef PROGRESSBAR_HPP
 #define PROGRESSBAR_HPP
 
-#include "RectangleShape.hpp"
+#include <QVBoxLayout>
+#include <QProgressBar>
+
 #include "NetUpdate.hpp"
 #include "Text.hpp"
 #include <string>
 
-class ProgressBar : public Drawable, public NetUpdate {
+class ProgressBar : public QWidget, public NetUpdate {
+    Q_OBJECT
 public:
-    ProgressBar(std::wstring text,
-                QColor fullFillColor,
-                QColor emptyFillColor,
-                QColor outlineColor,
-                bool netUpdate,
-                const QPoint& position = QPoint());
+    explicit ProgressBar(bool netUpdate, QWidget* parent = nullptr);
 
-    void setPercent(float percentFull);
+    void setPercent(float percent);
     float getPercent();
 
-    void setPosition(const QPoint& position);
-    void setPosition(short x, short y);
-
-    void setSize(const QPoint& size);
-    void setSize(short width, short height);
-
-    void setString(const std::wstring& message);
-    const std::wstring& getString();
-
-    void setBarFillColor(QColor fill);
-    QColor getBarFillColor();
-
-    void paintEvent(QPaintEvent* event);
+    void setString(const std::wstring& text);
+    std::wstring getString();
 
     void updateValue();
 
 private:
-    RectangleShape m_barOutline;
-    RectangleShape m_barFill;
-
-    float percent;
-
-    Text m_text;
+    QProgressBar* m_bar;
+    Text* m_text;
 };
 
 #endif // PROGRESSBAR_HPP

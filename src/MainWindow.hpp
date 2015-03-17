@@ -1,3 +1,9 @@
+// =============================================================================
+// File Name: MainWindow.hpp
+// Description: Creates application's main window
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
+
 #ifndef MAIN_WINDOW_HPP
 #define MAIN_WINDOW_HPP
 
@@ -17,8 +23,6 @@ class QAction;
 #include "MJPEG/MjpegStream.hpp"
 #include "MJPEG/WindowCallbacks.hpp"
 #include "MJPEG/mjpeg_sck.hpp"
-
-#include <cstdint>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT

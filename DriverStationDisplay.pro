@@ -24,13 +24,11 @@ SOURCES +=\
     src/MJPEG/mjpeg_sck_selector.cpp \
     src/MJPEG/MjpegStream.cpp \
     src/MJPEG/win32_socketpair.c \
-    src/NetUpdate/Drawable.cpp \
     src/NetUpdate/NetUpdate.cpp \
+    src/NetUpdate/CircleWidget.cpp \
     src/NetUpdate/ProgressBar.cpp \
-    src/NetUpdate/RectangleShape.cpp \
     src/NetUpdate/StatusLight.cpp \
     src/NetUpdate/Text.cpp \
-    src/NetUpdate/UIFont.cpp \
     src/NetUpdate/NetValue.cpp
 
 HEADERS  += \
@@ -44,13 +42,11 @@ HEADERS  += \
     src/MJPEG/MjpegStream.hpp \
     src/MJPEG/win32_socketpair.h \
     src/MJPEG/WindowCallbacks.hpp \
-    src/NetUpdate/Drawable.hpp \
     src/NetUpdate/NetUpdate.hpp \
+    src/NetUpdate/CircleWidget.hpp \
     src/NetUpdate/ProgressBar.hpp \
-    src/NetUpdate/RectangleShape.hpp \
     src/NetUpdate/StatusLight.hpp \
     src/NetUpdate/Text.hpp \
-    src/NetUpdate/UIFont.hpp \
     src/NetUpdate/NetValue.hpp
 
 RESOURCES += \

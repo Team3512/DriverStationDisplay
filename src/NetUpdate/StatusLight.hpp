@@ -8,45 +8,32 @@
 #ifndef STATUS_LIGHT_HPP
 #define STATUS_LIGHT_HPP
 
-#include "Drawable.hpp"
+#include <QWidget>
+
 #include "NetUpdate.hpp"
+#include "CircleWidget.hpp"
 #include "Text.hpp"
 
 #include <string>
 
-class StatusLight : public Drawable, public NetUpdate {
+class StatusLight : public QWidget, public NetUpdate {
+    Q_OBJECT
 public:
-    enum Status {
-        active,
-        standby,
-        inactive
-    };
+    explicit StatusLight(bool netUpdate, QWidget* parent = nullptr);
 
-    StatusLight(std::wstring message, bool netUpdate,
-                const QPoint& position = QPoint());
-
-    void setActive(Status newStatus);
-    Status getActive();
-
-    void setPosition(const QPoint& position);
-    void setPosition(short x, short y);
-
-    void setString(const std::wstring& message);
-    const std::wstring& getString();
+    void setString(const std::wstring& text);
+    std::wstring getString() const;
 
     static void setColorBlind(bool on);
     static bool isColorBlind();
 
-    void paintEvent(QPaintEvent* event);
+    void updateKeys(std::vector<std::string>& keys);
 
     void updateValue();
 
 private:
-    Status m_status;
-
-    Text m_text;
-
-    static bool m_isColorBlind;
+    CircleWidget* m_circle;
+    Text* m_text;
 };
 
 #endif // STATUS_LIGHT_HPP

@@ -5,100 +5,42 @@
 // =============================================================================
 
 #include "ProgressBar.hpp"
-#include "UIFont.hpp"
 
-ProgressBar::ProgressBar(std::wstring text,
-                         QColor fullFillColor,
-                         QColor emptyFillColor,
-                         QColor outlineColor,
-                         bool netUpdate,
-                         const QPoint& position) :
-    Drawable(position, QPoint(100, 18), emptyFillColor, outlineColor, 1),
-    NetUpdate(netUpdate),
-    m_barOutline(QPoint(100, 18), emptyFillColor, outlineColor, 1,
-                 position),
-    m_barFill(QPoint(98, 16),
-              fullFillColor,
-              QColor(0, 70, 0), 0,
-              QPoint(position.x() + 1, position.y() + 1)),
-    m_text(UIFont::getInstance().segoeUI14(), text, QColor(0, 0, 0),
-           false,
-           QPoint(position.x(), position.y() + 18 + 2)) {
+ProgressBar::ProgressBar(bool netUpdate, QWidget* parent) :
+    QWidget(parent), NetUpdate(netUpdate) {
+    QVBoxLayout* layout = new QVBoxLayout();
+    setLayout(layout);
+
+    m_bar = new QProgressBar(this);
+    m_bar->setMinimum(0);
+    m_bar->setMaximum(100);
+    layout->addWidget(m_bar);
+
+    m_text = new Text(false, this);
+    layout->addWidget(m_text);
+
     setPercent(0.f);
 }
 
-void ProgressBar::paintEvent(QPaintEvent* event) {
-    (void) event;
-
-    m_barOutline.update();
-    m_barFill.update();
-    m_text.update();
-}
-
-void ProgressBar::setPercent(float percentFull) {
-    if (percentFull > 100) {
-        percentFull = 100;
+void ProgressBar::setPercent(float percent) {
+    if (percent > 100) {
+        percent = 100;
     }
 
-    percent = percentFull;
-    m_barFill.setSize(QPoint((Drawable::getSize().x() - 2.f) * percentFull /
-                             100.f, m_barFill.getSize().y()));
+    m_bar->setValue(percent);
+    m_bar->update();
 }
 
 float ProgressBar::getPercent() {
-    return percent;
+    return m_bar->value();
 }
 
-void ProgressBar::setPosition(const QPoint& position) {
-    m_barOutline.setPosition(position);
-    m_barFill.setPosition(position.x() + 1, position.y() + 1);
-
-    m_text.setPosition(
-        m_barOutline.getPosition().x(),
-        m_barOutline.getPosition().y() + m_barOutline.getSize().y() + 2);
+void ProgressBar::setString(const std::wstring& text) {
+    m_text->setString(text);
 }
 
-void ProgressBar::setPosition(short x, short y) {
-    Drawable::setPosition(x, y);
-    m_barFill.setPosition(x + 1, y + 1);
-
-    m_text.setPosition(
-        m_barOutline.getPosition().x(),
-        m_barOutline.getPosition().y() + m_barOutline.getSize().y() + 2);
-}
-
-void ProgressBar::setSize(const QPoint& size) {
-    m_barOutline.setSize(size);
-    m_barFill.setSize(QPoint((size.y() - 2) * percent, size.y() - 2));
-
-    m_text.setPosition(
-        m_barOutline.getPosition().x(),
-        m_barOutline.getPosition().y() + m_barOutline.getSize().y() + 2);
-}
-
-void ProgressBar::setSize(short width, short height) {
-    m_barOutline.setSize(QPoint(width, height));
-    m_barFill.setSize(QPoint((width - 2) * percent, height - 2));
-
-    m_text.setPosition(
-        m_barOutline.getPosition().x(),
-        m_barOutline.getPosition().y() + m_barOutline.getSize().y() + 2);
-}
-
-void ProgressBar::setString(const std::wstring& message) {
-    m_text.setString(message);
-}
-
-const std::wstring& ProgressBar::getString() {
-    return m_text.getString();
-}
-
-void ProgressBar::setBarFillColor(QColor fill) {
-    m_barFill.setFillColor(fill);
-}
-
-QColor ProgressBar::getBarFillColor() {
-    return m_barFill.getFillColor();
+std::wstring ProgressBar::getString() {
+    return m_text->getString();
 }
 
 void ProgressBar::updateValue() {
@@ -110,6 +52,8 @@ void ProgressBar::updateValue() {
     }
 
     if (percentValue != nullptr) {
+        std::cout << "percentValue->getType()=" << percentValue->getType() << "\n";
+        std::cout << "percent=" << (int)*static_cast<unsigned char*>(percentValue->getValue()) << "\n";
         setPercent(*static_cast<unsigned char*>(percentValue->getValue()));
     }
 }

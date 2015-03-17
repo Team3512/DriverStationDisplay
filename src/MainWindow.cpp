@@ -1,3 +1,10 @@
+// =============================================================================
+// File Name: MainWindow.cpp
+// Description: Creates application's main window
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
+
+
 #include <QtWidgets>
 #include <QPushButton>
 #include <QSpacerItem>
@@ -12,7 +19,6 @@
 #include "NetUpdate/ProgressBar.hpp"
 #include "NetUpdate/StatusLight.hpp"
 #include "NetUpdate/Text.hpp"
-#include "NetUpdate/UIFont.hpp"
 #include "Util.hpp"
 
 MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
@@ -42,7 +48,6 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
 
     m_centerLayout = new QVBoxLayout;
 
-    m_leftLayout->insertStretch(0);
     m_centerLayout->addWidget(m_client, 0, Qt::AlignTop);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout;
@@ -63,19 +68,8 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
 
         m_dataSocket->writeDatagram(data, sizeof(data), m_remoteIP, m_dataPort);
     });
-    m_optionLayout->addWidget(m_autoSelect, 0, Qt::AlignTop);
-
-    QCheckBox* colorBlind = new QCheckBox(tr("Color Blind Mode"));
-    connect(colorBlind, &QAbstractButton::clicked, [] (bool clicked) {
-        StatusLight::setColorBlind(clicked);
-    });
-    m_optionLayout->addWidget(colorBlind, 0, Qt::AlignTop);
-
-    QPushButton* exitButton = new QPushButton("Exit");
-    connect(exitButton, &QPushButton::released, [this] {
-        this->close();
-    });
-    m_optionLayout->addWidget(exitButton, 0, Qt::AlignTop);
+    m_optionLayout->addWidget(m_autoSelect);
+    m_optionLayout->setAlignment(m_autoSelect, Qt::AlignTop);
 
     QGridLayout* mainLayout = new QGridLayout;
     mainLayout->setColumnMinimumWidth(0, width / 4);
@@ -200,6 +194,11 @@ void MainWindow::handleSocketData() {
             std::string tempName;
             packetToVar(m_buffer, packetPos, tempName);
             autoName += tempName;
+
+            int idx = m_autoSelect->findText(QString::fromStdString(tempName));
+            if (idx != -1) {
+                m_autoSelect->setCurrentIndex(idx);
+            }
 
             static QMessageBox connectDlg;
             connectDlg.setWindowTitle("Autonomous Change");
@@ -385,29 +384,30 @@ void MainWindow::parseLine(std::string line) {
 
     // Replace all unicode escape characters in the string with their unicode equivalents
     m_startText = replaceUnicodeChars(m_startText);
+    m_updateText = replaceUnicodeChars(m_updateText);
 
     NetUpdate* netPtr = nullptr;
     QWidget* qPtr = nullptr;
 
     // Create element
     if (m_currentType == "TEXT") {
-        Text* temp =  new Text(UIFont::getInstance().segoeUI14(), m_startText,
-                               QColor(0, 0, 0),
-                               true);
+        Text* temp =  new Text(true);
+        temp->setString(m_startText);
+
         netPtr = temp;
         qPtr = temp;
     }
     else if (m_currentType == "STATUSLIGHT") {
-        StatusLight* temp = new StatusLight(m_startText,
-                                            true);
+        StatusLight* temp = new StatusLight(true);
+        temp->setString(m_startText);
+
         netPtr = temp;
         qPtr = temp;
     }
     else if (m_currentType == "PBAR") {
-        ProgressBar* temp = new ProgressBar(m_startText,
-                                            QColor(0, 120, 0),
-                                            QColor(255, 255, 255),
-                                            QColor(50, 50, 50), true);
+        ProgressBar* temp = new ProgressBar(true);
+        temp->setString(m_startText);
+
         netPtr = temp;
         qPtr = temp;
     }

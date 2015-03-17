@@ -1,3 +1,9 @@
+// =============================================================================
+// File Name: Main.cpp
+// Description: Starts application
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
+
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QIcon>
