@@ -53,7 +53,7 @@ GLWindow::GLWindow(HWND window) {
 }
 
 GLWindow::~GLWindow() {
-    wglMakeCurrent(NULL, NULL);
+    wglMakeCurrent(nullptr, nullptr);
     wglDeleteContext(m_threadRC);
     ReleaseDC(m_window, m_dc);
 }

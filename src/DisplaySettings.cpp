@@ -42,7 +42,7 @@ void DisplaySettings::reloadGUI(sf::Packet& packet) {
     std::string tmpbuf;
     packet >> tmpbuf;
 
-    std::vector<std::string> lines = split(tmpbuf, "\r\n");
+    std::vector<std::string> lines = split(tmpbuf, "\n");
     for (auto& str : lines) {
         parseLine(str);
     }

@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include <cstring>
-#include <cwchar> // For _snwprintf(3, ...)
 
 std::wstring replaceUnicodeChars(std::wstring text) {
     size_t uPos = 0;

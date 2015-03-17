@@ -673,10 +673,16 @@ LRESULT CALLBACK OnEvent(HWND handle, UINT message, WPARAM wParam,
         if (size.X > textureSize || size.Y > textureSize) {
             textureSize = npot(std::max(size.X, size.Y));
 
-            uint8_t* tmpBuf = new uint8_t[textureSize * textureSize * 3];
+            uint8_t* tmpBuf = new uint8_t[textureSize * textureSize * 4];
             glTexImage2D(GL_TEXTURE_2D, 0, 3, textureSize, textureSize, 0,
-                         GL_RGB, GL_UNSIGNED_BYTE, tmpBuf);
+                         GL_RGBA, GL_UNSIGNED_BYTE, tmpBuf);
             delete[] tmpBuf;
+        }
+
+        glError = glGetError();
+        if (glError != GL_NO_ERROR) {
+            std::cerr << "Main.cpp OpenGL failure 0: " <<
+                gluErrorString(glError) << "\n";
         }
 
         /* Represents the amount of the texture to display. These are ratios
@@ -690,8 +696,20 @@ LRESULT CALLBACK OnEvent(HWND handle, UINT message, WPARAM wParam,
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size.X, size.Y,
                         GL_RGBA, GL_UNSIGNED_BYTE, pxlBuf);
 
+        glError = glGetError();
+        if (glError != GL_NO_ERROR) {
+            std::cerr << "Main.cpp OpenGL failure 1: " <<
+                gluErrorString(glError) << "\n";
+        }
+
         wratio = (float) size.X / (float) textureSize;
         hratio = (float) size.Y / (float) textureSize;
+
+        glError = glGetError();
+        if (glError != GL_NO_ERROR) {
+            std::cerr << "Main.cpp OpenGL failure 2: " <<
+                gluErrorString(glError) << "\n";
+        }
 
         // Position the GL texture in the Win32 window
         glBegin(GL_TRIANGLE_FAN);
