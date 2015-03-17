@@ -1,18 +1,16 @@
 // =============================================================================
 // File Name: Settings.cpp
 // Description: Opens a given file and creates an STL map of its name-value
-//             pairs
+//              pairs
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 
 #include "Settings.hpp"
 #include <fstream>
 #include <iostream>
-#include <cstdlib>
 
-Settings::Settings(std::string fileName) :
-    m_fileName(fileName),
-    m_index(0) {
+Settings::Settings(std::string fileName) : m_fileName(fileName),
+                                           m_index(0) {
     update();
 }
 
@@ -35,8 +33,8 @@ void Settings::update() {
         std::getline(settings, m_rawStr);
 
         m_index = 0;
-        name = extractDataFromString(true);
-        value = extractDataFromString(false);
+        name = extractKey();
+        value = extractValue();
 
         // Add name-value pair to map
         m_values[name] = value;
@@ -47,13 +45,13 @@ void Settings::update() {
     std::cout << "Settings loaded from " << m_fileName << "\n";
 }
 
-const std::string Settings::getString(const std::string& key) const {
-    std::map<std::string,
-             std::string>::const_iterator const index = m_values.find(key);
+std::string Settings::getString(const std::string& key) const {
+    auto index = m_values.find(key);
 
     // If the element wasn't found
     if (index == m_values.end()) {
-        std::cout << "Settings Error: '" << key << "' not found\n";
+        std::cout << "Settings: " << m_fileName << ": '" << key <<
+            "' not found\n";
         return "NOT_FOUND";
     }
 
@@ -61,13 +59,13 @@ const std::string Settings::getString(const std::string& key) const {
     return index->second;
 }
 
-const float Settings::getFloat(const std::string& key) const {
-    std::map<std::string,
-             std::string>::const_iterator index = m_values.find(key);
+double Settings::getDouble(const std::string& key) const {
+    auto index = m_values.find(key);
 
     // If the element wasn't found
     if (index == m_values.end()) {
-        std::cout << "Settings Error: '" << key << "' not found\n";
+        std::cout << "Settings: " << m_fileName << ": '" << key <<
+            "' not found\n";
         return 0.f;
     }
 
@@ -75,13 +73,13 @@ const float Settings::getFloat(const std::string& key) const {
     return atof(index->second.c_str());
 }
 
-const int Settings::getInt(const std::string& key) const {
-    std::map<std::string,
-             std::string>::const_iterator index = m_values.find(key);
+int Settings::getInt(const std::string& key) const {
+    auto index = m_values.find(key);
 
     // If the element wasn't found
     if (index == m_values.end()) {
-        std::cout << "Settings Error: '" << key << "' not found\n";
+        std::cout << "Settings: " << m_fileName << ": '" << key <<
+            "' not found\n";
         return 0;
     }
 
@@ -90,67 +88,44 @@ const int Settings::getInt(const std::string& key) const {
 }
 
 void Settings::saveToFile(const std::string& fileName) {
-    std::ofstream outFile(
-        fileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+    std::ofstream outFile(fileName, std::ios_base::out | std::ios_base::trunc);
+
     if (outFile.is_open()) {
-        for (std::map<std::string, std::string>::iterator index =
-                 m_values.begin();
-             index != m_values.end();
-             index++) {
-            outFile << index->first << " = " << index->second << "\n";
+        for (auto index : m_values) {
+            outFile << index.first << " = " << index.second << "\n";
         }
 
         outFile.close();
     }
 }
 
-std::string Settings::extractDataFromString(const bool& isName) {
-    std::string value;
-    bool hasEquals = false;
-
+std::string Settings::extractKey() {
     // Find start of name
-    while ((m_rawStr[m_index] == ' ' || m_rawStr[m_index] == '\t') &&
-           m_index < m_rawStr.length()) {
-        m_index++;
+    m_index = m_rawStr.find_first_not_of(" \t", m_index);
+    if (m_index == std::string::npos) {
+        return "";
     }
-    if (m_index == m_rawStr.length()) {
-        return value;
+
+    size_t keyStart = m_index;
+
+    // Find end of name
+    m_index = m_rawStr.find_first_of(" \t=", m_index);
+
+    return m_rawStr.substr(keyStart, m_index - keyStart);
+}
+
+std::string Settings::extractValue() {
+    // Find start of value
+    m_index = m_rawStr.find_first_not_of(" \t=", m_index);
+    if (m_index == std::string::npos) {
+        return "";
     }
 
     size_t valueStart = m_index;
 
-    // Find end of name
-    while (m_rawStr[m_index] != ' ' && m_rawStr[m_index] != '\t' &&
-           m_rawStr[m_index] != '=' && m_index < m_rawStr.length()) {
-        m_index++;
-    }
-    if (m_index == m_rawStr.length() && isName) {
-        return value;
-    }
+    // Find end of value
+    m_index = m_rawStr.find_first_of(" \t", m_index);
 
-    value = m_rawStr.substr(valueStart, m_index - valueStart);
-
-    if (isName) {
-        // If end of name was delimited by an equals sign
-        if (m_rawStr[m_index] == '=') {
-            hasEquals = true;
-        }
-
-        // Find an equals sign if there wasn't already one
-        while (!hasEquals && m_rawStr[m_index] != '=' &&
-               m_index < m_rawStr.length()) {
-            m_index++;
-        }
-        if (m_index == m_rawStr.length()) {
-            return value;
-        }
-
-        /* Since the last character was an equals sign in either case,
-         * advance to the next character for finding the value
-         */
-        m_index++;
-    }
-
-    return value;
+    return m_rawStr.substr(valueStart, m_index - valueStart);
 }
 

@@ -11,8 +11,8 @@ args() {
 }
 
 format() {
-  find $PWD ! -type d -not \( -name .svn -prune -o -name .hg -prune -o -name .git -prune -o -name ".*" -prune -o -name Makefile -prune \) -a \( -name \*.cpp -o -name \*.hpp -o -name \*.inl \) | uncrustify -c uncrustify.cfg -F - -l CPP --replace --no-backup
-  find $PWD ! -type d -not \( -name .svn -prune -o -name .hg -prune -o -name .git -prune -o -name ".*" -prune -o -name Makefile -prune \) -a \( -name \*.c -o -name \*.h \) | uncrustify -c uncrustify.cfg -F - -l C --replace --no-backup
+  find $PWD ! -type d -not \( -name .svn -prune -o -name .hg -prune -o -name .git -prune -o -name ".*" -prune -o -name Makefile -prune -o -name moc_\* -prune -o -name ui_\* -prune -o -name qrc_\* -prune \) -a \( -name \*.cpp -o -name \*.hpp -o -name \*.inl \) | uncrustify -c uncrustify.cfg -F - -l CPP --replace --no-backup
+  find $PWD ! -type d -not \( -name .svn -prune -o -name .hg -prune -o -name .git -prune -o -name ".*" -prune -o -name Makefile -prune -o -name moc_\* -prune -o -name ui_\* -prune -o -name qrc_\* -prune \) -a \( -name \*.c -o -name \*.h \) | uncrustify -c uncrustify.cfg -F - -l C --replace --no-backup
 }
 
 if [ $# = 0 ] ; then

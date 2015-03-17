@@ -1,5 +1,13 @@
+*.csv
 *.dll
 *.o
-*.d
-*.res
 *.exe
+DriverStationDisplay
+
+Makefile
+
+# Qt-generated files
+moc_*
+ui_*
+qrc_*
+*.pro.user
