@@ -29,8 +29,6 @@ protected:
 private:
     Status m_status;
     QColor m_color;
-
-    static bool m_isColorBlind;
 };
 
 #endif // CIRCLE_WIDGET_HPP

@@ -22,7 +22,7 @@ ProgressBar::ProgressBar(bool netUpdate, QWidget* parent) :
     setPercent(0.f);
 }
 
-void ProgressBar::setPercent(float percent) {
+void ProgressBar::setPercent(int percent) {
     if (percent > 100) {
         percent = 100;
     }
@@ -31,7 +31,7 @@ void ProgressBar::setPercent(float percent) {
     m_bar->update();
 }
 
-float ProgressBar::getPercent() {
+int ProgressBar::getPercent() {
     return m_bar->value();
 }
 
@@ -52,9 +52,18 @@ void ProgressBar::updateValue() {
     }
 
     if (percentValue != nullptr) {
-        std::cout << "percentValue->getType()=" << percentValue->getType() << "\n";
-        std::cout << "percent=" << (int)*static_cast<unsigned char*>(percentValue->getValue()) << "\n";
-        setPercent(*static_cast<unsigned char*>(percentValue->getValue()));
+        if (percentValue->getType() == 'c') {
+            setPercent(*static_cast<unsigned char*>(percentValue->getValue()));
+        }
+        else if (percentValue->getType() == 'i') {
+            setPercent(*static_cast<int*>(percentValue->getValue()));
+        }
+        else if (percentValue->getType() == 'u') {
+            setPercent(*static_cast<unsigned int*>(percentValue->getValue()));
+        }
+        else if (percentValue->getType() == 's') {
+            setPercent(std::stoi(*static_cast<std::wstring*>(percentValue->getValue())));
+        }
     }
 }
 

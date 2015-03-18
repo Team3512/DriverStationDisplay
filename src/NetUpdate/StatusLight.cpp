@@ -9,11 +9,6 @@
 
 #include <QHBoxLayout>
 
-#include <QPainter>
-#include <QPen>
-
-#include <cstring>
-
 StatusLight::StatusLight(bool netUpdate, QWidget* parent) :
     QWidget(parent), NetUpdate(false) {
     QHBoxLayout* layout = new QHBoxLayout();

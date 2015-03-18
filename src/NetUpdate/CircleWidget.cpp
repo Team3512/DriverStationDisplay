@@ -6,8 +6,6 @@
 
 #include <cstring>
 
-bool CircleWidget::m_isColorBlind = false;
-
 CircleWidget::CircleWidget(bool netUpdate, QWidget* parent) :
     QWidget(parent),
     NetUpdate(netUpdate) {

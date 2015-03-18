@@ -4,7 +4,6 @@
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 
-
 #include <QtWidgets>
 #include <QPushButton>
 #include <QSpacerItem>

@@ -19,8 +19,8 @@ class ProgressBar : public QWidget, public NetUpdate {
 public:
     explicit ProgressBar(bool netUpdate, QWidget* parent = nullptr);
 
-    void setPercent(float percent);
-    float getPercent();
+    void setPercent(int percent);
+    int getPercent();
 
     void setString(const std::wstring& text);
     std::wstring getString();
