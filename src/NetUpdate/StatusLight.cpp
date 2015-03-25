@@ -12,6 +12,7 @@
 StatusLight::StatusLight(bool netUpdate, QWidget* parent) :
     QWidget(parent), NetUpdate(false) {
     QHBoxLayout* layout = new QHBoxLayout();
+    layout->setAlignment(Qt::AlignTop);
     setLayout(layout);
 
     m_circle = new CircleWidget(netUpdate);

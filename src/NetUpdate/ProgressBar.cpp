@@ -62,7 +62,8 @@ void ProgressBar::updateValue() {
             setPercent(*static_cast<unsigned int*>(percentValue->getValue()));
         }
         else if (percentValue->getType() == 's') {
-            setPercent(std::stoi(*static_cast<std::wstring*>(percentValue->getValue())));
+            setPercent(std::stoi(*static_cast<std::wstring*>(percentValue->
+                                                             getValue())));
         }
     }
 }

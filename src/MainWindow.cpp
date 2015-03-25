@@ -199,10 +199,11 @@ void MainWindow::handleSocketData() {
                 m_autoSelect->setCurrentIndex(idx);
             }
 
-            static QMessageBox connectDlg;
-            connectDlg.setWindowTitle("Autonomous Change");
-            connectDlg.setText(autoName.c_str());
-            connectDlg.show();
+            QMessageBox* connectDlg = new QMessageBox(this);
+            connectDlg->setAttribute(Qt::WA_DeleteOnClose);
+            connectDlg->setWindowTitle("Autonomous Change");
+            connectDlg->setText(autoName.c_str());
+            connectDlg->open();
         }
     }
 }

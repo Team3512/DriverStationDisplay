@@ -31,7 +31,7 @@ CircleWidget::Status CircleWidget::getActive() {
 }
 
 QSize CircleWidget::sizeHint() const {
-    return QSize(24, 24);
+    return QSize(25, 25);
 }
 
 void CircleWidget::updateValue() {
@@ -67,3 +67,4 @@ void CircleWidget::paintEvent(QPaintEvent* event) {
     painter.setBrush(brush);
     painter.drawEllipse(-10, -10, 20, 20);
 }
+
