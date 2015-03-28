@@ -12,7 +12,7 @@ TARGET = DriverStationDisplay
 TEMPLATE = app
 
 QMAKE_CXXFLAGS += -std=c++1y
-LIBS += -static -ljpeg
+LIBS += -ljpeg
 win32:LIBS += -lws2_32
 
 SOURCES +=\
