@@ -9,11 +9,11 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <iostream>
 
 #include <cstdlib> // For std::memcpy(3)
 
-#include "../SFML/Network/Packet.hpp"
 #include "NetValue.hpp"
 
 /* Usage:

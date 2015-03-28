@@ -89,7 +89,7 @@ private:
     std::unique_ptr<QUdpSocket> m_dataSocket;
     QHostAddress m_remoteIP;
     unsigned short m_dataPort;
-    bool m_connectDlgOpen;
+    bool m_connectDlgOpen{false};
     bool m_connectedBefore{false};
 
     std::vector<char> m_buffer;
