@@ -29,16 +29,6 @@ MjpegStream::MjpegStream(const std::string& hostName,
     QOpenGLWidget(parentWin),
     MjpegClient(hostName, port, requestPath),
 
-    m_img(NULL),
-    m_imgWidth(0),
-    m_imgHeight(0),
-    m_textureWidth(0),
-    m_textureHeight(0),
-
-    m_firstImage(true),
-
-    m_frameRate(15),
-
     m_newImageCallback(newImageCbk),
     m_startCallback(startCbk),
     m_stopCallback(stopCbk) {
@@ -52,14 +42,12 @@ MjpegStream::MjpegStream(const std::string& hostName,
     m_imgWidth = width;
     m_imgHeight = height;
 
-    m_updateThread = new std::thread([this] { MjpegStream::updateFunc(); });
+    m_updateThread = std::thread([this] { MjpegStream::updateFunc(); });
 }
 
 MjpegStream::~MjpegStream() {
     stop();
-
-    m_updateThread->join();
-    delete m_updateThread;
+    m_updateThread.join();
 }
 
 QSize MjpegStream::sizeHint() const {
@@ -71,9 +59,6 @@ void MjpegStream::setFPS(unsigned int fps) {
 }
 
 void MjpegStream::newImageCallback(char* buf, int bufsize) {
-    (void) buf;
-    (void) bufsize;
-
     // Send message to parent window about the new image
     if (std::chrono::system_clock::now() - m_displayTime >
         std::chrono::duration<double>(1.0 / m_frameRate)) {
