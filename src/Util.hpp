@@ -10,9 +10,6 @@
 #include <vector>
 #include <string>
 
-// Bit-twiddling hack: Return the next power of two
-int npot(int num);
-
 template <class T>
 bool packetToVar(const std::vector<char>& data, size_t& pos, T& dest);
 

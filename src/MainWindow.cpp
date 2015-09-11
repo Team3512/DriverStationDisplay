@@ -176,7 +176,7 @@ void MainWindow::handleSocketData() {
             std::string autoName;
             while (packetPos < m_buffer.size() &&
                    packetToVar(m_buffer, packetPos, autoName)) {
-                autoNames.push_back(autoName);
+                autoNames.emplace_back(autoName);
             }
 
             m_autoSelect->clear();
@@ -391,21 +391,21 @@ void MainWindow::parseLine(std::string line) {
 
     // Create element
     if (m_currentType == "TEXT") {
-        Text* temp =  new Text(true);
+        auto temp =  new Text(true);
         temp->setString(m_startText);
 
         netPtr = temp;
         qPtr = temp;
     }
     else if (m_currentType == "STATUSLIGHT") {
-        StatusLight* temp = new StatusLight(true);
+        auto temp = new StatusLight(true);
         temp->setString(m_startText);
 
         netPtr = temp;
         qPtr = temp;
     }
     else if (m_currentType == "PBAR") {
-        ProgressBar* temp = new ProgressBar(true);
+        auto temp = new ProgressBar(true);
         temp->setString(m_startText);
 
         netPtr = temp;
