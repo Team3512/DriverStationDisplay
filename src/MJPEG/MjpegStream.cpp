@@ -42,7 +42,7 @@ MjpegStream::MjpegStream(const std::string& hostName,
     m_imgWidth = width;
     m_imgHeight = height;
 
-    m_updateThread = std::thread([this] { MjpegStream::updateFunc(); });
+    m_updateThread = std::thread(&MjpegStream::updateFunc, this);
 }
 
 MjpegStream::~MjpegStream() {
@@ -59,6 +59,9 @@ void MjpegStream::setFPS(unsigned int fps) {
 }
 
 void MjpegStream::newImageCallback(char* buf, int bufsize) {
+    (void) buf;
+    (void) bufsize;
+
     // Send message to parent window about the new image
     if (std::chrono::system_clock::now() - m_displayTime >
         std::chrono::duration<double>(1.0 / m_frameRate)) {
@@ -104,7 +107,9 @@ void MjpegStream::stopCallback() {
 }
 
 void MjpegStream::mousePressEvent(QMouseEvent* event) {
-    m_windowCallbacks->clickEvent(event->x(), event->y());
+    if (m_windowCallbacks != nullptr) {
+        m_windowCallbacks->clickEvent(event->x(), event->y());
+    }
 }
 
 void MjpegStream::paintGL() {

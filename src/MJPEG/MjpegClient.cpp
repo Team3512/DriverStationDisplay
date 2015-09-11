@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <system_error>
 #include <list>
 #include <cstring>
 
@@ -33,6 +34,18 @@ MjpegClient::MjpegClient(const std::string& hostName,
     m_hostName(hostName),
     m_port(port),
     m_requestPath(requestPath) {
+
+    mjpeg_socket_t pipefd[2];
+
+    /* Create a pipe that, when written to, causes any operation in the
+     * mjpegrx thread currently blocking to be cancelled.
+     */
+    if (mjpeg_pipe(pipefd) != 0) {
+        throw std::system_error();
+    }
+    m_cancelfdr = pipefd[0];
+    m_cancelfdw = pipefd[1];
+
     m_cinfo.err = jpeg_std_error(&m_jerr);
     m_cinfo.do_fancy_upsampling = 0;
     m_cinfo.do_block_smoothing = 0;
@@ -45,42 +58,38 @@ MjpegClient::~MjpegClient() {
 
     jpeg_destroy_decompress(&m_cinfo);
 
+    mjpeg_sck_close(m_cancelfdr);
+    mjpeg_sck_close(m_cancelfdw);
+
     delete[] m_pxlBuf;
     delete[] m_extBuf;
 }
 
 void MjpegClient::start() {
     if (!isStreaming()) { // if stream is closed, reopen it
-        mjpeg_socket_t pipefd[2];
-
-        /* Create a pipe that, when written to, causes any operation in the
-         * mjpegrx thread currently blocking to be cancelled.
-         */
-        if (mjpeg_pipe(pipefd) != 0) {
-            return;
+        // Join previous thread before making a new one
+        if (m_recvThread.joinable()) {
+            m_recvThread.join();
         }
-        m_cancelfdr = pipefd[0];
-        m_cancelfdw = pipefd[1];
 
         // Mark the thread as running
         m_stopReceive = false;
 
-        m_recvThread = std::thread([this] { MjpegClient::recvFunc(); });
+        m_recvThread = std::thread(&MjpegClient::recvFunc, this);
     }
 }
 
 void MjpegClient::stop() {
-    if (isStreaming()) { // if stream is open, close it
+    if (isStreaming()) {
         m_stopReceive = true;
 
         // Cancel any currently blocking operations
         send(m_cancelfdw, "U", 1, 0);
+    }
 
-        // Close the receive thread
+    // Close the receive thread
+    if (m_recvThread.joinable()) {
         m_recvThread.join();
-
-        mjpeg_sck_close(m_cancelfdr);
-        mjpeg_sck_close(m_cancelfdw);
     }
 }
 
@@ -104,10 +113,10 @@ uint8_t* MjpegClient::getCurrentImage() {
     m_imageMutex.lock();
     m_extMutex.lock();
 
-    if (m_pxlBuf != NULL) {
+    if (m_pxlBuf != nullptr) {
         // If buffer is wrong size, reallocate it
         if (m_imgWidth != m_extWidth || m_imgHeight != m_extHeight) {
-            if (m_extBuf != NULL) {
+            if (m_extBuf != nullptr) {
                 delete[] m_extBuf;
             }
 
@@ -151,7 +160,7 @@ uint8_t* MjpegClient::jpeg_load_from_memory(uint8_t* buffer, int len) {
     jpeg_mem_src(&m_cinfo, buffer, len);
 
     if (jpeg_read_header(&m_cinfo, TRUE) != JPEG_HEADER_OK) {
-        return NULL;
+        return nullptr;
     }
 
     jpeg_start_decompress(&m_cinfo);
@@ -254,7 +263,7 @@ int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
                                mjpeg_sck_selector::except);
         }
 
-        error = selector.select(NULL);
+        error = selector.select(nullptr);
 
         if (error == -1) {
             return -1;
@@ -271,6 +280,8 @@ int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
          * so far.
          */
         if (cancelfd && selector.isReady(cancelfd, mjpeg_sck_selector::read)) {
+            char cancel[2];
+            recv(cancelfd, cancel, 2, 0);
             return nread;
         }
 
@@ -286,7 +297,7 @@ int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
 }
 
 /* Searches string 'str' for any of the characters in 'c', then returns a
- * pointer to the first occurrence of any one of those characters, NULL if
+ * pointer to the first occurrence of any one of those characters, nullptr if
  * none are found
  */
 char* strchrs(char* str, const char* c) {
@@ -298,7 +309,7 @@ char* strchrs(char* str, const char* c) {
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /* A slightly modified version of strtok_r. When the function encounters a
@@ -309,15 +320,15 @@ char* strtok_r_n(char* str, const char* sep, char** last, char* used) {
     char* strsep;
     char* ret;
 
-    if (str != NULL) {
+    if (str != nullptr) {
         *last = str;
     }
 
     strsep = strchrs(*last, sep);
-    if (strsep == NULL) {
-        return NULL;
+    if (strsep == nullptr) {
+        return nullptr;
     }
-    if (used != NULL) {
+    if (used != nullptr) {
         *used = *strsep;
     }
     *strsep = '\0';
@@ -343,12 +354,12 @@ std::list<std::pair<char*, char*>> mjpeg_process_header(char* header) {
     char used;
 
     header = strdup(header);
-    if (header == NULL) {
+    if (header == nullptr) {
         return list;
     }
 
     key = strtok_r_n(header, ":\n", &strtoksave, &used);
-    if (key == NULL) {
+    if (key == nullptr) {
         return list;
     }
 
@@ -356,11 +367,11 @@ std::list<std::pair<char*, char*>> mjpeg_process_header(char* header) {
         // if no ':' exists on the line, ignore it
         if (used == '\n') {
             key = strtok_r_n(
-                NULL,
+                nullptr,
                 ":\n",
                 &strtoksave,
                 &used);
-            if (key == NULL) {
+            if (key == nullptr) {
                 break;
             }
             continue;
@@ -373,8 +384,8 @@ std::list<std::pair<char*, char*>> mjpeg_process_header(char* header) {
         list.back().first = strdup(key);
 
         // get the value
-        value = strtok_r_n(NULL, "\n", &strtoksave, NULL);
-        if (value == NULL) {
+        value = strtok_r_n(nullptr, "\n", &strtoksave, nullptr);
+        if (value == nullptr) {
             list.back().second = strdup("");
             break;
         }
@@ -385,8 +396,8 @@ std::list<std::pair<char*, char*>> mjpeg_process_header(char* header) {
         list.back().second = strdup(value);
 
         /* get the key for next loop */
-        key = strtok_r_n(NULL, ":\n", &strtoksave, &used);
-        if (key == NULL) {
+        key = strtok_r_n(nullptr, ":\n", &strtoksave, &used);
+        if (key == nullptr) {
             break;
         }
     }
@@ -416,8 +427,8 @@ char* mjpeg_getvalue(std::list<std::pair<char*, char*>>& list,
         }
     }
 
-    // Return NULL if no match found
-    return NULL;
+    // Return nullptr if no match found
+    return nullptr;
 }
 
 void MjpegClient::recvFunc() {
@@ -472,7 +483,7 @@ void MjpegClient::recvFunc() {
             headerlist,
             "Content-Length");
 
-        if (asciisize == NULL) {
+        if (asciisize == nullptr) {
             mjpeg_freelist(headerlist);
             continue;
         }
@@ -517,6 +528,7 @@ void MjpegClient::recvFunc() {
     mjpeg_sck_close(sd);
 
     m_stopReceive = true;
+
     stopCallback();
 }
 
