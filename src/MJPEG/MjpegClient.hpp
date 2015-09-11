@@ -66,7 +66,7 @@ public:
 
 protected:
     // Called if the new image loaded successfully
-    virtual void newImageCallback(char* buf, int bufsize) = 0;
+    virtual void newImageCallback(uint8_t* buf, int bufsize) = 0;
 
     // Called when client thread starts
     virtual void startCallback() = 0;
@@ -80,7 +80,7 @@ private:
     std::string m_requestPath;
 
     // Stores image before displaying it on the screen
-    uint8_t* m_pxlBuf = nullptr;
+    std::unique_ptr<uint8_t[]> m_pxlBuf;
     unsigned int m_imgWidth = 0;
     unsigned int m_imgHeight = 0;
     unsigned int m_imgChannels = 0;
@@ -89,7 +89,7 @@ private:
     /* Stores copy of image for use by external programs. It only updates when
      * getCurrentImage() is called.
      */
-    uint8_t* m_extBuf = nullptr;
+    std::unique_ptr<uint8_t[]> m_extBuf;
     unsigned int m_extWidth = 0;
     unsigned int m_extHeight = 0;
     mutable std::mutex m_extMutex;

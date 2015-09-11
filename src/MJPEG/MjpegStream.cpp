@@ -58,7 +58,7 @@ void MjpegStream::setFPS(unsigned int fps) {
     m_frameRate = fps;
 }
 
-void MjpegStream::newImageCallback(char* buf, int bufsize) {
+void MjpegStream::newImageCallback(uint8_t* buf, int bufsize) {
     (void) buf;
     (void) bufsize;
 

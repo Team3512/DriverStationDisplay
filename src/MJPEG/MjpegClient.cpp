@@ -60,9 +60,6 @@ MjpegClient::~MjpegClient() {
 
     mjpeg_sck_close(m_cancelfdr);
     mjpeg_sck_close(m_cancelfdw);
-
-    delete[] m_pxlBuf;
-    delete[] m_extBuf;
 }
 
 void MjpegClient::start() {
@@ -98,62 +95,44 @@ bool MjpegClient::isStreaming() const {
 }
 
 void MjpegClient::saveCurrentImage(const std::string& fileName) {
-    m_imageMutex.lock();
+    std::lock_guard<std::mutex> lock(m_imageMutex);
 
-    QImage tmp(m_pxlBuf, m_imgWidth, m_imgHeight, QImage::Format_RGB888);
+    QImage tmp(m_pxlBuf.get(), m_imgWidth, m_imgHeight, QImage::Format_RGB888);
     if (!tmp.save(fileName.c_str())) {
         std::cout << "MjpegClient: failed to save image to '" << fileName <<
             "'\n";
     }
-
-    m_imageMutex.unlock();
 }
 
 uint8_t* MjpegClient::getCurrentImage() {
-    m_imageMutex.lock();
-    m_extMutex.lock();
+    std::lock_guard<std::mutex> imageLock(m_imageMutex);
+    std::lock_guard<std::mutex> extLock(m_extMutex);
 
     if (m_pxlBuf != nullptr) {
         // If buffer is wrong size, reallocate it
         if (m_imgWidth != m_extWidth || m_imgHeight != m_extHeight) {
-            if (m_extBuf != nullptr) {
-                delete[] m_extBuf;
-            }
-
             // Allocate new buffer to fit latest image
-            m_extBuf = new uint8_t[m_imgWidth * m_imgHeight * m_imgChannels];
+            m_extBuf = std::make_unique<uint8_t[]>(m_imgWidth * m_imgHeight *
+                                                 m_imgChannels);
             m_extWidth = m_imgWidth;
             m_extHeight = m_imgHeight;
         }
 
-        std::memcpy(m_extBuf, m_pxlBuf,
+        std::memcpy(m_extBuf.get(), m_pxlBuf.get(),
                     m_extWidth * m_extHeight * m_imgChannels);
     }
 
-    m_extMutex.unlock();
-    m_imageMutex.unlock();
-
-    return m_extBuf;
+    return m_extBuf.get();
 }
 
 unsigned int MjpegClient::getCurrentWidth() const {
-    m_extMutex.lock();
-
-    unsigned int temp(m_extWidth);
-
-    m_extMutex.unlock();
-
-    return temp;
+    std::lock_guard<std::mutex> lock(m_extMutex);
+    return m_extWidth;
 }
 
 unsigned int MjpegClient::getCurrentHeight() const {
-    m_extMutex.lock();
-
-    unsigned int temp(m_extHeight);
-
-    m_extMutex.unlock();
-
-    return temp;
+    std::lock_guard<std::mutex> lock(m_extMutex);
+    return m_extHeight;
 }
 
 uint8_t* MjpegClient::jpeg_load_from_memory(uint8_t* buffer, int len) {
@@ -366,11 +345,7 @@ std::list<std::pair<char*, char*>> mjpeg_process_header(char* header) {
     while (1) { // we break out inside
         // if no ':' exists on the line, ignore it
         if (used == '\n') {
-            key = strtok_r_n(
-                nullptr,
-                ":\n",
-                &strtoksave,
-                &used);
+            key = strtok_r_n(nullptr, ":\n", &strtoksave, &used);
             if (key == nullptr) {
                 break;
             }
@@ -378,7 +353,7 @@ std::list<std::pair<char*, char*>> mjpeg_process_header(char* header) {
         }
 
         // create a linked list element
-        list.push_back(std::pair<char*, char*>());
+        list.emplace_back();
 
         // save off the key
         list.back().first = strdup(key);
@@ -438,7 +413,6 @@ void MjpegClient::recvFunc() {
 
     char* asciisize;
     int datasize;
-    char* buf;
     char tmp[256];
 
     char* headerbuf;
@@ -447,7 +421,7 @@ void MjpegClient::recvFunc() {
 
     int bytesread;
 
-    /* Connect to the remote host. */
+    // Connect to the remote host.
     sd = mjpeg_sck_connect(m_hostName.c_str(), m_port, m_cancelfdr);
     if (!mjpeg_sck_valid(sd)) {
         std::cerr << "mjpegrx: Connection failed\n";
@@ -479,9 +453,7 @@ void MjpegClient::recvFunc() {
         /* Read the Content-Length header to determine the length of data to
          * read.
          */
-        asciisize = mjpeg_getvalue(
-            headerlist,
-            "Content-Length");
+        asciisize = mjpeg_getvalue(headerlist, "Content-Length");
 
         if (asciisize == nullptr) {
             mjpeg_freelist(headerlist);
@@ -492,36 +464,29 @@ void MjpegClient::recvFunc() {
         mjpeg_freelist(headerlist);
 
         // Read the JPEG image data.
-        buf = static_cast<char*>(malloc(datasize));
-        bytesread = mjpeg_sck_recv(sd, buf, datasize, m_cancelfdr);
+        auto buf = std::make_unique<uint8_t[]>(datasize);
+        bytesread = mjpeg_sck_recv(sd, buf.get(), datasize, m_cancelfdr);
         if (bytesread != datasize) {
-            free(buf);
             std::cerr << "mjpegrx: recv(2) failed\n";
             break;
         }
 
         // Load the image received (converts from JPEG to pixel array)
-        uint8_t* ptr =
-            jpeg_load_from_memory(reinterpret_cast<unsigned char*>(buf),
-                                  datasize);
+        uint8_t* ptr = jpeg_load_from_memory(buf.get(), datasize);
 
         if (ptr) {
-            m_imageMutex.lock();
+            {
+                std::lock_guard<std::mutex> lock(m_imageMutex);
 
-            // Free old buffer and store new one created by jpeg_load_from_memory()
-            delete[] m_pxlBuf;
+                // Store new buffer created by jpeg_load_from_memory()
+                m_pxlBuf = std::unique_ptr<uint8_t[]>(ptr);
+            }
 
-            m_pxlBuf = ptr;
-
-            m_imageMutex.unlock();
-
-            newImageCallback(buf, datasize);
+            newImageCallback(buf.get(), datasize);
         }
         else {
             std::cout << "MjpegClient: image failed to load\n";
         }
-
-        free(buf);
     }
 
     // The loop has exited. We should now clean up and exit the thread.
