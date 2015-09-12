@@ -11,8 +11,6 @@
 #include <QImage>
 #include <QString>
 
-#include <sys/types.h>
-
 #include <iostream>
 #include <system_error>
 #include <map>
@@ -153,40 +151,35 @@ void MjpegClient::jpeg_load_from_memory(uint8_t* inputBuf, int inputLen,
     jpeg_finish_decompress(&m_cinfo);
 }
 
-/* Read a byte from sd into (*buf)+*bufpos . If afterwards,
- * bufpos == (*bufsize)-1, reallocate the buffer as 1024
- *  bytes larger, updating *bufsize . This function blocks
- *  until either a byte is received, or cancelfd becomes
- *  ready for reading. */
-int mjpeg_rxbyte(char** buf, int* bufpos, int* bufsize, int sd, int cancelfd) {
-    int bytesread;
-
-    bytesread = mjpeg_sck_recv(sd, (*buf) + *bufpos, 1, cancelfd);
+/* Read a byte from sd into &buf[bufpos]. If afterwards, bufpos == buf.size(),
+ * reallocate the buffer as 1024 bytes larger. This function blocks until either
+ * a byte is received, or cancelfd becomes ready for reading.
+ */
+int mjpeg_rxbyte(std::vector<char>& buf, size_t& bufpos, int sd, int cancelfd) {
+    int bytesread = mjpeg_sck_recv(sd, &buf[bufpos], 1, cancelfd);
     if (bytesread == -1) {
         return -1;
     }
     if (bytesread != 1) {
         return 1;
     }
-    (*bufpos)++;
+    bufpos++;
 
-    if (*bufpos == (*bufsize) - 1) {
-        *bufsize += 1024;
-        *buf = static_cast<char*>(realloc(*buf, *bufsize));
+    if (bufpos == buf.size()) {
+        buf.resize(buf.size() + 1024);
     }
 
     return 0;
 }
 
 // Read data up until the character sequence "\r\n\r\n" is received.
-int mjpeg_rxheaders(char** buf_out, int* bufsize_out, int sd, int cancelfd) {
-    int allocsize = 1024;
-    int bufpos = 0;
-    char* buf = static_cast<char*>(malloc(allocsize));
+int mjpeg_rxheaders(std::vector<char>& buf_out, int sd, int cancelfd) {
+    size_t bufpos = 0;
+    std::vector<char> buf;
+    buf.resize(1024);
 
     do {
-        if (mjpeg_rxbyte(&buf, &bufpos, &allocsize, sd, cancelfd) != 0) {
-            free(buf);
+        if (mjpeg_rxbyte(buf, bufpos, sd, cancelfd) != 0) {
             return -1;
         }
     } while (!(bufpos >= 4 && buf[bufpos - 4] == '\r' &&
@@ -194,8 +187,7 @@ int mjpeg_rxheaders(char** buf_out, int* bufsize_out, int sd, int cancelfd) {
                buf[bufpos - 2] == '\r' && buf[bufpos - 1] == '\n'));
     buf[bufpos] = '\0';
 
-    *buf_out = buf;
-    *bufsize_out = bufpos;
+    buf_out = buf;
 
     return 0;
 }
@@ -258,13 +250,13 @@ int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
     return nread;
 }
 
-/* Processes the HTTP response headers, separating them into key-value
- *  pairs. These are then stored in a linked list. The "header" argument
- *  should point to a block of HTTP response headers in the standard ':'
- *  and '\n' separated format. The key is the text on a line before the
- *  ':', the value is the text after the ':', but before the '\n'. Any
- *  line without a ':' is ignored. a pointer to the first element in a
- *  linked list is returned. */
+/* Processes the HTTP response headers, separating them into key-value pairs.
+ * These are then stored in a linked list. The "header" argument should point to
+ * a block of HTTP response headers in the standard ':' and '\n' separated
+ * format. The key is the text on a line before the ':', the value is the text
+ * after the ':', but before the '\n'. Any line without a ':' is ignored. a
+ * pointer to the first element in a linked list is returned.
+ */
 std::map<std::string, std::string> mjpeg_process_header(std::string header) {
     std::map<std::string, std::string> list;
     std::string key;
@@ -321,8 +313,7 @@ std::map<std::string, std::string> mjpeg_process_header(std::string header) {
 void MjpegClient::recvFunc() {
     startCallback();
 
-    char* headerbuf;
-    int headerbufsize;
+    std::vector<char> headerbuf;
 
     // Connect to the remote host.
     m_sd = mjpeg_sck_connect(m_hostName.c_str(), m_port, m_cancelfdr);
@@ -342,13 +333,11 @@ void MjpegClient::recvFunc() {
 
     while (!m_stopReceive) {
         // Read and parse incoming HTTP response headers.
-        if (mjpeg_rxheaders(&headerbuf, &headerbufsize, m_sd,
-                            m_cancelfdr) == -1) {
+        if (mjpeg_rxheaders(headerbuf, m_sd, m_cancelfdr) == -1) {
             std::cerr << "mjpegrx: recv(2) failed\n";
             break;
         }
-        auto headerlist = mjpeg_process_header(headerbuf);
-        free(headerbuf);
+        auto headerlist = mjpeg_process_header(&headerbuf[0]);
         if (headerlist.size() == 0) {
             break;
         }
