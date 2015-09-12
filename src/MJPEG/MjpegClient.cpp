@@ -258,49 +258,6 @@ int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
     return nread;
 }
 
-/* Searches string 'str' for any of the characters in 'c', then returns a
- * pointer to the first occurrence of any one of those characters, nullptr if
- * none are found
- */
-char* strchrs(char* str, const char* c) {
-    for (char* t = str; *t != '\0'; t++) {
-        for (const char* ct = c; *ct != '\0'; ct++) {
-            if (*t == *ct) {
-                return t;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-/* A slightly modified version of strtok_r. When the function encounters a
- *  character in the separator list, that character is set into *used before
- *  the token is returned. This allows the caller to determine which separator
- *  character preceded the returned token. */
-char* strtok_r_n(char* str, const char* sep, char** last, char* used) {
-    char* strsep;
-    char* ret;
-
-    if (str != nullptr) {
-        *last = str;
-    }
-
-    strsep = strchrs(*last, sep);
-    if (strsep == nullptr) {
-        return nullptr;
-    }
-    if (used != nullptr) {
-        *used = *strsep;
-    }
-    *strsep = '\0';
-
-    ret = *last;
-    *last = strsep + 1;
-
-    return ret;
-}
-
 /* Processes the HTTP response headers, separating them into key-value
  *  pairs. These are then stored in a linked list. The "header" argument
  *  should point to a block of HTTP response headers in the standard ':'
@@ -308,98 +265,89 @@ char* strtok_r_n(char* str, const char* sep, char** last, char* used) {
  *  ':', the value is the text after the ':', but before the '\n'. Any
  *  line without a ':' is ignored. a pointer to the first element in a
  *  linked list is returned. */
-std::map<std::string, std::string> mjpeg_process_header(char* header) {
-    char* strtoksave;
+std::map<std::string, std::string> mjpeg_process_header(std::string header) {
     std::map<std::string, std::string> list;
-    char* key;
-    char* value;
-    char used;
+    std::string key;
+    std::string value;
 
-    header = strdup(header);
-    if (header == nullptr) {
+    if (header.length() == 0) {
         return list;
     }
 
-    key = strtok_r_n(header, ":\n", &strtoksave, &used);
-    if (key == nullptr) {
+    size_t startPos = 0;
+    size_t endPos = 0;
+    endPos = header.find_first_of(":\n", startPos);
+    if (endPos == std::string::npos) {
         return list;
     }
 
     while (1) { // we break out inside
         // if no ':' exists on the line, ignore it
-        if (used == '\n') {
-            key = strtok_r_n(nullptr, ":\n", &strtoksave, &used);
-            if (key == nullptr) {
-                break;
+        if (header[endPos] == '\n') {
+            // If no ':' exists, get the key for next iteration
+            startPos = endPos + 1;
+            endPos = header.find_first_of(":\n", startPos);
+            if (endPos == std::string::npos) {
+                return list;
             }
+            key = header.substr(startPos, endPos - startPos);
+            startPos = endPos + 1;
             continue;
         }
 
         // get the value
-        value = strtok_r_n(nullptr, "\n", &strtoksave, nullptr);
-        if (value == nullptr) {
+        endPos = header.find("\n", startPos);
+        if (endPos == std::string::npos) {
             list.emplace(key, "");
-            break;
+            return list;
         }
         else {
-            value++;
-            if (value[strlen(value) - 1] == '\r') {
-                value[strlen(value) - 1] = '\0';
-            }
+            startPos++;
+            endPos = header.find("\r", startPos);
+            value = header.substr(startPos, endPos - startPos);
             list.emplace(key, value);
 
-            // get the key for next loop
-            key = strtok_r_n(nullptr, ":\n", &strtoksave, &used);
-            if (key == nullptr) {
-                break;
+            // get the key for next iteration
+            startPos = endPos + 1;
+            endPos = header.find_first_of(":\n", startPos);
+            if (endPos == std::string::npos) {
+                return list;
             }
+            key = header.substr(startPos, endPos - startPos);
         }
     }
-
-    free(header);
-
-    return list;
 }
 
 void MjpegClient::recvFunc() {
     startCallback();
 
-    mjpeg_socket_t sd;
-
-    std::string asciisize;
-    int datasize;
-    char tmp[256];
-
     char* headerbuf;
     int headerbufsize;
-    std::map<std::string, std::string> headerlist;
-
-    int bytesread;
 
     // Connect to the remote host.
-    sd = mjpeg_sck_connect(m_hostName.c_str(), m_port, m_cancelfdr);
-    if (!mjpeg_sck_valid(sd)) {
+    m_sd = mjpeg_sck_connect(m_hostName.c_str(), m_port, m_cancelfdr);
+    if (!mjpeg_sck_valid(m_sd)) {
         std::cerr << "mjpegrx: Connection failed\n";
         m_stopReceive = true;
         stopCallback();
 
         return;
     }
-    m_sd = sd;
 
     // Send the HTTP request.
-    snprintf(tmp, 255, "GET %s HTTP/1.0\r\n\r\n", m_requestPath.c_str());
-    send(sd, tmp, strlen(tmp), 0);
+    std::string tmp = "GET ";
+    tmp += m_requestPath + " HTTP/1.0\r\n\r\n";
+    send(m_sd, tmp.c_str(), tmp.length(), 0);
     std::cout << tmp;
 
     while (!m_stopReceive) {
         // Read and parse incoming HTTP response headers.
-        if (mjpeg_rxheaders(&headerbuf, &headerbufsize, sd,
+        if (mjpeg_rxheaders(&headerbuf, &headerbufsize, m_sd,
                             m_cancelfdr) == -1) {
             std::cerr << "mjpegrx: recv(2) failed\n";
             break;
         }
-        headerlist = mjpeg_process_header(headerbuf);
+        auto headerlist = mjpeg_process_header(headerbuf);
         free(headerbuf);
         if (headerlist.size() == 0) {
             break;
@@ -408,17 +356,17 @@ void MjpegClient::recvFunc() {
         /* Read the Content-Length header to determine the length of data to
          * read.
          */
-        asciisize = headerlist["Content-Length"];
+        std::string asciisize = headerlist["Content-Length"];
 
         if (asciisize == "") {
             continue;
         }
 
-        datasize = std::stoi(asciisize);
+        int datasize = std::stoi(asciisize);
 
         // Read the JPEG image data.
         auto buf = std::make_unique<uint8_t[]>(datasize);
-        bytesread = mjpeg_sck_recv(sd, buf.get(), datasize, m_cancelfdr);
+        int bytesread = mjpeg_sck_recv(m_sd, buf.get(), datasize, m_cancelfdr);
         if (bytesread != datasize) {
             std::cerr << "mjpegrx: recv(2) failed\n";
             break;
@@ -434,7 +382,7 @@ void MjpegClient::recvFunc() {
     }
 
     // The loop has exited. We should now clean up and exit the thread.
-    mjpeg_sck_close(sd);
+    mjpeg_sck_close(m_sd);
 
     m_stopReceive = true;
 
