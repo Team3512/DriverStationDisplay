@@ -151,43 +151,29 @@ void MjpegClient::jpeg_load_from_memory(uint8_t* inputBuf, int inputLen,
     jpeg_finish_decompress(&m_cinfo);
 }
 
-/* Read a byte from sd into &buf[bufpos]. If afterwards, bufpos == buf.size(),
- * reallocate the buffer as 1024 bytes larger. This function blocks until either
- * a byte is received, or cancelfd becomes ready for reading.
- */
-int mjpeg_rxbyte(std::vector<char>& buf, size_t& bufpos, int sd, int cancelfd) {
-    int bytesread = mjpeg_sck_recv(sd, &buf[bufpos], 1, cancelfd);
-    if (bytesread == -1) {
-        return -1;
-    }
-    if (bytesread != 1) {
-        return 1;
-    }
-    bufpos++;
-
-    if (bufpos == buf.size()) {
-        buf.resize(buf.size() + 1024);
-    }
-
-    return 0;
-}
-
 // Read data up until the character sequence "\r\n\r\n" is received.
-int mjpeg_rxheaders(std::vector<char>& buf_out, int sd, int cancelfd) {
+int mjpeg_rxheaders(std::vector<uint8_t>& buf, int sd, int cancelfd) {
     size_t bufpos = 0;
-    std::vector<char> buf;
     buf.resize(1024);
 
-    do {
-        if (mjpeg_rxbyte(buf, bufpos, sd, cancelfd) != 0) {
+    while (!(bufpos >= 4 && buf[bufpos - 4] == '\r' &&
+            buf[bufpos - 3] == '\n' &&
+            buf[bufpos - 2] == '\r' && buf[bufpos - 1] == '\n')) {
+        /* Read a byte from sd into &buf[bufpos]. If afterwards, bufpos ==
+         * buf.size(), reallocate the buffer as 1024 bytes larger. This function
+         * blocks until either a byte is received, or cancelfd becomes ready for
+         * reading.
+         */
+        int bytesread = mjpeg_sck_recv(sd, &buf[bufpos], 1, cancelfd);
+        if (bytesread != 1) {
             return -1;
         }
-    } while (!(bufpos >= 4 && buf[bufpos - 4] == '\r' &&
-               buf[bufpos - 3] == '\n' &&
-               buf[bufpos - 2] == '\r' && buf[bufpos - 1] == '\n'));
-    buf[bufpos] = '\0';
+        bufpos++;
 
-    buf_out = buf;
+        if (bufpos == buf.size()) {
+            buf.resize(buf.size() + 1024);
+        }
+    }
 
     return 0;
 }
@@ -288,14 +274,9 @@ std::map<std::string, std::string> mjpeg_process_header(std::string header) {
         }
 
         // get the value
-        endPos = header.find("\n", startPos);
-        if (endPos == std::string::npos) {
-            list.emplace(key, "");
-            return list;
-        }
-        else {
-            startPos++;
-            endPos = header.find("\r", startPos);
+        if (header.find("\n", startPos) != std::string::npos) {
+            startPos = endPos + 1;
+            endPos = header.find('\r', startPos);
             value = header.substr(startPos, endPos - startPos);
             list.emplace(key, value);
 
@@ -313,7 +294,8 @@ std::map<std::string, std::string> mjpeg_process_header(std::string header) {
 void MjpegClient::recvFunc() {
     startCallback();
 
-    std::vector<char> headerbuf;
+    std::vector<uint8_t> headerbuf;
+    std::vector<uint8_t> buf;
 
     // Connect to the remote host.
     m_sd = mjpeg_sck_connect(m_hostName.c_str(), m_port, m_cancelfdr);
@@ -337,7 +319,8 @@ void MjpegClient::recvFunc() {
             std::cerr << "mjpegrx: recv(2) failed\n";
             break;
         }
-        auto headerlist = mjpeg_process_header(&headerbuf[0]);
+        std::string str(headerbuf.begin(), headerbuf.end());
+        auto headerlist = mjpeg_process_header(std::move(str));
         if (headerlist.size() == 0) {
             break;
         }
@@ -354,8 +337,8 @@ void MjpegClient::recvFunc() {
         int datasize = std::stoi(asciisize);
 
         // Read the JPEG image data.
-        auto buf = std::make_unique<uint8_t[]>(datasize);
-        int bytesread = mjpeg_sck_recv(m_sd, buf.get(), datasize, m_cancelfdr);
+        buf.resize(datasize);
+        int bytesread = mjpeg_sck_recv(m_sd, &buf[0], datasize, m_cancelfdr);
         if (bytesread != datasize) {
             std::cerr << "mjpegrx: recv(2) failed\n";
             break;
@@ -364,7 +347,7 @@ void MjpegClient::recvFunc() {
         // Load the image received (converts from JPEG to pixel array)
         {
             std::lock_guard<std::mutex> lock(m_imageMutex);
-            jpeg_load_from_memory(buf.get(), datasize, m_pxlBuf);
+            jpeg_load_from_memory(&buf[0], datasize, m_pxlBuf);
         }
 
         newImageCallback(&m_pxlBuf[0], m_pxlBuf.size());
