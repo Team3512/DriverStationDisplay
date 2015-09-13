@@ -237,58 +237,40 @@ int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
 }
 
 /* Processes the HTTP response headers, separating them into key-value pairs.
- * These are then stored in a linked list. The "header" argument should point to
- * a block of HTTP response headers in the standard ':' and '\n' separated
- * format. The key is the text on a line before the ':', the value is the text
- * after the ':', but before the '\n'. Any line without a ':' is ignored. a
- * pointer to the first element in a linked list is returned.
+ * These are then stored in a map. The "header" argument should point to a block
+ * of HTTP response headers in the standard ':' and '\n' separated format. The
+ * key is the text on a line before the ':', the value is the text after the
+ * ':', but before the '\n'. Any line without a ':' is ignored.
  */
 std::map<std::string, std::string> mjpeg_process_header(std::string header) {
     std::map<std::string, std::string> list;
-    std::string key;
-    std::string value;
 
     if (header.length() == 0) {
         return list;
     }
 
+    std::string key;
+    std::string value;
     size_t startPos = 0;
     size_t endPos = 0;
-    endPos = header.find_first_of(":\n", startPos);
-    if (endPos == std::string::npos) {
-        return list;
-    }
 
-    while (1) { // we break out inside
-        // if no ':' exists on the line, ignore it
-        if (header[endPos] == '\n') {
-            // If no ':' exists, get the key for next iteration
-            startPos = endPos + 1;
-            endPos = header.find_first_of(":\n", startPos);
-            if (endPos == std::string::npos) {
-                return list;
-            }
-            key = header.substr(startPos, endPos - startPos);
-            startPos = endPos + 1;
-            continue;
-        }
+    while (endPos != std::string::npos) {
+        // Get the key
+        endPos = header.find_first_of(":\n", startPos);
+        key = header.substr(startPos, endPos - startPos);
+        startPos = endPos + 1;
 
-        // get the value
-        if (header.find("\n", startPos) != std::string::npos) {
-            startPos = endPos + 1;
+        // Get the value if a ':' exists on the line
+        if (endPos != std::string::npos && header[endPos] == ':') {
             endPos = header.find('\r', startPos);
             value = header.substr(startPos, endPos - startPos);
-            list.emplace(key, value);
-
-            // get the key for next iteration
             startPos = endPos + 1;
-            endPos = header.find_first_of(":\n", startPos);
-            if (endPos == std::string::npos) {
-                return list;
-            }
-            key = header.substr(startPos, endPos - startPos);
+
+            list.emplace(key, value);
         }
     }
+
+    return list;
 }
 
 void MjpegClient::recvFunc() {
