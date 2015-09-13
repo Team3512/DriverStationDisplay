@@ -128,9 +128,6 @@ void MjpegClient::jpeg_load_from_memory(uint8_t* inputBuf, int inputLen,
 
     int m_row_stride = m_cinfo.output_width * m_cinfo.output_components;
 
-    JSAMPARRAY samp = (*m_cinfo.mem->alloc_sarray)
-                          ((j_common_ptr) &m_cinfo, JPOOL_IMAGE, m_row_stride,
-                          1);
     m_imgWidth = m_cinfo.output_width;
     m_imgHeight = m_cinfo.output_height;
     m_imgChannels = m_cinfo.output_components;
@@ -140,12 +137,11 @@ void MjpegClient::jpeg_load_from_memory(uint8_t* inputBuf, int inputLen,
         outputBuf.resize(m_imgWidth * m_imgChannels * m_imgHeight);
     }
 
+    uint8_t* sampleBuf;
     for (int outpos = 0; m_cinfo.output_scanline < m_cinfo.output_height;
          outpos += m_row_stride) {
-        jpeg_read_scanlines(&m_cinfo, samp, 1);
-
-        /* Assume put_scanline_someplace wants a pointer and sample count. */
-        std::memcpy(&outputBuf[outpos], samp[0], m_row_stride);
+        sampleBuf = &outputBuf[outpos];
+        jpeg_read_scanlines(&m_cinfo, &sampleBuf, 1);
     }
 
     jpeg_finish_decompress(&m_cinfo);
@@ -178,11 +174,11 @@ int mjpeg_rxheaders(std::vector<uint8_t>& buf, int sd, int cancelfd) {
     return 0;
 }
 
-/* mjpeg_sck_recv() blocks until either len bytes of data have
- *  been read into buf, or cancelfd becomes ready for reading.
- *  If either len bytes are read, or cancelfd becomes ready for
- *  reading, the number of bytes received is returned. On error,
- *  -1 is returned, and errno is set appropriately. */
+/* mjpeg_sck_recv() blocks until either len bytes of data have been read into
+ * buf, or cancelfd becomes ready for reading. If either len bytes are read, or
+ * cancelfd becomes ready for reading, the number of bytes received is returned.
+ * On error, -1 is returned, and errno is set appropriately.
+ */
 int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
     int error;
     size_t nread;
