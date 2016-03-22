@@ -1,7 +1,6 @@
 // =============================================================================
-// File Name: StatusLight.cpp
 // Description: Shows green, yellow, or red circle depending on its internal
-//             state
+//              state
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 

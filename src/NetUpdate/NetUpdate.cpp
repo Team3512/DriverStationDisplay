@@ -1,15 +1,15 @@
 // =============================================================================
-// File Name: NetUpdate.cpp
-// Description: Allows WinGDI drawable objects to update over the network
+// Description: Allows drawable objects to update over the network
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 
 #include "NetUpdate.hpp"
-#include "../Util.hpp"
-#include <sstream>
-#include <algorithm>
 
 #include <cstring>
+#include <algorithm>
+#include <sstream>
+
+#include "../Util.hpp"
 
 std::wstring replaceUnicodeChars(std::wstring text) {
     size_t uPos = 0;

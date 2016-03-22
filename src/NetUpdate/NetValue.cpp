@@ -1,5 +1,4 @@
 // =============================================================================
-// File Name: NetValue.cpp
 // Description: Provides a universal container for values being received over
 //              the network
 // Author: FRC Team 3512, Spartatroniks
@@ -7,8 +6,8 @@
 
 #include "NetValue.hpp"
 
-#include <string>
 #include <cstring>
+#include <string>
 
 NetValue::NetValue(unsigned char type) {
     m_type = type;

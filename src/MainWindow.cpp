@@ -1,5 +1,4 @@
 // =============================================================================
-// File Name: MainWindow.cpp
 // Description: Creates application's main window
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
@@ -10,10 +9,12 @@
 #include <QHBoxLayout>
 
 #include "MainWindow.hpp"
+#include "MJPEG/VideoStream.hpp"
+#include "MJPEG/MjpegClient.hpp"
 
-#include <fstream>
 #include <cstring>
 #include <chrono>
+#include <fstream>
 
 #include "NetUpdate/ProgressBar.hpp"
 #include "NetUpdate/StatusLight.hpp"
@@ -28,9 +29,11 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
 
     m_settings = std::make_unique<Settings>("IPSettings.txt");
 
-    m_client = new MjpegStream(m_settings->getString("streamHost"),
+    m_client = new MjpegClient(m_settings->getString("streamHost"),
                                m_settings->getInt("streamPort"),
-                               m_settings->getString("streamRequestPath"),
+                               m_settings->getString("streamRequestPath"));
+
+    m_stream = new VideoStream(m_client,
                                this,
                                320,
                                240,
@@ -38,7 +41,7 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
                                [this] {},
                                [this] { m_button->setText("Stop Stream"); },
                                [this] { m_button->setText("Start Stream"); });
-    m_client->setMaximumSize(320, 240);
+    m_stream->setMaximumSize(320, 240);
 
     m_button = new QPushButton("Start Stream");
     connect(m_button, SIGNAL(released()), this, SLOT(toggleButton()));
@@ -47,7 +50,7 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
 
     m_centerLayout = new QVBoxLayout;
 
-    m_centerLayout->addWidget(m_client, 0, Qt::AlignTop);
+    m_centerLayout->addWidget(m_stream, 0, Qt::AlignTop);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout;
     buttonLayout->addWidget(m_button, 0, Qt::AlignTop);

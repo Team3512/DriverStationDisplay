@@ -1,5 +1,4 @@
 // =============================================================================
-// File Name: MainWindow.hpp
 // Description: Creates application's main window
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
@@ -7,22 +6,25 @@
 #ifndef MAIN_WINDOW_HPP
 #define MAIN_WINDOW_HPP
 
-#include <QMainWindow>
-#include <QVBoxLayout>
-#include <QComboBox>
-#include <QUdpSocket>
-#include <QHostAddress>
-#include <QTimer>
+#include <memory>
 
+#include <QComboBox>
+#include <QHostAddress>
+#include <QMainWindow>
+#include <QTimer>
+#include <QUdpSocket>
+#include <QVBoxLayout>
+
+#include "MJPEG/mjpeg_sck.hpp"
+#include "MJPEG/WindowCallbacks.hpp"
+#include "Settings.hpp"
+
+class ClientBase;
+class QAction;
+class QMenu;
 class QPushButton;
 class QSlider;
-class QMenu;
-class QAction;
-
-#include "Settings.hpp"
-#include "MJPEG/MjpegStream.hpp"
-#include "MJPEG/WindowCallbacks.hpp"
-#include "MJPEG/mjpeg_sck.hpp"
+class VideoStream;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -61,7 +63,8 @@ private:
     std::unique_ptr<Settings> m_settings;
 
     WindowCallbacks m_streamCallback;
-    MjpegStream* m_client;
+    ClientBase* m_client;
+    VideoStream* m_stream;
     QPushButton* m_button;
 
     // Allows the user to select which autonomous mode the robot shoud run

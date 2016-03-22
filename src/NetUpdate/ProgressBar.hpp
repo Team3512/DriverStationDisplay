@@ -1,18 +1,18 @@
 // =============================================================================
-// File Name: ProgressBar.hpp
-// Description: Provides an interface to a progress bar with WinGDI
+// Description: Provides an interface to a progress bar
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 
-#ifndef PROGRESSBAR_HPP
-#define PROGRESSBAR_HPP
+#ifndef PROGRESS_BAR_HPP
+#define PROGRESS_BAR_HPP
 
-#include <QVBoxLayout>
+#include <string>
+
 #include <QProgressBar>
+#include <QVBoxLayout>
 
 #include "NetUpdate.hpp"
 #include "Text.hpp"
-#include <string>
 
 class ProgressBar : public QWidget, public NetUpdate {
     Q_OBJECT
@@ -33,4 +33,4 @@ private:
     Text* m_text;
 };
 
-#endif // PROGRESSBAR_HPP
+#endif // PROGRESS_BAR_HPP

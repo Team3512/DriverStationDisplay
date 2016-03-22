@@ -1,18 +1,16 @@
 // =============================================================================
-// File Name: NetUpdate.hpp
-// Description: Allows WinGDI drawable objects to update over the network
+// Description: Allows drawable objects to update over the network
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 
 #ifndef NET_UPDATE_HPP
 #define NET_UPDATE_HPP
 
+#include <cstdlib> // For std::memcpy(3)
+#include <iostream>
 #include <string>
 #include <map>
 #include <vector>
-#include <iostream>
-
-#include <cstdlib> // For std::memcpy(3)
 
 #include "NetValue.hpp"
 

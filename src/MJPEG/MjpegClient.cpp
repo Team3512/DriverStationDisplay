@@ -1,20 +1,17 @@
 // =============================================================================
-// File Name: MjpegClient.cpp
 // Description: Receives an MJPEG stream and displays it in a child window with
-//             the specified properties
+//              the specified properties
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 
 #include "MjpegClient.hpp"
-#include "mjpeg_sck_selector.hpp"
 
-#include <QImage>
-#include <QString>
-
+#include <cstring>
 #include <iostream>
 #include <system_error>
 #include <map>
-#include <cstring>
+
+#include <QImage>
 
 MjpegClient::MjpegClient(const std::string& hostName,
                          unsigned short port,
@@ -147,130 +144,8 @@ void MjpegClient::jpeg_load_from_memory(uint8_t* inputBuf,
     jpeg_finish_decompress(&m_cinfo);
 }
 
-// Read data up until the character sequence "\r\n\r\n" is received.
-int mjpeg_rxheaders(std::vector<uint8_t>& buf, int sd, int cancelfd) {
-    size_t bufpos = 0;
-    buf.resize(1024);
-
-    while (!(bufpos >= 4 && buf[bufpos - 4] == '\r' &&
-             buf[bufpos - 3] == '\n' &&
-             buf[bufpos - 2] == '\r' && buf[bufpos - 1] == '\n')) {
-        /* Read a byte from sd into &buf[bufpos]. If afterwards, bufpos ==
-         * buf.size(), reallocate the buffer as 1024 bytes larger. This function
-         * blocks until either a byte is received, or cancelfd becomes ready for
-         * reading.
-         */
-        int bytesread = mjpeg_sck_recv(sd, &buf[bufpos], 1, cancelfd);
-        if (bytesread != 1) {
-            return -1;
-        }
-        bufpos++;
-
-        if (bufpos == buf.size()) {
-            buf.resize(buf.size() + 1024);
-        }
-    }
-
-    return 0;
-}
-
-/* mjpeg_sck_recv() blocks until either len bytes of data have been read into
- * buf, or cancelfd becomes ready for reading. If either len bytes are read, or
- * cancelfd becomes ready for reading, the number of bytes received is returned.
- * On error, -1 is returned, and errno is set appropriately.
- */
-int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd) {
-    int error;
-    size_t nread;
-
-    mjpeg_sck_selector selector;
-
-    nread = 0;
-    while (nread < len) {
-        selector.zero(mjpeg_sck_selector::read | mjpeg_sck_selector::except);
-
-        // Set the sockets into the fd_set s
-        selector.addSocket(sockfd,
-                           mjpeg_sck_selector::read |
-                           mjpeg_sck_selector::except);
-        if (cancelfd) {
-            selector.addSocket(cancelfd,
-                               mjpeg_sck_selector::read |
-                               mjpeg_sck_selector::except);
-        }
-
-        error = selector.select(nullptr);
-
-        if (error == -1) {
-            return -1;
-        }
-
-        // If an exception occurred with either one, return error.
-        if ((cancelfd &&
-             selector.isReady(cancelfd, mjpeg_sck_selector::except)) ||
-            selector.isReady(sockfd, mjpeg_sck_selector::except)) {
-            return -1;
-        }
-
-        /* If cancelfd is ready for reading, return now with what we have read
-         * so far.
-         */
-        if (cancelfd && selector.isReady(cancelfd, mjpeg_sck_selector::read)) {
-            char cancel[2];
-            recv(cancelfd, cancel, 2, 0);
-            return nread;
-        }
-
-        // Otherwise, read some more.
-        error = recv(sockfd, static_cast<char*>(buf) + nread, len - nread, 0);
-        if (error < 1) {
-            return -1;
-        }
-        nread += error;
-    }
-
-    return nread;
-}
-
-/* Processes the HTTP response headers, separating them into key-value pairs.
- * These are then stored in a map. The "header" argument should point to a block
- * of HTTP response headers in the standard ':' and '\n' separated format. The
- * key is the text on a line before the ':', the value is the text after the
- * ':', but before the '\n'. Any line without a ':' is ignored.
- */
-std::map<std::string, std::string> mjpeg_process_header(std::string header) {
-    std::map<std::string, std::string> list;
-
-    if (header.length() == 0) {
-        return list;
-    }
-
-    std::string key;
-    std::string value;
-    size_t startPos = 0;
-    size_t endPos = 0;
-
-    while (endPos != std::string::npos) {
-        // Get the key
-        endPos = header.find_first_of(":\n", startPos);
-        key = header.substr(startPos, endPos - startPos);
-        startPos = endPos + 1;
-
-        // Get the value if a ':' exists on the line
-        if (endPos != std::string::npos && header[endPos] == ':') {
-            endPos = header.find('\r', startPos);
-            value = header.substr(startPos, endPos - startPos);
-            startPos = endPos + 1;
-
-            list.emplace(key, value);
-        }
-    }
-
-    return list;
-}
-
 void MjpegClient::recvFunc() {
-    startCallback();
+    ClientBase::callStart();
 
     std::vector<uint8_t> headerbuf;
     std::vector<uint8_t> buf;
@@ -280,7 +155,7 @@ void MjpegClient::recvFunc() {
     if (!mjpeg_sck_valid(m_sd)) {
         std::cerr << "mjpegrx: Connection failed\n";
         m_stopReceive = true;
-        stopCallback();
+        ClientBase::callStop();
 
         return;
     }
@@ -328,7 +203,7 @@ void MjpegClient::recvFunc() {
             jpeg_load_from_memory(&buf[0], datasize, m_pxlBuf);
         }
 
-        newImageCallback(&m_pxlBuf[0], m_pxlBuf.size());
+        ClientBase::callNewImage(&m_pxlBuf[0], m_pxlBuf.size());
     }
 
     // The loop has exited. We should now clean up and exit the thread.
@@ -336,5 +211,69 @@ void MjpegClient::recvFunc() {
 
     m_stopReceive = true;
 
-    stopCallback();
+    ClientBase::callStop();
+}
+
+// Read data up until the character sequence "\r\n\r\n" is received.
+int mjpeg_rxheaders(std::vector<uint8_t>& buf, int sd, int cancelfd) {
+    size_t bufpos = 0;
+    buf.resize(1024);
+
+    while (!(bufpos >= 4 && buf[bufpos - 4] == '\r' &&
+             buf[bufpos - 3] == '\n' &&
+             buf[bufpos - 2] == '\r' && buf[bufpos - 1] == '\n')) {
+        /* Read a byte from sd into &buf[bufpos]. If afterwards, bufpos ==
+         * buf.size(), reallocate the buffer as 1024 bytes larger. This function
+         * blocks until either a byte is received, or cancelfd becomes ready for
+         * reading.
+         */
+        int bytesread = mjpeg_sck_recv(sd, &buf[bufpos], 1, cancelfd);
+        if (bytesread != 1) {
+            return -1;
+        }
+        bufpos++;
+
+        if (bufpos == buf.size()) {
+            buf.resize(buf.size() + 1024);
+        }
+    }
+
+    return 0;
+}
+
+/* Processes the HTTP response headers, separating them into key-value pairs.
+ * These are then stored in a map. The "header" argument should point to a block
+ * of HTTP response headers in the standard ':' and '\n' separated format. The
+ * key is the text on a line before the ':', the value is the text after the
+ * ':', but before the '\n'. Any line without a ':' is ignored.
+ */
+std::map<std::string, std::string> mjpeg_process_header(std::string header) {
+    std::map<std::string, std::string> list;
+
+    if (header.length() == 0) {
+        return list;
+    }
+
+    std::string key;
+    std::string value;
+    size_t startPos = 0;
+    size_t endPos = 0;
+
+    while (endPos != std::string::npos) {
+        // Get the key
+        endPos = header.find_first_of(":\n", startPos);
+        key = header.substr(startPos, endPos - startPos);
+        startPos = endPos + 1;
+
+        // Get the value if a ':' exists on the line
+        if (endPos != std::string::npos && header[endPos] == ':') {
+            endPos = header.find('\r', startPos);
+            value = header.substr(startPos, endPos - startPos);
+            startPos = endPos + 1;
+
+            list.emplace(key, value);
+        }
+    }
+
+    return list;
 }

@@ -1,5 +1,4 @@
 // =============================================================================
-// File Name: NetValue.hpp
 // Description: Provides a universal container for values being received over
 //              the network
 // Author: FRC Team 3512, Spartatroniks

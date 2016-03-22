@@ -1,20 +1,19 @@
 // =============================================================================
-// File Name: StatusLight.hpp
 // Description: Shows green, yellow, or red circle depending on its internal
-//             state
+//              state
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 
 #ifndef STATUS_LIGHT_HPP
 #define STATUS_LIGHT_HPP
 
+#include <string>
+
 #include <QWidget>
 
-#include "NetUpdate.hpp"
 #include "CircleWidget.hpp"
+#include "NetUpdate.hpp"
 #include "Text.hpp"
-
-#include <string>
 
 class StatusLight : public QWidget, public NetUpdate {
     Q_OBJECT

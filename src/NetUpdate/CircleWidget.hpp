@@ -1,3 +1,8 @@
+// =============================================================================
+// Description: Used to draw circle in other widgets
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
+
 #ifndef CIRCLE_WIDGET_HPP
 #define CIRCLE_WIDGET_HPP
 

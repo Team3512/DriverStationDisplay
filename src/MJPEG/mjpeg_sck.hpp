@@ -13,15 +13,15 @@ typedef u_int mjpeg_socket_t;
 
 #else
 
-#include <unistd.h>
-#include <fcntl.h>
+#include <arpa/inet.h>
 #include <errno.h>
-#include <sys/socket.h>
-#include <sys/select.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <arpa/inet.h>
 #include <netdb.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 typedef int mjpeg_socket_t;
 #define INVALID_SOCKET -1
@@ -64,5 +64,12 @@ int mjpeg_sck_close(mjpeg_socket_t sd);
 /* A platform independent wrapper function which acts like
  *  the call socketpair(AF_INET, SOCK_STREAM, 0, sv) . */
 mjpeg_socket_t mjpeg_pipe(mjpeg_socket_t sv[2]);
+
+/* mjpeg_sck_recv() blocks until either len bytes of data have been read into
+ * buf, or cancelfd becomes ready for reading. If either len bytes are read, or
+ * cancelfd becomes ready for reading, the number of bytes received is returned.
+ * On error, -1 is returned, and errno is set appropriately.
+ */
+int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd);
 
 #endif // MJPEG_SCK_HPP

@@ -1,6 +1,5 @@
 // =============================================================================
-// File Name: ProgressBar.cpp
-// Description: Provides an interface to a progress bar with WinGDI
+// Description: Provides an interface to a progress bar
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
 

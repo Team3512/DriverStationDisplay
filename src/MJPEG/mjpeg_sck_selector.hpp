@@ -1,5 +1,4 @@
 // =============================================================================
-// File Name: mjpeg_sck_selector.hpp
 // Description: A wrapper around select(3)
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
@@ -7,8 +6,9 @@
 #ifndef MJPEG_SCK_SELECTOR_HPP
 #define MJPEG_SCK_SELECTOR_HPP
 
-#include <list>
 #include <cstdint>
+#include <list>
+
 #include "mjpeg_sck.hpp"
 
 struct selector_sck {

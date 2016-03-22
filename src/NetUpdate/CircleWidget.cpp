@@ -1,10 +1,15 @@
+// =============================================================================
+// Description: Used to draw circle in other widgets
+// Author: FRC Team 3512, Spartatroniks
+// =============================================================================
+
 #include "CircleWidget.hpp"
 
+#include <cstring>
+
+#include <QBrush>
 #include <QPainter>
 #include <QPen>
-#include <QBrush>
-
-#include <cstring>
 
 CircleWidget::CircleWidget(bool netUpdate, QWidget* parent) :
     QWidget(parent),

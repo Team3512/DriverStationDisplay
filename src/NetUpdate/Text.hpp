@@ -1,5 +1,4 @@
 // =============================================================================
-// File Name: Text.hpp
 // Description: Provides a wrapper for QLabel
 // Author: FRC Team 3512, Spartatroniks
 // =============================================================================
@@ -7,8 +6,8 @@
 #ifndef TEXT_HPP
 #define TEXT_HPP
 
-#include <QWidget>
 #include <QLabel>
+#include <QWidget>
 
 #include "NetUpdate.hpp"
 
