@@ -130,4 +130,3 @@ private:
 int mjpeg_sck_recv(int sockfd, void* buf, size_t len, int cancelfd);
 
 #endif // MJPEG_CLIENT_HPP
-

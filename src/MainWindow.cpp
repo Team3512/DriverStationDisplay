@@ -443,4 +443,3 @@ void MainWindow::resetAllTemps() {
     m_updateText.clear();
     m_tempVarIds.clear();
 }
-

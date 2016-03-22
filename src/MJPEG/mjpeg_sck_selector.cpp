@@ -96,4 +96,3 @@ int mjpeg_sck_selector::select(struct timeval* timeout) {
                     &m_exceptfds,
                     timeout);
 }
-

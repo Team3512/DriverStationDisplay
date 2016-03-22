@@ -37,4 +37,3 @@ void StatusLight::updateKeys(std::vector<std::string>& keys) {
 void StatusLight::updateValue() {
     setString(getUpdateText());
 }
-

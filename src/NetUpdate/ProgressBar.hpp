@@ -16,6 +16,7 @@
 
 class ProgressBar : public QWidget, public NetUpdate {
     Q_OBJECT
+
 public:
     explicit ProgressBar(bool netUpdate, QWidget* parent = nullptr);
 
@@ -33,4 +34,3 @@ private:
 };
 
 #endif // PROGRESSBAR_HPP
-

@@ -18,4 +18,3 @@ bool packetToVar(const std::vector<char>& data, size_t& pos, std::string& dest);
 #include "Util.inl"
 
 #endif // UTIL_HPP
-

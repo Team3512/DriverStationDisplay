@@ -12,4 +12,3 @@ bool packetToVar(const std::vector<char>& data, size_t& pos, T& dest) {
         return false;
     }
 }
-

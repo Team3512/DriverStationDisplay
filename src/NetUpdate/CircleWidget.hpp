@@ -7,6 +7,7 @@
 
 class CircleWidget : public QWidget, public NetUpdate {
     Q_OBJECT
+
 public:
     enum Status {
         active,
@@ -32,4 +33,3 @@ private:
 };
 
 #endif // CIRCLE_WIDGET_HPP
-

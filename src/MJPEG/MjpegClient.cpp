@@ -338,4 +338,3 @@ void MjpegClient::recvFunc() {
 
     stopCallback();
 }
-

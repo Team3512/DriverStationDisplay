@@ -99,4 +99,3 @@ void NetValue::freeValue() {
 
     m_type = 0;
 }
-

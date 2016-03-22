@@ -18,6 +18,7 @@
 
 class StatusLight : public QWidget, public NetUpdate {
     Q_OBJECT
+
 public:
     explicit StatusLight(bool netUpdate, QWidget* parent = nullptr);
 
@@ -37,4 +38,3 @@ private:
 };
 
 #endif // STATUS_LIGHT_HPP
-

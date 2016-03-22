@@ -67,4 +67,3 @@ void CircleWidget::paintEvent(QPaintEvent* event) {
     painter.setBrush(brush);
     painter.drawEllipse(-10, -10, 20, 20);
 }
-

@@ -28,4 +28,3 @@ void Text::updateValue() {
         setString(NetUpdate::fillValue(printValue));
     }
 }
-

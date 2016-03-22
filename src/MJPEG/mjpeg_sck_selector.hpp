@@ -57,4 +57,3 @@ private:
 };
 
 #endif // MJPEG_SCK_SELECTOR_HPP
-

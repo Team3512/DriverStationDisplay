@@ -135,4 +135,3 @@ signals:
 };
 
 #endif // MJPEG_STREAM_HPP
-

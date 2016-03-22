@@ -16,4 +16,3 @@ public:
 };
 
 #endif // WINDOW_CALLBACKS_HPP
-

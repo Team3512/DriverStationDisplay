@@ -14,6 +14,7 @@
 
 class Text : public QWidget, public NetUpdate {
     Q_OBJECT
+
 public:
     explicit Text(bool netUpdate, QWidget* parent = nullptr);
 
@@ -27,4 +28,3 @@ private:
 };
 
 #endif // TEXT_HPP
-

@@ -35,4 +35,3 @@ private:
     unsigned char m_type;
     void* m_value;
 };
-

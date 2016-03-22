@@ -38,4 +38,3 @@ bool packetToVar(const std::vector<char>& data, size_t& pos,
      */
     return false;
 }
-

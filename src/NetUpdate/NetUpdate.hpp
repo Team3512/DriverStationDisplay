@@ -72,4 +72,3 @@ private:
 };
 
 #endif // NET_UPDATE_HPP
-

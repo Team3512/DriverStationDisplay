@@ -177,4 +177,3 @@ std::wstring NetUpdate::fillValue(NetValue* value) {
 
     return buffer;
 }
-
