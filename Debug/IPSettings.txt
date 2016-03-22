@@ -1,6 +1,3 @@
-#video source can be MJPEG, webcam, or WPI
-sourceType = MJPEG
-
 #MJPEG client configuration
 streamHost       = 127.0.0.1
 mjpegPort        = 8080
@@ -12,5 +9,5 @@ alfCmdPort = 3512
 dsDataPort = 1130
 
 #the DS sends to this
-robotIP          = 127.0.0.1
-robotControlPort = 1131
+robotIP       = 127.0.0.1
+robotDataPort = 1131

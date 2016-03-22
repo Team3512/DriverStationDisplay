@@ -1,6 +1,3 @@
-#video source can be MJPEG, webcam, or WPI
-sourceType = MJPEG
-
 #MJPEG client configuration
 streamHost       = 127.0.0.1
 mjpegPort        = 8080
@@ -12,5 +9,5 @@ alfCmdPort = 3512
 dsDataPort = 1130
 
 #the DS sends to this
-robotIP          = roborio-3512-frc.local
-robotControlPort = 1130
+robotIP       = roborio-3512-frc.local
+robotDataPort = 1130

@@ -30,8 +30,8 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
     m_settings = std::make_unique<Settings>("IPSettings.txt");
 
     m_client = new MjpegClient(m_settings->getString("streamHost"),
-                               m_settings->getInt("streamPort"),
-                               m_settings->getString("streamRequestPath"));
+                               m_settings->getInt("mjpegPort"),
+                               m_settings->getString("mjpegRequestPath"));
 
     m_stream = new VideoStream(m_client,
                                this,
