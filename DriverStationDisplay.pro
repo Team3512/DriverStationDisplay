@@ -9,7 +9,7 @@ CONFIG += c++14
 LIBS += -ljpeg
 win32:LIBS += -lws2_32
 
-SOURCES +=\
+SOURCES += \
     src/Main.cpp \
     src/MainWindow.cpp \
     src/Settings.cpp \

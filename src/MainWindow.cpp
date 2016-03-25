@@ -35,13 +35,13 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
 
     m_stream = new VideoStream(m_client,
                                this,
-                               320,
-                               240,
+                               640,
+                               480,
                                &m_streamCallback,
                                [this] {},
                                [this] { m_button->setText("Stop Stream"); },
                                [this] { m_button->setText("Start Stream"); });
-    m_stream->setMaximumSize(320, 240);
+    m_stream->setMaximumSize(640, 480);
 
     m_button = new QPushButton("Start Stream");
     connect(m_button, SIGNAL(released()), this, SLOT(toggleButton()));
