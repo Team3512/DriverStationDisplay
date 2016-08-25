@@ -1,14 +1,14 @@
 *.csv
 *.dll
-*.o
 *.exe
-DriverStationDisplay
+*.o
 *.swp
-
-Makefile
+DriverStationDisplay
 
 # Qt-generated files
+.qmake.stash
 moc_*
 ui_*
 qrc_*
+Makefile*
 *.pro.user

@@ -1,7 +1,4 @@
-// =============================================================================
-// Description: Creates application's main window
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #ifndef MAIN_WINDOW_HPP
 #define MAIN_WINDOW_HPP
@@ -15,8 +12,8 @@
 #include <QUdpSocket>
 #include <QVBoxLayout>
 
-#include "MJPEG/mjpeg_sck.hpp"
 #include "MJPEG/WindowCallbacks.hpp"
+#include "MJPEG/mjpeg_sck.hpp"
 #include "Settings.hpp"
 
 class ClientBase;
@@ -26,6 +23,9 @@ class QPushButton;
 class QSlider;
 class VideoStream;
 
+/**
+ * Creates application's main window
+ */
 class MainWindow : public QMainWindow {
     Q_OBJECT
     QWidget* centralWidget;
@@ -91,7 +91,7 @@ private:
 
     std::unique_ptr<QUdpSocket> m_dataSocket;
     QHostAddress m_remoteIP;
-    unsigned short m_dataPort;
+    uint16_t m_dataPort;
     bool m_connectDlgOpen{false};
     bool m_connectedBefore{false};
 
@@ -125,4 +125,4 @@ private:
     void resetAllTemps();
 };
 
-#endif // MAIN_WINDOW_HPP
+#endif  // MAIN_WINDOW_HPP

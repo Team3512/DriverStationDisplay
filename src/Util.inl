@@ -1,3 +1,5 @@
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
+
 #include <QtEndian>
 
 template <class T>
@@ -7,8 +9,7 @@ bool packetToVar(const std::vector<char>& data, size_t& pos, T& dest) {
         pos += sizeof(dest);
 
         return true;
-    }
-    else {
+    } else {
         return false;
     }
 }

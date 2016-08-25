@@ -1,12 +1,9 @@
-// =============================================================================
-// Description: Allows drawable objects to update over the network
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include "NetUpdate.hpp"
 
-#include <cstring>
 #include <algorithm>
+#include <cstring>
 #include <sstream>
 
 #include "../Util.hpp"
@@ -20,8 +17,7 @@ std::wstring replaceUnicodeChars(std::wstring text) {
     while (uPos < text.length()) {
         if (uPos == 0) {
             uPos = text.find(L"\\u", uPos);
-        }
-        else {
+        } else {
             uPos = text.find(L"\\u", uPos + 1);
         }
 
@@ -41,8 +37,7 @@ std::wstring replaceUnicodeChars(std::wstring text) {
 std::vector<NetUpdate*> NetUpdate::m_netObjs;
 std::map<std::string, NetValue> NetUpdate::m_netValues;
 
-NetUpdate::NetUpdate(bool trackUpdate) :
-    m_trackUpdate(trackUpdate) {
+NetUpdate::NetUpdate(bool trackUpdate) : m_trackUpdate(trackUpdate) {
     if (m_trackUpdate) {
         m_netObjs.push_back(this);
     }
@@ -62,13 +57,9 @@ NetUpdate::~NetUpdate() {
     }
 }
 
-void NetUpdate::setUpdateText(const std::wstring& text) {
-    m_updateText = text;
-}
+void NetUpdate::setUpdateText(const std::wstring& text) { m_updateText = text; }
 
-const std::wstring& NetUpdate::getUpdateText() {
-    return m_updateText;
-}
+const std::wstring& NetUpdate::getUpdateText() { return m_updateText; }
 
 void NetUpdate::updateValues(std::vector<char>& data, size_t& pos) {
     unsigned char type;
@@ -88,9 +79,8 @@ void NetUpdate::updateValues(std::vector<char>& data, size_t& pos) {
             if (tempVal->getType() != type) {
                 tempVal->reallocValue(type);
             }
-        }
-        // Else make a new one
-        else {
+        } else {
+            // Else make a new one
             m_netValues[key] = std::move(NetValue(type));
 
             tempVal = &m_netValues[key];
@@ -102,20 +92,17 @@ void NetUpdate::updateValues(std::vector<char>& data, size_t& pos) {
             packetToVar(data, pos, value);
 
             tempVal->setValue(&value);
-        }
-        else if (type == 'i') {
+        } else if (type == 'i') {
             int value = 0;
             packetToVar(data, pos, value);
 
             tempVal->setValue(&value);
-        }
-        else if (type == 'u') {
+        } else if (type == 'u') {
             unsigned int value = 0;
             packetToVar(data, pos, value);
 
             tempVal->setValue(&value);
-        }
-        else if (type == 's') {
+        } else if (type == 's') {
             std::string value;
             packetToVar(data, pos, value);
 
@@ -128,8 +115,7 @@ NetValue* NetUpdate::getValue(const std::string& key) {
     // If there is a value for the given key, return it
     if (m_netValues.find(key) != m_netValues.end()) {
         return &m_netValues[key];
-    }
-    else {
+    } else {
         return nullptr;
     }
 }
@@ -140,9 +126,7 @@ void NetUpdate::updateElements() {
     }
 }
 
-void NetUpdate::updateKeys(std::vector<std::string>& keys) {
-    m_varIds = keys;
-}
+void NetUpdate::updateKeys(std::vector<std::string>& keys) { m_varIds = keys; }
 
 std::wstring NetUpdate::fillValue(NetValue* value) {
     unsigned char type = value->getType();
@@ -152,19 +136,16 @@ std::wstring NetUpdate::fillValue(NetValue* value) {
         unsigned char tempVal = 0;
         std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
         replacement = std::to_wstring(tempVal);
-    }
-    else if (type == 'u') {
+    } else if (type == 'u') {
         unsigned int tempVal = 0;
         std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
         replacement = std::to_wstring(tempVal);
-    }
-    else if (type == 'i') {
+    } else if (type == 'i') {
         int tempVal = 0;
         std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
         replacement = std::to_wstring(tempVal);
-    }
-    // Else data is already in a string
-    else {
+    } else {
+        // Else data is already in a string
         replacement = *static_cast<std::wstring*>(value->getValue());
     }
 

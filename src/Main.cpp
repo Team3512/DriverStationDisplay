@@ -1,7 +1,4 @@
-// =============================================================================
-// Description: Starts application
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include <QApplication>
 #include <QDesktopWidget>

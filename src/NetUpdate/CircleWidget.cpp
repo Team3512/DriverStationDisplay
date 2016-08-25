@@ -1,7 +1,4 @@
-// =============================================================================
-// Description: Used to draw circle in other widgets
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include "CircleWidget.hpp"
 
@@ -11,33 +8,26 @@
 #include <QPainter>
 #include <QPen>
 
-CircleWidget::CircleWidget(bool netUpdate, QWidget* parent) :
-    QWidget(parent),
-    NetUpdate(netUpdate) {
+CircleWidget::CircleWidget(bool netUpdate, QWidget* parent)
+    : QWidget(parent), NetUpdate(netUpdate) {
     setActive(Status::inactive);
 }
 
 void CircleWidget::setActive(Status newStatus) {
     if (newStatus == Status::active) {
         m_color = QColor(0, 255, 0);
-    }
-    else if (newStatus == Status::standby) {
+    } else if (newStatus == Status::standby) {
         m_color = QColor(255, 255, 0);
-    }
-    else {
+    } else {
         m_color = QColor(255, 0, 0);
     }
 
     m_status = newStatus;
 }
 
-CircleWidget::Status CircleWidget::getActive() {
-    return m_status;
-}
+CircleWidget::Status CircleWidget::getActive() { return m_status; }
 
-QSize CircleWidget::sizeHint() const {
-    return QSize(25, 25);
-}
+QSize CircleWidget::sizeHint() const { return QSize(25, 25); }
 
 void CircleWidget::updateValue() {
     NetValue* lightValue = getValue(m_varIds[0]);
@@ -53,7 +43,7 @@ void CircleWidget::updateValue() {
 }
 
 void CircleWidget::paintEvent(QPaintEvent* event) {
-    (void) event;
+    (void)event;
 
     QPainter painter(this);
     painter.translate(width() / 2, height() / 2);

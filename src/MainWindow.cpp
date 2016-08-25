@@ -1,21 +1,18 @@
-// =============================================================================
-// Description: Creates application's main window
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
-
-#include <QtWidgets>
-#include <QPushButton>
-#include <QSpacerItem>
-#include <QHBoxLayout>
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include "MainWindow.hpp"
-#include "MJPEG/VideoStream.hpp"
-#include "MJPEG/MjpegClient.hpp"
 
-#include <cstring>
 #include <chrono>
+#include <cstring>
 #include <fstream>
 
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QSpacerItem>
+#include <QtWidgets>
+
+#include "MJPEG/MjpegClient.hpp"
+#include "MJPEG/VideoStream.hpp"
 #include "NetUpdate/ProgressBar.hpp"
 #include "NetUpdate/StatusLight.hpp"
 #include "NetUpdate/Text.hpp"
@@ -33,14 +30,10 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
                                m_settings->getInt("mjpegPort"),
                                m_settings->getString("mjpegRequestPath"));
 
-    m_stream = new VideoStream(m_client,
-                               this,
-                               640,
-                               480,
-                               &m_streamCallback,
-                               [this] {},
-                               [this] { m_button->setText("Stop Stream"); },
-                               [this] { m_button->setText("Start Stream"); });
+    m_stream =
+        new VideoStream(m_client, this, 640, 480, &m_streamCallback, [this] {},
+                        [this] { m_button->setText("Stop Stream"); },
+                        [this] { m_button->setText("Start Stream"); });
     m_stream->setMaximumSize(640, 480);
 
     m_button = new QPushButton("Start Stream");
@@ -64,12 +57,13 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
     m_autoSelect = new QComboBox;
     connect(m_autoSelect,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::activated),
-            [this] (int index) {
-        char data[16] = "autonSelect\r\n";
-        data[13] = index;
+            [this](int index) {
+                char data[16] = "autonSelect\r\n";
+                data[13] = index;
 
-        m_dataSocket->writeDatagram(data, sizeof(data), m_remoteIP, m_dataPort);
-    });
+                m_dataSocket->writeDatagram(data, sizeof(data), m_remoteIP,
+                                            m_dataPort);
+            });
     m_optionLayout->addWidget(m_autoSelect);
     m_optionLayout->setAlignment(m_autoSelect, Qt::AlignTop);
 
@@ -93,8 +87,8 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
 
     m_dataSocket = std::make_unique<QUdpSocket>(this);
     m_dataSocket->bind(m_settings->getInt("dsDataPort"));
-    connect(m_dataSocket.get(), SIGNAL(readyRead()),
-            this, SLOT(handleSocketData()));
+    connect(m_dataSocket.get(), SIGNAL(readyRead()), this,
+            SLOT(handleSocketData()));
 
     m_remoteIP = QString::fromUtf8(m_settings->getString("robotIP").c_str());
     m_dataPort = m_settings->getInt("robotDataPort");
@@ -112,13 +106,9 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
     m_connectTimer->start(2000);
 }
 
-void MainWindow::startMJPEG() {
-    m_client->start();
-}
+void MainWindow::startMJPEG() { m_client->start(); }
 
-void MainWindow::stopMJPEG() {
-    m_client->stop();
-}
+void MainWindow::stopMJPEG() { m_client->stop(); }
 
 void MainWindow::about() {
     QMessageBox::about(this, tr("About DriverStationDisplay"),
@@ -131,8 +121,7 @@ void MainWindow::about() {
 void MainWindow::toggleButton() {
     if (m_client->isStreaming()) {
         stopMJPEG();
-    }
-    else {
+    } else {
         startMJPEG();
     }
 }
@@ -157,8 +146,7 @@ void MainWindow::handleSocketData() {
 
                 m_connectTimer->start(2000);
             }
-        }
-        else if (header == "guiCreate\r\n") {
+        } else if (header == "guiCreate\r\n") {
             reloadGUI(m_buffer, packetPos);
 
             if (!m_connectedBefore) {
@@ -166,8 +154,7 @@ void MainWindow::handleSocketData() {
             }
 
             m_connectTimer->start(2000);
-        }
-        else if (header == "autonList\r\n") {
+        } else if (header == "autonList\r\n") {
             /* Unpacks the following variables:
              *
              * Autonomous Modes (contained in rest of packet):
@@ -186,8 +173,7 @@ void MainWindow::handleSocketData() {
             for (auto& str : autoNames) {
                 m_autoSelect->addItem(str.c_str());
             }
-        }
-        else if (header == "autonConfirmed\r\n") {
+        } else if (header == "autonConfirmed\r\n") {
             /* If a new autonomous mode was selected from the robot, it
              * sends back this packet as confirmation
              */
@@ -314,15 +300,13 @@ void MainWindow::parseLine(std::string line) {
     m_start = 0;
 
     // Get five arguments
-    for (size_t i = 0; i < 5; ) {
+    for (size_t i = 0; i < 5;) {
         // First three arguments are delimited by a space
         if (i == 0) {
             m_delimiter = " ";
-        }
-        else if (i == 1) {
+        } else if (i == 1) {
             m_delimiter = ", ";
-        }
-        else if (i == 3) {
+        } else if (i == 3) {
             m_delimiter = "\"";
         }
 
@@ -353,23 +337,19 @@ void MainWindow::parseLine(std::string line) {
         if (i == 0) {
             // lastType vars are updated when the column is found
             m_currentType = line.substr(m_start, m_end - m_start);
-        }
-        else if (i == 1) {
+        } else if (i == 1) {
             /* Add the next variable ID to a storage vector for adding to the
              * element later
              */
             m_tempVarIds.push_back(line.substr(m_start, m_end - m_start));
-        }
-        else if (i == 2) {
+        } else if (i == 2) {
             m_column = line.substr(m_start, m_end - m_start);
-        }
-        else if (i == 3) {
+        } else if (i == 3) {
             std::string tempStr = line.substr(m_start, m_end - m_start);
 
             // Convert std::string to std::wstring
             m_startText.assign(tempStr.begin(), tempStr.end());
-        }
-        else if (i == 4) {
+        } else if (i == 4) {
             std::string tempStr = line.substr(m_start, m_end - m_start);
 
             // Convert std::string to std::wstring
@@ -385,7 +365,9 @@ void MainWindow::parseLine(std::string line) {
         }
     }
 
-    // Replace all unicode escape characters in the string with their unicode equivalents
+    /* Replace all unicode escape characters in the string with their unicode
+     * equivalents
+     */
     m_startText = replaceUnicodeChars(m_startText);
     m_updateText = replaceUnicodeChars(m_updateText);
 
@@ -394,20 +376,18 @@ void MainWindow::parseLine(std::string line) {
 
     // Create element
     if (m_currentType == "TEXT") {
-        auto temp =  new Text(true);
+        auto temp = new Text(true);
         temp->setString(m_startText);
 
         netPtr = temp;
         qPtr = temp;
-    }
-    else if (m_currentType == "STATUSLIGHT") {
+    } else if (m_currentType == "STATUSLIGHT") {
         auto temp = new StatusLight(true);
         temp->setString(m_startText);
 
         netPtr = temp;
         qPtr = temp;
-    }
-    else if (m_currentType == "PBAR") {
+    } else if (m_currentType == "PBAR") {
         auto temp = new ProgressBar(true);
         temp->setString(m_startText);
 
@@ -427,8 +407,7 @@ void MainWindow::parseLine(std::string line) {
     if (qPtr != nullptr) {
         if (m_column == "left") {
             m_leftLayout->addWidget(qPtr);
-        }
-        else if (m_column == "right") {
+        } else if (m_column == "right") {
             m_rightLayout->addWidget(qPtr);
         }
     }

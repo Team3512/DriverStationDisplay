@@ -1,7 +1,4 @@
-// =============================================================================
-// Description: Provides an interface to a progress bar
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #ifndef PROGRESS_BAR_HPP
 #define PROGRESS_BAR_HPP
@@ -14,6 +11,9 @@
 #include "NetUpdate.hpp"
 #include "Text.hpp"
 
+/**
+ * Provides an interface to a progress bar
+ */
 class ProgressBar : public QWidget, public NetUpdate {
     Q_OBJECT
 
@@ -33,4 +33,4 @@ private:
     Text* m_text;
 };
 
-#endif // PROGRESS_BAR_HPP
+#endif  // PROGRESS_BAR_HPP

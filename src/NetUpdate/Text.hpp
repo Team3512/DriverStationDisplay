@@ -1,7 +1,4 @@
-// =============================================================================
-// Description: Provides a wrapper for QLabel
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #ifndef TEXT_HPP
 #define TEXT_HPP
@@ -11,6 +8,9 @@
 
 #include "NetUpdate.hpp"
 
+/**
+ * Provides a wrapper for QLabel
+ */
 class Text : public QWidget, public NetUpdate {
     Q_OBJECT
 
@@ -26,4 +26,4 @@ private:
     QLabel* m_text;
 };
 
-#endif // TEXT_HPP
+#endif  // TEXT_HPP

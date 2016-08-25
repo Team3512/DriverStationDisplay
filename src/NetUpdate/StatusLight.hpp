@@ -1,8 +1,4 @@
-// =============================================================================
-// Description: Shows green, yellow, or red circle depending on its internal
-//              state
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #ifndef STATUS_LIGHT_HPP
 #define STATUS_LIGHT_HPP
@@ -15,6 +11,9 @@
 #include "NetUpdate.hpp"
 #include "Text.hpp"
 
+/**
+ * Shows green, yellow, or red circle depending on its internal state
+ */
 class StatusLight : public QWidget, public NetUpdate {
     Q_OBJECT
 
@@ -36,4 +35,4 @@ private:
     Text* m_text;
 };
 
-#endif // STATUS_LIGHT_HPP
+#endif  // STATUS_LIGHT_HPP

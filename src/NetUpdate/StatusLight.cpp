@@ -1,15 +1,11 @@
-// =============================================================================
-// Description: Shows green, yellow, or red circle depending on its internal
-//              state
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include "StatusLight.hpp"
 
 #include <QHBoxLayout>
 
-StatusLight::StatusLight(bool netUpdate, QWidget* parent) :
-    QWidget(parent), NetUpdate(false) {
+StatusLight::StatusLight(bool netUpdate, QWidget* parent)
+    : QWidget(parent), NetUpdate(false) {
     QHBoxLayout* layout = new QHBoxLayout();
     layout->setAlignment(Qt::AlignTop);
     setLayout(layout);
@@ -25,14 +21,10 @@ void StatusLight::setString(const std::wstring& text) {
     m_text->setString(text);
 }
 
-std::wstring StatusLight::getString() const {
-    return m_text->getString();
-}
+std::wstring StatusLight::getString() const { return m_text->getString(); }
 
 void StatusLight::updateKeys(std::vector<std::string>& keys) {
     m_circle->updateKeys(keys);
 }
 
-void StatusLight::updateValue() {
-    setString(getUpdateText());
-}
+void StatusLight::updateValue() { setString(getUpdateText()); }

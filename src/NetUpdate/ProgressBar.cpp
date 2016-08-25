@@ -1,12 +1,9 @@
-// =============================================================================
-// Description: Provides an interface to a progress bar
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include "ProgressBar.hpp"
 
-ProgressBar::ProgressBar(bool netUpdate, QWidget* parent) :
-    QWidget(parent), NetUpdate(netUpdate) {
+ProgressBar::ProgressBar(bool netUpdate, QWidget* parent)
+    : QWidget(parent), NetUpdate(netUpdate) {
     QVBoxLayout* layout = new QVBoxLayout();
     setLayout(layout);
 
@@ -30,17 +27,13 @@ void ProgressBar::setPercent(int percent) {
     m_bar->update();
 }
 
-int ProgressBar::getPercent() {
-    return m_bar->value();
-}
+int ProgressBar::getPercent() { return m_bar->value(); }
 
 void ProgressBar::setString(const std::wstring& text) {
     m_text->setString(text);
 }
 
-std::wstring ProgressBar::getString() {
-    return m_text->getString();
-}
+std::wstring ProgressBar::getString() { return m_text->getString(); }
 
 void ProgressBar::updateValue() {
     NetValue* printValue = getValue(m_varIds[0]);
@@ -53,16 +46,13 @@ void ProgressBar::updateValue() {
     if (percentValue != nullptr) {
         if (percentValue->getType() == 'c') {
             setPercent(*static_cast<unsigned char*>(percentValue->getValue()));
-        }
-        else if (percentValue->getType() == 'i') {
+        } else if (percentValue->getType() == 'i') {
             setPercent(*static_cast<int*>(percentValue->getValue()));
-        }
-        else if (percentValue->getType() == 'u') {
+        } else if (percentValue->getType() == 'u') {
             setPercent(*static_cast<unsigned int*>(percentValue->getValue()));
-        }
-        else if (percentValue->getType() == 's') {
-            setPercent(std::stoi(*static_cast<std::wstring*>(percentValue->
-                                                             getValue())));
+        } else if (percentValue->getType() == 's') {
+            setPercent(std::stoi(
+                *static_cast<std::wstring*>(percentValue->getValue())));
         }
     }
 }

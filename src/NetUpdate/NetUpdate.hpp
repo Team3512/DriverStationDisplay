@@ -1,20 +1,20 @@
-// =============================================================================
-// Description: Allows drawable objects to update over the network
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #ifndef NET_UPDATE_HPP
 #define NET_UPDATE_HPP
 
-#include <cstdlib> // For std::memcpy(3)
+#include <cstdlib>  // For std::memcpy(3)
 #include <iostream>
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "NetValue.hpp"
 
-/* Usage:
+/**
+ * Allows drawable objects to update over the network
+ *
+ * Usage:
  *
  * When a packet full of display data comes in, each element of the packet is
  * applied to a NetUpdate object in their respective storage orders (If the
@@ -27,8 +27,8 @@ std::wstring replaceUnicodeChars(std::wstring text);
 class NetUpdate {
 public:
     /* Passing 'true' adds the object to m_updateObjs, which makes it update
-     * during a call to updateElements(). This may be desirable if the object is a
-     * member of another class also deriving from the NetUpdate class.
+     * during a call to updateElements(). This may be desirable if the object is
+     * a member of another class also deriving from the NetUpdate class.
      */
     NetUpdate(bool trackUpdate);
     virtual ~NetUpdate();
@@ -69,4 +69,4 @@ private:
     const bool m_trackUpdate;
 };
 
-#endif // NET_UPDATE_HPP
+#endif  // NET_UPDATE_HPP

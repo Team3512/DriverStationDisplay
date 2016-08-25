@@ -1,0 +1,21 @@
+genFolderExclude {
+}
+
+genFileExclude {
+  \.ico$
+  \.o$
+  DriverStationDisplay$
+  DriverStationDisplay\.pro\.user$
+  Makefile
+  moc_
+  qrc_
+  ui_
+}
+
+modifiableFolderExclude {
+  \.git
+}
+
+modifiableFileExclude {
+  win32_socketpair
+}

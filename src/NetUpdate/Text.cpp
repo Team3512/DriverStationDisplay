@@ -1,12 +1,9 @@
-// =============================================================================
-// Description: Provides a wrapper for QLabel
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include "Text.hpp"
 
-Text::Text(bool netUpdate, QWidget* parent) :
-    QWidget(parent), NetUpdate(netUpdate) {
+Text::Text(bool netUpdate, QWidget* parent)
+    : QWidget(parent), NetUpdate(netUpdate) {
     m_text = new QLabel(this);
 }
 
@@ -15,9 +12,7 @@ void Text::setString(const std::wstring& text) {
     m_text->update();
 }
 
-std::wstring Text::getString() const {
-    return m_text->text().toStdWString();
-}
+std::wstring Text::getString() const { return m_text->text().toStdWString(); }
 
 void Text::updateValue() {
     NetValue* printValue = getValue(m_varIds[0]);

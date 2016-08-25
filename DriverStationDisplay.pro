@@ -6,8 +6,9 @@ TARGET = DriverStationDisplay
 TEMPLATE = app
 CONFIG += c++14
 
-LIBS += -ljpeg
 win32:LIBS += -lws2_32
+
+CONFIG += debug_and_release
 
 SOURCES += \
     src/Main.cpp \
@@ -51,3 +52,5 @@ RESOURCES += \
 
 DISTFILES += \
     Resources.rc
+
+LIBS += -ljpeg

@@ -1,8 +1,4 @@
-// =============================================================================
-// Description: Provides a universal container for values being received over
-//              the network
-// Author: FRC Team 3512, Spartatroniks
-// =============================================================================
+// Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
 #include "NetValue.hpp"
 
@@ -15,9 +11,7 @@ NetValue::NetValue(unsigned char type) {
     allocValue();
 }
 
-NetValue::~NetValue() {
-    freeValue();
-}
+NetValue::~NetValue() { freeValue(); }
 
 NetValue& NetValue::operator=(const NetValue& rhs) {
     reallocValue(rhs.m_type);
@@ -26,9 +20,7 @@ NetValue& NetValue::operator=(const NetValue& rhs) {
     return *this;
 }
 
-unsigned char NetValue::getType() const {
-    return m_type;
-}
+unsigned char NetValue::getType() const { return m_type; }
 
 void NetValue::reallocValue(unsigned char type) {
     freeValue();
@@ -43,14 +35,11 @@ void NetValue::reallocValue(unsigned char type) {
 void NetValue::setValue(void* value) {
     if (m_type == 'c') {
         std::memcpy(m_value, value, sizeof(unsigned char));
-    }
-    else if (m_type == 'i') {
+    } else if (m_type == 'i') {
         std::memcpy(m_value, value, sizeof(int));
-    }
-    else if (m_type == 'u') {
+    } else if (m_type == 'u') {
         std::memcpy(m_value, value, sizeof(unsigned int));
-    }
-    else if (m_type == 's') {
+    } else if (m_type == 's') {
         std::string* str = static_cast<std::string*>(value);
 
         // Convert std::string to std::wstring
@@ -58,24 +47,18 @@ void NetValue::setValue(void* value) {
     }
 }
 
-void* NetValue::getValue() const {
-    return m_value;
-}
+void* NetValue::getValue() const { return m_value; }
 
 void NetValue::allocValue() {
     if (m_type == 'c') {
         m_value = new unsigned char;
-    }
-    else if (m_type == 'i') {
+    } else if (m_type == 'i') {
         m_value = new int;
-    }
-    else if (m_type == 'u') {
+    } else if (m_type == 'u') {
         m_value = new unsigned int;
-    }
-    else if (m_type == 's') {
+    } else if (m_type == 's') {
         m_value = new std::wstring;
-    }
-    else {
+    } else {
         m_type = 0;
         m_value = nullptr;
     }
@@ -85,14 +68,11 @@ void NetValue::freeValue() {
     // Free value in void*
     if (m_type == 'c') {
         delete static_cast<unsigned char*>(m_value);
-    }
-    else if (m_type == 'i') {
+    } else if (m_type == 'i') {
         delete static_cast<int*>(m_value);
-    }
-    else if (m_type == 'u') {
+    } else if (m_type == 'u') {
         delete static_cast<unsigned int*>(m_value);
-    }
-    else if (m_type == 's') {
+    } else if (m_type == 's') {
         delete static_cast<std::wstring*>(m_value);
     }
 

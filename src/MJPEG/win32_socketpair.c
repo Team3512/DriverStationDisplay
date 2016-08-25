@@ -26,10 +26,10 @@
 #include <string.h>
 
 #ifdef _WIN32
-# define WIN32_LEAN_AND_MEAN
-# include <io.h>
-# include <windows.h>
-# include <winsock2.h>
+#define WIN32_LEAN_AND_MEAN
+#include <io.h>
+#include <windows.h>
+#include <winsock2.h>
 typedef int socklen_t;
 
 /* dumb_socketpair:
@@ -44,8 +44,7 @@ int dumb_socketpair(SOCKET socks[2], int make_overlapped) {
     union {
         struct sockaddr_in inaddr;
         struct sockaddr addr;
-    }
-    a;
+    } a;
     SOCKET listener;
     int e;
     socklen_t addrlen = sizeof(a.inaddr);
@@ -69,14 +68,14 @@ int dumb_socketpair(SOCKET socks[2], int make_overlapped) {
 
     socks[0] = socks[1] = INVALID_SOCKET;
     do {
-        if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR,
-                       (char*) &reuse, (socklen_t) sizeof(reuse)) == -1) {
+        if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse,
+                       (socklen_t)sizeof(reuse)) == -1) {
             break;
         }
-        if  (bind(listener, &a.addr, sizeof(a.inaddr)) == SOCKET_ERROR) {
+        if (bind(listener, &a.addr, sizeof(a.inaddr)) == SOCKET_ERROR) {
             break;
         }
-        if  (getsockname(listener, &a.addr, &addrlen) == SOCKET_ERROR) {
+        if (getsockname(listener, &a.addr, &addrlen) == SOCKET_ERROR) {
             break;
         }
         if (listen(listener, 1) == SOCKET_ERROR) {
