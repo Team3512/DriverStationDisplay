@@ -1,9 +1,10 @@
 // Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
-#ifndef MAIN_WINDOW_HPP
-#define MAIN_WINDOW_HPP
+#pragma once
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include <QComboBox>
 #include <QHostAddress>
@@ -124,5 +125,3 @@ private:
     // Resets all temporary variables to be reused during a call to update(1)
     void resetAllTemps();
 };
-
-#endif  // MAIN_WINDOW_HPP

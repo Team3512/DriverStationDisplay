@@ -1,7 +1,6 @@
 // Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
-#ifndef TEXT_HPP
-#define TEXT_HPP
+#pragma once
 
 #include <QLabel>
 #include <QWidget>
@@ -25,5 +24,3 @@ public:
 private:
     QLabel* m_text;
 };
-
-#endif  // TEXT_HPP

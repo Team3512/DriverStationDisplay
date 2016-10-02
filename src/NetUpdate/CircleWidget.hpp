@@ -1,7 +1,6 @@
 // Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
-#ifndef CIRCLE_WIDGET_HPP
-#define CIRCLE_WIDGET_HPP
+#pragma once
 
 #include <QWidget>
 
@@ -32,5 +31,3 @@ private:
     Status m_status;
     QColor m_color;
 };
-
-#endif  // CIRCLE_WIDGET_HPP

@@ -1,7 +1,6 @@
 // Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
-#ifndef NET_UPDATE_HPP
-#define NET_UPDATE_HPP
+#pragma once
 
 #include <cstdlib>  // For std::memcpy(3)
 #include <iostream>
@@ -30,7 +29,7 @@ public:
      * during a call to updateElements(). This may be desirable if the object is
      * a member of another class also deriving from the NetUpdate class.
      */
-    NetUpdate(bool trackUpdate);
+    explicit NetUpdate(bool trackUpdate);
     virtual ~NetUpdate();
 
     // Sets string which determines how displayed text is updated
@@ -68,5 +67,3 @@ private:
 
     const bool m_trackUpdate;
 };
-
-#endif  // NET_UPDATE_HPP

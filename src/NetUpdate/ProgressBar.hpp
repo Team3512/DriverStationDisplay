@@ -1,7 +1,6 @@
 // Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
-#ifndef PROGRESS_BAR_HPP
-#define PROGRESS_BAR_HPP
+#pragma once
 
 #include <string>
 
@@ -32,5 +31,3 @@ private:
     QProgressBar* m_bar;
     Text* m_text;
 };
-
-#endif  // PROGRESS_BAR_HPP

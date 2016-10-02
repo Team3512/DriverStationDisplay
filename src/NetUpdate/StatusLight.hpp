@@ -1,9 +1,9 @@
 // Copyright (c) FRC Team 3512, Spartatroniks 2012-2016. All Rights Reserved.
 
-#ifndef STATUS_LIGHT_HPP
-#define STATUS_LIGHT_HPP
+#pragma once
 
 #include <string>
+#include <vector>
 
 #include <QWidget>
 
@@ -34,5 +34,3 @@ private:
     CircleWidget* m_circle;
     Text* m_text;
 };
-
-#endif  // STATUS_LIGHT_HPP

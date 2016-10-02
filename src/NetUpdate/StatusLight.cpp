@@ -2,6 +2,8 @@
 
 #include "StatusLight.hpp"
 
+#include <vector>
+
 #include <QHBoxLayout>
 
 StatusLight::StatusLight(bool netUpdate, QWidget* parent)
