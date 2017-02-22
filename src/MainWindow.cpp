@@ -136,6 +136,9 @@ void MainWindow::handleSocketData() {
         std::string header;
         packetToVar(m_buffer, packetPos, header);
 
+        // Receiving any packet resets timeout
+        m_connectTimer->start(2000);
+
         if (header == "display\r\n") {
             /* Only allow keep-alive (resetting timer) if we have a valid
              * GUI; we need to connect and create the GUI before accepting
@@ -144,8 +147,6 @@ void MainWindow::handleSocketData() {
             if (m_connectedBefore) {
                 updateGuiTable(m_buffer, packetPos);
                 NetUpdate::updateElements();
-
-                m_connectTimer->start(2000);
             }
         } else if (header == "guiCreate\r\n") {
             reloadGUI(m_buffer, packetPos);
@@ -153,8 +154,6 @@ void MainWindow::handleSocketData() {
             if (!m_connectedBefore) {
                 m_connectedBefore = true;
             }
-
-            m_connectTimer->start(2000);
         } else if (header == "autonList\r\n") {
             /* Unpacks the following variables:
              *
