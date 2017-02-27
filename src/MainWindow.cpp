@@ -136,8 +136,13 @@ void MainWindow::handleSocketData() {
         std::string header;
         packetToVar(m_buffer, packetPos, header);
 
-        // Receiving any packet resets timeout
-        m_connectTimer->start(2000);
+        /* If this instance has connected to the server before, receiving any
+         * packet resets the timeout. This check is necessary in case a previous
+         * instance caused packets to be redirected here.
+         */
+        if (m_connectedBefore) {
+            m_connectTimer->start(2000);
+        }
 
         if (header == "display\r\n") {
             /* Only allow keep-alive (resetting timer) if we have a valid
