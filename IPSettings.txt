@@ -6,8 +6,8 @@ mjpegRequestPath = /mjpg/video.mjpg
 alfCmdPort = 3512
 
 #the DS binds to this
-dsDataPort = 1130
+dsDataPort = 5800
 
 #the DS sends to this
 robotIP       = roborio-3512-frc.local
-robotDataPort = 1130
+robotDataPort = 5800
