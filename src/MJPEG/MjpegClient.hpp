@@ -90,10 +90,16 @@ private:
     // Used by m_recvThread
     void recvFunc();
 
-    /* inputBuf is input JPEG data; width, height, and channel amount are stored
-     * in member variables
+    /**
+     * Decompresses JPEG data from memory into another buffer. width, height,
+     * and channel amount are stored in member variables.
+     *
+     * @param inputBuf input JPEG data
+     * @param inputLen length of input buffer
+     * @param outputBuf output buffer for decompressed image
+     * @return true if decompressed successfully or false otherwise
      */
-    void jpeg_load_from_memory(uint8_t* inputBuf, int inputLen,
+    bool jpeg_load_from_memory(uint8_t* inputBuf, int inputLen,
                                std::vector<uint8_t>& outputBuf);
 };
 
