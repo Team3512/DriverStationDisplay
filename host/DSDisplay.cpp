@@ -4,8 +4,9 @@
 
 #include <cstring>
 #include <fstream>
-#include <functional>
 #include <iostream>
+
+using namespace std::chrono_literals;
 
 DSDisplay& DSDisplay::GetInstance(uint16_t dsPort) {
     static DSDisplay dsDisplay(dsPort);
@@ -15,24 +16,30 @@ DSDisplay& DSDisplay::GetInstance(uint16_t dsPort) {
 void DSDisplay::Clear() { m_packet.clear(); }
 
 void DSDisplay::SendToDS() {
-    if (m_dsIP != sf::IpAddress::None) {
+    if (m_dsIP != 0) {
         m_socket.send(m_packet, m_dsIP, m_dsPort);
     }
 }
 
 const std::string DSDisplay::ReceiveFromDS() {
-    // Send keepalive
-    Clear();
-    m_packet << static_cast<std::string>("\r\n");
-    SendToDS();
+    // Send keepalive every 250ms
+    auto time = steady_clock::now();
+    if (time - prevTime > 250ms) {
+        Clear();
+        m_packet << static_cast<std::string>("\r\n");
+        SendToDS();
+
+        prevTime = time;
+    }
 
     if (m_socket.receive(m_recvBuffer, 256, m_recvAmount, m_recvIP,
-                         m_recvPort) == sf::Socket::Done) {
+                         m_recvPort) == UdpSocket::Done) {
         if (std::strncmp(m_recvBuffer, "connect\r\n", 9) == 0) {
             m_dsIP = m_recvIP;
             m_dsPort = m_recvPort;
 
             // Send GUI element file to DS
+
             Clear();
 
             m_packet << static_cast<std::string>("guiCreate\r\n");
@@ -119,6 +126,11 @@ const std::string DSDisplay::ReceiveFromDS() {
     }
 
     return "NONE";
+}
+
+void DSDisplay::AddAutoMethod(const std::string& methodName,
+                              std::function<void()> func) {
+    m_autonModes.AddMethod(methodName, func);
 }
 
 DSDisplay::DSDisplay(uint16_t portNumber) : m_dsPort(portNumber) {

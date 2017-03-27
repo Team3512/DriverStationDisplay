@@ -4,12 +4,13 @@
 
 #include <stdint.h>
 
+#include <chrono>
+#include <functional>
 #include <string>
 
 #include "AutonContainer.hpp"
-#include "SFML/Network/IpAddress.hpp"
-#include "SFML/Network/Packet.hpp"
-#include "SFML/Network/UdpSocket.hpp"
+#include "Packet.hpp"
+#include "UdpSocket.hpp"
 
 /* This class allows you to pack data into an SFML packet and send it to an
  * application on the DriverStation that displays it in a GUI.
@@ -59,9 +60,8 @@ public:
     const std::string ReceiveFromDS();
 
     // Add and remove autonomous functions
-    template <class T>
-    void AddAutoMethod(const std::string& methodName, void (T::*function)(),
-                       T* object);
+    void AddAutoMethod(const std::string& methodName,
+                       std::function<void()> func);
     void DeleteAllMethods();
 
     // Runs autonomous function currently selected
@@ -91,19 +91,24 @@ public:
     void AddData(std::string ID, double data);
 
 private:
+    using steady_clock = std::chrono::steady_clock;
+
     explicit DSDisplay(uint16_t portNumber);
 
     DSDisplay(const DSDisplay&) = delete;
     DSDisplay& operator=(const DSDisplay&) = delete;
 
-    sf::Packet m_packet;
+    Packet m_packet;
 
-    sf::UdpSocket m_socket;  // socket for sending data to Driver Station
-    sf::IpAddress m_dsIP{sf::IpAddress::None};  // IP address of Driver Station
-    uint16_t m_dsPort;                          // port to which to send data
+    UdpSocket m_socket;  // socket for sending data to Driver Station
+    uint32_t m_dsIP;     // IP address of Driver Station
+    uint16_t m_dsPort;   // port to which to send data
+
+    // Rate-limits keepalive
+    steady_clock::time_point prevTime = steady_clock::now();
 
     // Stores IP address temporarily during receive
-    sf::IpAddress m_recvIP{0, 0, 0, 0};
+    uint32_t m_recvIP;
 
     // Stores port temporarily during receive
     uint16_t m_recvPort = 0;
@@ -117,5 +122,3 @@ private:
     AutonContainer m_autonModes;
     char m_curAutonMode;
 };
-
-#include "DSDisplay.inl"
