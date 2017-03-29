@@ -4,7 +4,7 @@
 
 ProgressBar::ProgressBar(bool netUpdate, QWidget* parent)
     : QWidget(parent), NetUpdate(netUpdate) {
-    QVBoxLayout* layout = new QVBoxLayout();
+    QVBoxLayout* layout = new QVBoxLayout(this);
     setLayout(layout);
 
     m_bar = new QProgressBar(this);

@@ -3,22 +3,20 @@
 #include "Text.hpp"
 
 Text::Text(bool netUpdate, QWidget* parent)
-    : QWidget(parent), NetUpdate(netUpdate) {
-    m_text = new QLabel(this);
-}
+    : QLabel(parent), NetUpdate(netUpdate) {}
 
 void Text::setString(const std::wstring& text) {
-    m_text->setText(QString::fromStdWString(text));
-    m_text->update();
+    setText(QString::fromStdWString(text));
+    update();
 }
 
-std::wstring Text::getString() const { return m_text->text().toStdWString(); }
+std::wstring Text::getString() const { return text().toStdWString(); }
 
 void Text::updateValue() {
     NetValue* printValue = getValue(m_varIds[0]);
 
     if (printValue != nullptr) {
-        std::wcout << "text=" << NetUpdate::fillValue(printValue) << "\n";
+        std::wcout << "text=" << NetUpdate::fillValue(printValue) << std::endl;
         setString(NetUpdate::fillValue(printValue));
     }
 }

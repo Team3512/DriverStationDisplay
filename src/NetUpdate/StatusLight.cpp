@@ -8,15 +8,16 @@
 
 StatusLight::StatusLight(bool netUpdate, QWidget* parent)
     : QWidget(parent), NetUpdate(false) {
-    QHBoxLayout* layout = new QHBoxLayout();
-    layout->setAlignment(Qt::AlignTop);
+    auto layout = new QHBoxLayout(this);
     setLayout(layout);
 
-    m_circle = new CircleWidget(netUpdate);
+    m_circle = new CircleWidget(netUpdate, this);
     layout->addWidget(m_circle);
 
-    m_text = new Text(false);
+    m_text = new Text(false, this);
     layout->addWidget(m_text);
+
+    layout->addStretch(1);
 }
 
 void StatusLight::setString(const std::wstring& text) {

@@ -3,14 +3,13 @@
 #pragma once
 
 #include <QLabel>
-#include <QWidget>
 
 #include "NetUpdate.hpp"
 
 /**
  * Provides a wrapper for QLabel
  */
-class Text : public QWidget, public NetUpdate {
+class Text : public QLabel, public NetUpdate {
     Q_OBJECT
 
 public:
@@ -20,7 +19,4 @@ public:
     std::wstring getString() const;
 
     void updateValue();
-
-private:
-    QLabel* m_text;
 };

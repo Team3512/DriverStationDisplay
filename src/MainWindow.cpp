@@ -31,31 +31,35 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
                                m_settings->getInt("mjpegPort"),
                                m_settings->getString("mjpegRequestPath"));
 
+    constexpr int32_t videoX = 640;
+    constexpr int32_t videoY = 480;
+
     m_stream =
-        new VideoStream(m_client, this, 640, 480, &m_streamCallback, [this] {},
-                        [this] { m_button->setText("Stop Stream"); },
+        new VideoStream(m_client, this, videoX, videoY, &m_streamCallback,
+                        [this] {}, [this] { m_button->setText("Stop Stream"); },
                         [this] { m_button->setText("Start Stream"); });
-    m_stream->setMaximumSize(640, 480);
+    m_stream->setMaximumSize(videoX, videoY);
 
     m_button = new QPushButton("Start Stream");
     connect(m_button, SIGNAL(released()), this, SLOT(toggleButton()));
 
-    m_leftLayout = new QVBoxLayout;
+    m_leftWidgetLayout = new QVBoxLayout();
 
-    m_centerLayout = new QVBoxLayout;
+    m_centerWidgetLayout = new QVBoxLayout();
 
-    m_centerLayout->addWidget(m_stream, 0, Qt::AlignTop);
+    m_centerWidgetLayout->addWidget(m_stream, 0,
+                                    Qt::AlignHCenter | Qt::AlignTop);
 
-    QHBoxLayout* buttonLayout = new QHBoxLayout;
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
     buttonLayout->addWidget(m_button, 0, Qt::AlignTop);
     buttonLayout->insertStretch(1);
-    m_centerLayout->addLayout(buttonLayout);
+    m_centerWidgetLayout->addLayout(buttonLayout, Qt::AlignHCenter);
 
-    m_rightLayout = new QVBoxLayout;
+    auto rightLayout = new QVBoxLayout();
 
-    m_optionLayout = new QVBoxLayout;
+    m_rightWidgetLayout = new QVBoxLayout();
 
-    m_autoSelect = new QComboBox;
+    m_autoSelect = new QComboBox();
     connect(m_autoSelect,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::activated),
             [this](int index) {
@@ -65,19 +69,21 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
                 m_dataSocket->writeDatagram(data, sizeof(data), m_remoteIP,
                                             m_dataPort);
             });
-    m_optionLayout->addWidget(m_autoSelect);
-    m_optionLayout->setAlignment(m_autoSelect, Qt::AlignTop);
+    rightLayout->addWidget(m_autoSelect);
+    rightLayout->addLayout(m_rightWidgetLayout);
 
-    QGridLayout* mainLayout = new QGridLayout;
-    mainLayout->setColumnMinimumWidth(0, width / 4);
-    mainLayout->setColumnMinimumWidth(1, width / 4);
-    mainLayout->setColumnMinimumWidth(2, width / 4);
-    mainLayout->setColumnMinimumWidth(3, width / 4);
+    QGridLayout* mainLayout = new QGridLayout();
+    mainLayout->setColumnMinimumWidth(0, (width - videoX / 2) / 3);
+    mainLayout->setColumnMinimumWidth(1, videoX);
+    mainLayout->setColumnMinimumWidth(2, (width - videoX / 2) / 3);
 
-    mainLayout->addLayout(m_leftLayout, 0, 0);
-    mainLayout->addLayout(m_centerLayout, 0, 1);
-    mainLayout->addLayout(m_rightLayout, 0, 2);
-    mainLayout->addLayout(m_optionLayout, 0, 3);
+    mainLayout->addLayout(m_leftWidgetLayout, 0, 0);
+    mainLayout->setAlignment(m_leftWidgetLayout, Qt::AlignTop);
+
+    mainLayout->addLayout(m_centerWidgetLayout, 0, 1);
+
+    mainLayout->addLayout(rightLayout, 0, 2);
+    mainLayout->setAlignment(rightLayout, Qt::AlignTop);
 
     centralWidget->setLayout(mainLayout);
 
@@ -228,8 +234,8 @@ void MainWindow::createMenus() {
 }
 
 void MainWindow::clearGUI() {
-    clearLayout(m_leftLayout);
-    clearLayout(m_rightLayout);
+    clearLayout(m_leftWidgetLayout);
+    clearLayout(m_rightWidgetLayout);
 }
 
 void MainWindow::clearLayout(QLayout* layout) {
@@ -411,9 +417,9 @@ void MainWindow::parseLine(std::string line) {
     // Add widget to correct layout if it was created
     if (qPtr != nullptr) {
         if (m_column == "left") {
-            m_leftLayout->addWidget(qPtr);
+            m_leftWidgetLayout->addWidget(qPtr);
         } else if (m_column == "right") {
-            m_rightLayout->addWidget(qPtr);
+            m_rightWidgetLayout->addWidget(qPtr);
         }
     }
 }

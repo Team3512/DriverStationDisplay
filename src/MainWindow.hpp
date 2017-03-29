@@ -72,16 +72,13 @@ private:
     QComboBox* m_autoSelect;
 
     // Holds dynamically created widgets in left column
-    QVBoxLayout* m_leftLayout;
+    QVBoxLayout* m_leftWidgetLayout;
 
     // Holds dynamically created widgets in center column
-    QVBoxLayout* m_centerLayout;
+    QVBoxLayout* m_centerWidgetLayout;
 
     // Holds dynamically created widgets in right column
-    QVBoxLayout* m_rightLayout;
-
-    // Holds robot configuration options on right edge of window
-    QVBoxLayout* m_optionLayout;
+    QVBoxLayout* m_rightWidgetLayout;
 
     QMenu* m_optionsMenu;
     QMenu* m_helpMenu;
