@@ -11,7 +11,6 @@
 void _sck_wsainit() {
     WORD vs;
     WSADATA wsadata;
-
     vs = MAKEWORD(2, 2);
     WSAStartup(vs, &wsadata);
 }

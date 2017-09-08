@@ -1,46 +1,21 @@
-cExtensions {
-  c
-  h
+cppHeaderFileInclude {
+  \.h$
+  \.hpp$
+  \.inl$
 }
 
-cppHeaderExtensions {
-  hpp
-  inl
+cppSrcFileInclude {
+  \.cpp$
 }
 
-cppSrcExtensions {
-  cpp
-}
-
-otherExtensions {
-}
-
-genFolderExclude {
-}
-
-genFileExclude {
+generatedFileExclude {
   \.ico$
-}
-
-modifiableFolderExclude {
 }
 
 modifiableFileExclude {
   win32_socketpair
 }
 
-includeRelated {
-}
-
-includeCSys {
-}
-
-includeCppSys {
-}
-
 includeOtherLibs {
   ^jpeglib\.h$
-}
-
-includeProject {
 }
