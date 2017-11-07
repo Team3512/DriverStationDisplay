@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 FRC Team 3512. All Rights Reserved.
+// Copyright (c) 2016-2017 FRC Team 3512, Spartatroniks. All Rights Reserved.
 
 #include "DSDisplay.hpp"
 
