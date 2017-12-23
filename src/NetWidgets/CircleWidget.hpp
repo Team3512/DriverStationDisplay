@@ -4,12 +4,12 @@
 
 #include <QWidget>
 
-#include "NetUpdate.hpp"
+#include "NetWidget.hpp"
 
 /**
  * Used to draw circle in other widgets
  */
-class CircleWidget : public QWidget, public NetUpdate {
+class CircleWidget : public QWidget, public NetWidget {
     Q_OBJECT
 
 public:
@@ -22,7 +22,7 @@ public:
 
     QSize sizeHint() const;
 
-    void updateValue();
+    void updateEntry() override;
 
 protected:
     void paintEvent(QPaintEvent* event);

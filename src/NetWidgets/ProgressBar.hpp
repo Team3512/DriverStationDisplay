@@ -7,13 +7,13 @@
 #include <QProgressBar>
 #include <QVBoxLayout>
 
-#include "NetUpdate.hpp"
+#include "NetWidget.hpp"
 #include "Text.hpp"
 
 /**
  * Provides an interface to a progress bar
  */
-class ProgressBar : public QWidget, public NetUpdate {
+class ProgressBar : public QWidget, public NetWidget {
     Q_OBJECT
 
 public:
@@ -25,7 +25,7 @@ public:
     void setString(const std::wstring& text);
     std::wstring getString();
 
-    void updateValue();
+    void updateEntry() override;
 
 private:
     QProgressBar* m_bar;

@@ -4,12 +4,12 @@
 
 #include <QLabel>
 
-#include "NetUpdate.hpp"
+#include "NetWidget.hpp"
 
 /**
  * Provides a wrapper for QLabel
  */
-class Text : public QLabel, public NetUpdate {
+class Text : public QLabel, public NetWidget {
     Q_OBJECT
 
 public:
@@ -18,5 +18,5 @@ public:
     void setString(const std::wstring& text);
     std::wstring getString() const;
 
-    void updateValue();
+    void updateEntry() override;
 };

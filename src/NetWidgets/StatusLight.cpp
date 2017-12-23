@@ -7,7 +7,7 @@
 #include <QHBoxLayout>
 
 StatusLight::StatusLight(bool netUpdate, QWidget* parent)
-    : QWidget(parent), NetUpdate(false) {
+    : QWidget(parent), NetWidget(false) {
     auto layout = new QHBoxLayout(this);
     setLayout(layout);
 
@@ -30,4 +30,4 @@ void StatusLight::updateKeys(std::vector<std::string>& keys) {
     m_circle->updateKeys(keys);
 }
 
-void StatusLight::updateValue() { setString(getUpdateText()); }
+void StatusLight::updateEntry() { setString(getUpdateText()); }

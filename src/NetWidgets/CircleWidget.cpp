@@ -9,7 +9,7 @@
 #include <QPen>
 
 CircleWidget::CircleWidget(bool netUpdate, QWidget* parent)
-    : QWidget(parent), NetUpdate(netUpdate) {
+    : QWidget(parent), NetWidget(netUpdate) {
     setActive(Status::inactive);
 }
 
@@ -29,12 +29,12 @@ CircleWidget::Status CircleWidget::getActive() { return m_status; }
 
 QSize CircleWidget::sizeHint() const { return QSize(25, 25); }
 
-void CircleWidget::updateValue() {
-    NetValue* lightValue = getValue(m_varIds[0]);
+void CircleWidget::updateEntry() {
+    NetEntry& lightValue = getNetEntry(m_varIds[0]);
 
-    if (lightValue != nullptr) {
+    if (lightValue.getType() == 'c') {
         unsigned char tempVal = 0;
-        std::memcpy(&tempVal, lightValue->getValue(), sizeof(tempVal));
+        std::memcpy(&tempVal, lightValue.getValue(), sizeof(tempVal));
 
         setActive(static_cast<Status>(tempVal));
 

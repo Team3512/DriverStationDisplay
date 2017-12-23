@@ -8,13 +8,13 @@
 #include <QWidget>
 
 #include "CircleWidget.hpp"
-#include "NetUpdate.hpp"
+#include "NetWidget.hpp"
 #include "Text.hpp"
 
 /**
  * Shows green, yellow, or red circle depending on its internal state
  */
-class StatusLight : public QWidget, public NetUpdate {
+class StatusLight : public QWidget, public NetWidget {
     Q_OBJECT
 
 public:
@@ -28,7 +28,7 @@ public:
 
     void updateKeys(std::vector<std::string>& keys);
 
-    void updateValue();
+    void updateEntry() override;
 
 private:
     CircleWidget* m_circle;

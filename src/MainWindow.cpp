@@ -14,9 +14,9 @@
 
 #include "MJPEG/MjpegClient.hpp"
 #include "MJPEG/VideoStream.hpp"
-#include "NetUpdate/ProgressBar.hpp"
-#include "NetUpdate/StatusLight.hpp"
-#include "NetUpdate/Text.hpp"
+#include "NetWidgets/ProgressBar.hpp"
+#include "NetWidgets/StatusLight.hpp"
+#include "NetWidgets/Text.hpp"
 #include "Util.hpp"
 
 MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
@@ -157,7 +157,7 @@ void MainWindow::handleSocketData() {
              */
             if (m_connectedBefore) {
                 updateGuiTable(m_buffer, packetPos);
-                NetUpdate::updateElements();
+                NetWidget::updateElements();
             }
         } else if (header == "guiCreate\r\n") {
             reloadGUI(m_buffer, packetPos);
@@ -280,7 +280,7 @@ void MainWindow::reloadGUI(const std::string& fileName) {
 }
 
 void MainWindow::updateGuiTable(std::vector<char>& data, size_t& pos) {
-    NetUpdate::updateValues(data, pos);
+    NetWidget::updateValues(data, pos);
 }
 
 std::vector<std::string> MainWindow::split(const std::string& s,
@@ -382,7 +382,7 @@ void MainWindow::parseLine(std::string line) {
     m_startText = replaceUnicodeChars(m_startText);
     m_updateText = replaceUnicodeChars(m_updateText);
 
-    NetUpdate* netPtr = nullptr;
+    NetWidget* netPtr = nullptr;
     QWidget* qPtr = nullptr;
 
     // Create element

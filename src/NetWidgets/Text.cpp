@@ -3,7 +3,7 @@
 #include "Text.hpp"
 
 Text::Text(bool netUpdate, QWidget* parent)
-    : QLabel(parent), NetUpdate(netUpdate) {}
+    : QLabel(parent), NetWidget(netUpdate) {}
 
 void Text::setString(const std::wstring& text) {
     setText(QString::fromStdWString(text));
@@ -12,11 +12,10 @@ void Text::setString(const std::wstring& text) {
 
 std::wstring Text::getString() const { return text().toStdWString(); }
 
-void Text::updateValue() {
-    NetValue* printValue = getValue(m_varIds[0]);
+void Text::updateEntry() {
+    NetEntry& printValue = getNetEntry(m_varIds[0]);
 
-    if (printValue != nullptr) {
-        std::wcout << "text=" << NetUpdate::fillValue(printValue) << std::endl;
-        setString(NetUpdate::fillValue(printValue));
+    if (printValue.getType() == 's') {
+        setString(NetWidget::fill(printValue));
     }
 }

@@ -13,7 +13,7 @@ void Settings::update() {
 
     m_values.clear();
 
-    std::ifstream settings(m_fileName.c_str());
+    std::ifstream settings(m_fileName);
     if (!settings.is_open()) {
         std::cout << "Failed to open " << m_fileName << "\n";
         return;
@@ -56,11 +56,11 @@ double Settings::getDouble(const std::string& key) const {
     if (index == m_values.end()) {
         std::cout << "Settings: " << m_fileName << ": '" << key
                   << "' not found\n";
-        return 0.f;
+        return 0.0;
     }
 
     // Else return the value for that element
-    return std::atof(index->second.c_str());
+    return std::stod(index->second);
 }
 
 int Settings::getInt(const std::string& key) const {
@@ -74,7 +74,7 @@ int Settings::getInt(const std::string& key) const {
     }
 
     // Else return the value for that element
-    return std::atoi(index->second.c_str());
+    return std::stoi(index->second);
 }
 
 void Settings::saveToFile(const std::string& fileName) {

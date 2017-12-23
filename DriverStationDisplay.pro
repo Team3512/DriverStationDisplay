@@ -21,12 +21,12 @@ SOURCES += \
     src/MJPEG/mjpeg_sck_selector.cpp \
     src/MJPEG/VideoStream.cpp \
     src/MJPEG/win32_socketpair.c \
-    src/NetUpdate/NetUpdate.cpp \
-    src/NetUpdate/CircleWidget.cpp \
-    src/NetUpdate/ProgressBar.cpp \
-    src/NetUpdate/StatusLight.cpp \
-    src/NetUpdate/Text.cpp \
-    src/NetUpdate/NetValue.cpp
+    src/NetWidgets/NetWidget.cpp \
+    src/NetWidgets/CircleWidget.cpp \
+    src/NetWidgets/ProgressBar.cpp \
+    src/NetWidgets/StatusLight.cpp \
+    src/NetWidgets/Text.cpp \
+    src/NetWidgets/NetEntry.cpp
 
 HEADERS  += \
     src/MainWindow.hpp \
@@ -40,12 +40,12 @@ HEADERS  += \
     src/MJPEG/VideoStream.hpp \
     src/MJPEG/win32_socketpair.h \
     src/MJPEG/WindowCallbacks.hpp \
-    src/NetUpdate/NetUpdate.hpp \
-    src/NetUpdate/CircleWidget.hpp \
-    src/NetUpdate/ProgressBar.hpp \
-    src/NetUpdate/StatusLight.hpp \
-    src/NetUpdate/Text.hpp \
-    src/NetUpdate/NetValue.hpp
+    src/NetWidgets/NetWidget.hpp \
+    src/NetWidgets/CircleWidget.hpp \
+    src/NetWidgets/ProgressBar.hpp \
+    src/NetWidgets/StatusLight.hpp \
+    src/NetWidgets/Text.hpp \
+    src/NetWidgets/NetEntry.hpp
 
 RESOURCES += \
     DriverStationDisplay.qrc

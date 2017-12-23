@@ -85,9 +85,7 @@ public:
     void AddData(std::string ID, bool data);
     void AddData(std::string ID, int8_t data);
     void AddData(std::string ID, int32_t data);
-    void AddData(std::string ID, uint32_t data);
     void AddData(std::string ID, std::string data);
-    void AddData(std::string ID, float data);
     void AddData(std::string ID, double data);
 
 private:

@@ -25,7 +25,7 @@ const void* Packet::getData() const {
     }
 }
 
-std::size_t Packet::getDataSize() const { return m_packetData.size(); }
+size_t Packet::getDataSize() const { return m_packetData.size(); }
 
 Packet& Packet::operator<<(bool data) {
     *this << static_cast<uint8_t>(data);

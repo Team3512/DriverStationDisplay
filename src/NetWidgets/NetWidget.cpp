@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2017 FRC Team 3512, Spartatroniks. All Rights Reserved.
 
-#include "NetUpdate.hpp"
+#include "NetWidget.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -35,16 +35,16 @@ std::wstring replaceUnicodeChars(std::wstring text) {
     return text;
 }
 
-std::vector<NetUpdate*> NetUpdate::m_netObjs;
-std::map<std::string, NetValue> NetUpdate::m_netValues;
+std::vector<NetWidget*> NetWidget::m_netObjs;
+std::map<std::string, NetEntry> NetWidget::m_netValues;
 
-NetUpdate::NetUpdate(bool trackUpdate) : m_trackUpdate(trackUpdate) {
+NetWidget::NetWidget(bool trackUpdate) : m_trackUpdate(trackUpdate) {
     if (m_trackUpdate) {
         m_netObjs.push_back(this);
     }
 }
 
-NetUpdate::~NetUpdate() {
+NetWidget::~NetWidget() {
     if (m_trackUpdate) {
         auto index = std::find(m_netObjs.begin(), m_netObjs.end(), this);
 
@@ -58,15 +58,15 @@ NetUpdate::~NetUpdate() {
     }
 }
 
-void NetUpdate::setUpdateText(const std::wstring& text) { m_updateText = text; }
+void NetWidget::setUpdateText(const std::wstring& text) { m_updateText = text; }
 
-const std::wstring& NetUpdate::getUpdateText() { return m_updateText; }
+const std::wstring& NetWidget::getUpdateText() { return m_updateText; }
 
-void NetUpdate::updateValues(std::vector<char>& data, size_t& pos) {
+void NetWidget::updateValues(std::vector<char>& data, size_t& pos) {
     unsigned char type;
     std::string key;
 
-    NetValue* tempVal;
+    NetEntry* tempVal;
 
     while (pos < data.size() && packetToVar(data, pos, type) &&
            packetToVar(data, pos, key)) {
@@ -82,7 +82,7 @@ void NetUpdate::updateValues(std::vector<char>& data, size_t& pos) {
             }
         } else {
             // Else make a new one
-            m_netValues[key] = std::move(NetValue(type));
+            m_netValues[key] = std::move(NetEntry(type));
 
             tempVal = &m_netValues[key];
         }
@@ -112,42 +112,38 @@ void NetUpdate::updateValues(std::vector<char>& data, size_t& pos) {
     }
 }
 
-NetValue* NetUpdate::getValue(const std::string& key) {
+NetEntry& NetWidget::getNetEntry(const std::string& key) {
     // If there is a value for the given key, return it
-    if (m_netValues.find(key) != m_netValues.end()) {
-        return &m_netValues[key];
-    } else {
-        return nullptr;
-    }
+    return m_netValues[key];
 }
 
-void NetUpdate::updateElements() {
+void NetWidget::updateElements() {
     for (auto i : m_netObjs) {
-        i->updateValue();
+        i->updateEntry();
     }
 }
 
-void NetUpdate::updateKeys(std::vector<std::string>& keys) { m_varIds = keys; }
+void NetWidget::updateKeys(std::vector<std::string>& keys) { m_varIds = keys; }
 
-std::wstring NetUpdate::fillValue(NetValue* value) {
-    unsigned char type = value->getType();
+std::wstring NetWidget::fill(NetEntry& value) {
+    unsigned char type = value.getType();
     std::wstring replacement;
 
     if (type == 'c') {
         unsigned char tempVal = 0;
-        std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
+        std::memcpy(&tempVal, value.getValue(), sizeof(tempVal));
         replacement = std::to_wstring(tempVal);
     } else if (type == 'u') {
         unsigned int tempVal = 0;
-        std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
+        std::memcpy(&tempVal, value.getValue(), sizeof(tempVal));
         replacement = std::to_wstring(tempVal);
     } else if (type == 'i') {
         int tempVal = 0;
-        std::memcpy(&tempVal, value->getValue(), sizeof(tempVal));
+        std::memcpy(&tempVal, value.getValue(), sizeof(tempVal));
         replacement = std::to_wstring(tempVal);
     } else {
         // Else data is already in a string
-        replacement = *static_cast<std::wstring*>(value->getValue());
+        replacement = *static_cast<std::wstring*>(value.getValue());
     }
 
     std::wstring buffer = m_updateText;

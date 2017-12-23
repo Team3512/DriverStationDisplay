@@ -2,25 +2,29 @@
 
 #pragma once
 
+#include <stdint.h>
+
+#include <string>
+
 /**
  * Provides a universal container for values being received over the network
  */
-class NetValue {
+class NetEntry {
 public:
-    explicit NetValue(unsigned char type = 0);
-    virtual ~NetValue();
+    explicit NetEntry(uint8_t type = 0);
+    virtual ~NetEntry();
 
-    NetValue(const NetValue&) = delete;
-    NetValue& operator=(const NetValue& rhs);
+    NetEntry(const NetEntry&) = delete;
+    NetEntry& operator=(const NetEntry& rhs);
 
     // Returns type ID of internal value storage
-    unsigned char getType() const;
+    uint8_t getType() const;
 
     /* Delete the underlying storage for the value and reallocate it based on
      * the type ID passed in. this->type will be updated to the new type. If no
      * argument is given, The current value of this->type is used.
      */
-    void reallocValue(unsigned char type = 0);
+    void reallocValue(uint8_t type = 0);
 
     // Copies the memory pointed to by 'value' to internal storage
     void setValue(void* value);
@@ -32,6 +36,6 @@ private:
     void allocValue();
     void freeValue();
 
-    unsigned char m_type;
+    uint8_t m_type = 0;
     void* m_value;
 };

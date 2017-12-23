@@ -212,17 +212,6 @@ void DSDisplay::AddData(std::string ID, int32_t data) {
     m_packet << data;
 }
 
-void DSDisplay::AddData(std::string ID, uint32_t data) {
-    // If packet is empty, add "display\r\n" header to packet
-    if (m_packet.getData() == nullptr) {
-        m_packet << std::string("display\r\n");
-    }
-
-    m_packet << static_cast<int8_t>('u');
-    m_packet << ID;
-    m_packet << data;
-}
-
 void DSDisplay::AddData(std::string ID, std::string data) {
     // If packet is empty, add "display\r\n" header to packet
     if (m_packet.getData() == nullptr) {
@@ -232,17 +221,6 @@ void DSDisplay::AddData(std::string ID, std::string data) {
     m_packet << static_cast<int8_t>('s');
     m_packet << ID;
     m_packet << data;
-}
-
-void DSDisplay::AddData(std::string ID, float data) {
-    // If packet is empty, add "display\r\n" header to packet
-    if (m_packet.getData() == nullptr) {
-        m_packet << std::string("display\r\n");
-    }
-
-    m_packet << static_cast<int8_t>('s');
-    m_packet << ID;
-    m_packet << std::to_string(data);
 }
 
 void DSDisplay::AddData(std::string ID, double data) {
