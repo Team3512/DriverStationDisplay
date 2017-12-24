@@ -2,6 +2,8 @@
 
 #include "ProgressBar.hpp"
 
+#include <type_traits>
+
 ProgressBar::ProgressBar(bool netUpdate, QWidget* parent)
     : QWidget(parent), NetWidget(netUpdate) {
     QVBoxLayout* layout = new QVBoxLayout(this);
@@ -37,15 +39,21 @@ std::wstring ProgressBar::getString() { return m_text->getString(); }
 
 void ProgressBar::updateEntry() {
     NetEntry& printEntry = getEntry(m_varIds[0]);
+    setString(NetWidget::fillEntry(printEntry));
+
     NetEntry& percentEntry = getEntry(m_varIds[1]);
 
-    if (printEntry.getType() != 0) {
-        setString(NetWidget::fillEntry(printEntry));
-    }
+    std::visit(
+        [&](auto&& arg) {
+            int32_t value;
+            using T = std::decay_t<decltype(arg)>;
 
-    if (percentEntry.getType() == 'c' || percentEntry.getType() == 'i') {
-        setPercent(percentEntry.getValue<int32_t>());
-    } else if (percentEntry.getType() == 's') {
-        setPercent(std::stoi(percentEntry.getValue<std::wstring>()));
-    }
+            if constexpr (std::is_same_v<T, int32_t>) {
+                value = std::get<int32_t>(percentEntry);
+            } else {
+                value = std::stoi(std::get<std::wstring>(percentEntry));
+            }
+            setPercent(value);
+        },
+        percentEntry);
 }

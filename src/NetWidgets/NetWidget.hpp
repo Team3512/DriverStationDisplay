@@ -2,12 +2,13 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <cstdlib>  // For std::memcpy(3)
 #include <map>
 #include <string>
+#include <variant>
 #include <vector>
-
-#include "NetEntry.hpp"
 
 /**
  * Allows drawable objects to update over the network
@@ -21,6 +22,8 @@
  */
 class NetWidget {
 public:
+    using NetEntry = std::variant<int32_t, std::wstring>;
+
     /**
      * Passing 'true' adds the object to m_updateObjs, which makes it update
      * during a call to updateElements(). This may be desirable if the object is

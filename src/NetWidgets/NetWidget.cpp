@@ -7,12 +7,13 @@
 #include <cstring>
 #include <locale>
 #include <sstream>
+#include <type_traits>
 #include <utility>
 
 #include "../Util.hpp"
 
 std::vector<NetWidget*> NetWidget::m_netObjs;
-std::map<std::string, NetEntry> NetWidget::m_netValues;
+std::map<std::string, NetWidget::NetEntry> NetWidget::m_netValues;
 
 NetWidget::NetWidget(bool trackUpdate) : m_trackUpdate(trackUpdate) {
     if (m_trackUpdate) {
@@ -45,30 +46,29 @@ void NetWidget::updateValues(std::vector<char>& data, size_t& pos) {
     while (pos < data.size() && packetToVar(data, pos, type) &&
            packetToVar(data, pos, key)) {
         auto& entry = m_netValues[key];
-        entry.setType(type);
 
         // Assign value to prepared space
         if (type == 'c') {
             uint8_t value = 0;
             packetToVar(data, pos, value);
 
-            entry.setValue(value);
+            entry = value;
         } else if (type == 'i') {
             int32_t value = 0;
             packetToVar(data, pos, value);
 
-            entry.setValue(value);
+            entry = value;
         } else if (type == 's') {
             std::string value;
             packetToVar(data, pos, value);
 
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            entry.setValue(converter.from_bytes(value));
+            entry = converter.from_bytes(value);
         }
     }
 }
 
-NetEntry& NetWidget::getEntry(const std::string& key) {
+NetWidget::NetEntry& NetWidget::getEntry(const std::string& key) {
     // If there is a value for the given key, return it
     return m_netValues[key];
 }
@@ -82,15 +82,20 @@ void NetWidget::updateElements() {
 void NetWidget::updateKeys(std::vector<std::string>& keys) { m_varIds = keys; }
 
 std::wstring NetWidget::fillEntry(NetEntry& entry) {
-    uint8_t type = entry.getType();
     std::wstring replacement;
 
-    if (type == 'c' || type == 'i') {
-        replacement = std::to_wstring(entry.getValue<int32_t>());
-    } else {
-        // Else data is already in a string
-        replacement = entry.getValue<std::wstring>();
-    }
+    std::visit(
+        [&](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<T, int32_t>) {
+                replacement = std::to_wstring(std::get<int32_t>(entry));
+            } else {
+                // Else data is already in a string
+                replacement = std::get<std::wstring>(entry);
+            }
+        },
+        entry);
 
     std::wstring buffer = m_updateText;
     size_t pos = 0;

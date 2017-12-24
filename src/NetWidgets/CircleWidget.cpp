@@ -3,6 +3,7 @@
 #include "CircleWidget.hpp"
 
 #include <cstring>
+#include <type_traits>
 
 #include <QBrush>
 #include <QPainter>
@@ -32,10 +33,20 @@ QSize CircleWidget::sizeHint() const { return QSize(25, 25); }
 void CircleWidget::updateEntry() {
     NetEntry& lightEntry = getEntry(m_varIds[0]);
 
-    if (lightEntry.getType() == 'c') {
-        setActive(static_cast<Status>(lightEntry.getValue<int32_t>()));
-        update();
-    }
+    std::visit(
+        [&](auto&& arg) {
+            int32_t value;
+            using T = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<T, int32_t>) {
+                value = std::get<int32_t>(lightEntry);
+            } else {
+                value = std::stoi(std::get<std::wstring>(lightEntry));
+            }
+            setActive(static_cast<Status>(value));
+            update();
+        },
+        lightEntry);
 }
 
 void CircleWidget::paintEvent(QPaintEvent* event) {

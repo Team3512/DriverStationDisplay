@@ -15,7 +15,13 @@ std::wstring Text::getString() const { return text().toStdWString(); }
 void Text::updateEntry() {
     NetEntry& printEntry = getEntry(m_varIds[0]);
 
-    if (printEntry.getType() == 's') {
-        setString(NetWidget::fillEntry(printEntry));
-    }
+    std::visit(
+        [&](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<T, std::wstring>) {
+                setString(NetWidget::fillEntry(printEntry));
+            }
+        },
+        printEntry);
 }

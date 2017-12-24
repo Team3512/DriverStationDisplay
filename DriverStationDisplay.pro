@@ -25,8 +25,7 @@ SOURCES += \
     src/NetWidgets/CircleWidget.cpp \
     src/NetWidgets/ProgressBar.cpp \
     src/NetWidgets/StatusLight.cpp \
-    src/NetWidgets/Text.cpp \
-    src/NetWidgets/NetEntry.cpp
+    src/NetWidgets/Text.cpp
 
 HEADERS  += \
     src/MainWindow.hpp \
@@ -44,8 +43,7 @@ HEADERS  += \
     src/NetWidgets/CircleWidget.hpp \
     src/NetWidgets/ProgressBar.hpp \
     src/NetWidgets/StatusLight.hpp \
-    src/NetWidgets/Text.hpp \
-    src/NetWidgets/NetEntry.hpp
+    src/NetWidgets/Text.hpp
 
 RESOURCES += \
     DriverStationDisplay.qrc
