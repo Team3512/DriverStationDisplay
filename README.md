@@ -151,7 +151,7 @@ This will be the text intially used by the GUI element from its creation until i
 
 #### `["Replacement Text"]`
 
-After new data has arrived for the GUI element, this string will be used to update the element's text. When updating, the first instance of `%s` will be replaced with the received data as a string. All other instances of `%` are ignored.
+After new data has arrived for the GUI element, this string will be used to update the element's text. When updating, all instances of `%s` will be replaced with the received data as a string. All other instances of `%` are ignored.
 
 ### Unicode Literals
 
@@ -198,7 +198,7 @@ This element displays a progress bar with a line of text below it.
     STATUSLIGHT GYRO_ON left "Gyro Enabled" "Gyro Enabled"
     STATUSLIGHT ROTATE left "Slow Rotation" "Slow Rotation"
 
-    PBAR RPM_MAN_DISP,RPM_MAN right "Manual: 0%" "Manual: %s%%"
+    PBAR RPM_MAN_DISP,RPM_MAN right "Manual: 0%" "Manual: %s%"
     PBAR RPM_SET_DISP,RPM_SET right "RPM \u2192 0" "RPM \u2192 %s"
     PBAR RPM_REAL_DISP,RPM_REAL right "RPM: 0" "RPM: %s"
     STATUSLIGHT SHOOT_READY right "Shooter Ready" "Shooter Ready"
