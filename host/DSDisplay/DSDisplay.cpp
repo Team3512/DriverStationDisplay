@@ -46,8 +46,12 @@ const std::string DSDisplay::ReceiveFromDS() {
             m_packet << static_cast<std::string>("guiCreate\r\n");
 
             // Open the file
+#ifdef __FRC_ROBORIO__
             std::ifstream guiFile("/home/lvuser/GUISettings.txt",
                                   std::ifstream::binary);
+#else
+            std::ifstream guiFile("GUISettings.txt", std::ifstream::binary);
+#endif
 
             if (guiFile.is_open()) {
                 // Get its length
@@ -59,7 +63,7 @@ const std::string DSDisplay::ReceiveFromDS() {
                 m_packet << static_cast<uint32_t>(fileSize);
 
                 // Allocate a buffer for the file
-                auto tempBuf = std::make_unique<char>(fileSize);
+                auto tempBuf = std::make_unique<char[]>(fileSize);
 
                 // Send the data
                 guiFile.read(tempBuf.get(), fileSize);
@@ -100,8 +104,12 @@ const std::string DSDisplay::ReceiveFromDS() {
             m_packet << m_autonModes.Name(m_curAutonMode);
 
             // Store newest autonomous choice to file for persistent storage
+#ifdef __FRC_ROBORIO__
             std::ofstream autonModeFile("/home/lvuser/autonMode.txt",
                                         std::fstream::trunc);
+#else
+            std::ofstream autonModeFile("autonMode.txt", std::fstream::trunc);
+#endif
             if (autonModeFile.is_open()) {
                 // Selection is stored as ASCII number in file
                 char autonNum = '0' + m_curAutonMode;
@@ -138,7 +146,11 @@ DSDisplay::DSDisplay(uint16_t portNumber) : m_dsPort(portNumber) {
     m_socket.setBlocking(false);
 
     // Retrieve stored autonomous index
+#ifdef __FRC_ROBORIO__
     std::ifstream autonModeFile("/home/lvuser/autonMode.txt");
+#else
+    std::ifstream autonModeFile("autonMode.txt");
+#endif
     if (autonModeFile.is_open()) {
         if (autonModeFile >> m_curAutonMode) {
             std::cout << "DSDisplay: restored auton " << m_curAutonMode
