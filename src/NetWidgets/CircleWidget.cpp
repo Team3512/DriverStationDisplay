@@ -30,14 +30,10 @@ CircleWidget::Status CircleWidget::getActive() { return m_status; }
 QSize CircleWidget::sizeHint() const { return QSize(25, 25); }
 
 void CircleWidget::updateEntry() {
-    NetEntry& lightValue = getNetEntry(m_varIds[0]);
+    NetEntry& lightEntry = getNetEntry(m_varIds[0]);
 
-    if (lightValue.getType() == 'c') {
-        unsigned char tempVal = 0;
-        std::memcpy(&tempVal, lightValue.getValue(), sizeof(tempVal));
-
-        setActive(static_cast<Status>(tempVal));
-
+    if (lightEntry.getType() == 'c') {
+        setActive(static_cast<Status>(lightEntry.getValue<int32_t>()));
         update();
     }
 }

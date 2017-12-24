@@ -4,7 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets network
 
 TARGET = DriverStationDisplay
 TEMPLATE = app
-CONFIG += c++14
+CONFIG += c++1z
 
 win32:LIBS += -lws2_32
 

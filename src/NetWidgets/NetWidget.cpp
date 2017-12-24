@@ -3,7 +3,9 @@
 #include "NetWidget.hpp"
 
 #include <algorithm>
+#include <codecvt>
 #include <cstring>
+#include <locale>
 #include <sstream>
 #include <utility>
 
@@ -63,51 +65,31 @@ void NetWidget::setUpdateText(const std::wstring& text) { m_updateText = text; }
 const std::wstring& NetWidget::getUpdateText() { return m_updateText; }
 
 void NetWidget::updateValues(std::vector<char>& data, size_t& pos) {
-    unsigned char type;
+    uint8_t type;
     std::string key;
-
-    NetEntry* tempVal;
 
     while (pos < data.size() && packetToVar(data, pos, type) &&
            packetToVar(data, pos, key)) {
-        // If 'key' already has an entry
-        if (m_netValues.find(key) != m_netValues.end()) {
-            tempVal = &m_netValues[key];
-
-            /* If types aren't the same, free the value member for later
-             * reallocation
-             */
-            if (tempVal->getType() != type) {
-                tempVal->reallocValue(type);
-            }
-        } else {
-            // Else make a new one
-            m_netValues[key] = std::move(NetEntry(type));
-
-            tempVal = &m_netValues[key];
-        }
+        auto& entry = m_netValues[key];
+        entry.setType(type);
 
         // Assign value to prepared space
         if (type == 'c') {
-            unsigned char value = 0;
+            uint8_t value = 0;
             packetToVar(data, pos, value);
 
-            tempVal->setValue(&value);
+            entry.setValue(value);
         } else if (type == 'i') {
-            int value = 0;
+            int32_t value = 0;
             packetToVar(data, pos, value);
 
-            tempVal->setValue(&value);
-        } else if (type == 'u') {
-            unsigned int value = 0;
-            packetToVar(data, pos, value);
-
-            tempVal->setValue(&value);
+            entry.setValue(value);
         } else if (type == 's') {
             std::string value;
             packetToVar(data, pos, value);
 
-            tempVal->setValue(&value);
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            entry.setValue(converter.from_bytes(value));
         }
     }
 }
@@ -125,25 +107,15 @@ void NetWidget::updateElements() {
 
 void NetWidget::updateKeys(std::vector<std::string>& keys) { m_varIds = keys; }
 
-std::wstring NetWidget::fill(NetEntry& value) {
-    unsigned char type = value.getType();
+std::wstring NetWidget::fill(NetEntry& entry) {
+    uint8_t type = entry.getType();
     std::wstring replacement;
 
-    if (type == 'c') {
-        unsigned char tempVal = 0;
-        std::memcpy(&tempVal, value.getValue(), sizeof(tempVal));
-        replacement = std::to_wstring(tempVal);
-    } else if (type == 'u') {
-        unsigned int tempVal = 0;
-        std::memcpy(&tempVal, value.getValue(), sizeof(tempVal));
-        replacement = std::to_wstring(tempVal);
-    } else if (type == 'i') {
-        int tempVal = 0;
-        std::memcpy(&tempVal, value.getValue(), sizeof(tempVal));
-        replacement = std::to_wstring(tempVal);
+    if (type == 'c' || type == 'i') {
+        replacement = std::to_wstring(entry.getValue<int32_t>());
     } else {
         // Else data is already in a string
-        replacement = *static_cast<std::wstring*>(value.getValue());
+        replacement = entry.getValue<std::wstring>();
     }
 
     std::wstring buffer = m_updateText;

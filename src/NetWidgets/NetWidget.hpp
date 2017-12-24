@@ -25,35 +25,52 @@ std::wstring replaceUnicodeChars(std::wstring text);
 
 class NetWidget {
 public:
-    /* Passing 'true' adds the object to m_updateObjs, which makes it update
+    /**
+     * Passing 'true' adds the object to m_updateObjs, which makes it update
      * during a call to updateElements(). This may be desirable if the object is
      * a member of another class also deriving from the NetWidget class.
      */
     explicit NetWidget(bool trackUpdate);
     virtual ~NetWidget();
 
-    // Sets string which determines how displayed text is updated
+    /**
+     * Sets string which determines how displayed text is updated
+     */
     void setUpdateText(const std::wstring& text);
 
-    // Returns template for value updates
+    /**
+     * Returns template for value updates
+     */
     const std::wstring& getUpdateText();
 
-    // Updates values currently in table and adds new ones if they don't exist
+    /**
+     * Updates values currently in table and adds new ones if they don't exist
+     */
     static void updateValues(std::vector<char>& data, size_t& pos);
 
-    // Returns the corresponding network value of a keyword
+    /**
+     * Returns the corresponding network value of a keyword
+     */
     static NetEntry& getNetEntry(const std::string& key);
 
-    // All elements' values are updated from the table of network values
+    /**
+     * All elements' values are updated from the table of network values
+     */
     static void updateElements();
 
-    // Updates keys which are used to retrieve the network variables
+    /**
+     * Updates keys which are used to retrieve the network variables
+     */
     virtual void updateKeys(std::vector<std::string>& keys);
 
-    // Insert value into update text and return the result
-    std::wstring fill(NetEntry& value);
+    /**
+     * Insert value into update text and return the result
+     */
+    std::wstring fill(NetEntry& entry);
 
-    // Updates custom values of object to display
+    /**
+     * Updates custom values of object to display
+     */
     virtual void updateEntry() = 0;
 
 protected:

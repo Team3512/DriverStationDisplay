@@ -36,19 +36,16 @@ void ProgressBar::setString(const std::wstring& text) {
 std::wstring ProgressBar::getString() { return m_text->getString(); }
 
 void ProgressBar::updateEntry() {
-    NetEntry& printValue = getNetEntry(m_varIds[0]);
-    NetEntry& percentValue = getNetEntry(m_varIds[1]);
+    NetEntry& printEntry = getNetEntry(m_varIds[0]);
+    NetEntry& percentEntry = getNetEntry(m_varIds[1]);
 
-    if (printValue.getType() != 0) {
-        setString(NetWidget::fill(printValue));
+    if (printEntry.getType() != 0) {
+        setString(NetWidget::fill(printEntry));
     }
 
-    if (percentValue.getType() == 'c') {
-        setPercent(*static_cast<unsigned char*>(percentValue.getValue()));
-    } else if (percentValue.getType() == 'i') {
-        setPercent(*static_cast<int*>(percentValue.getValue()));
-    } else if (percentValue.getType() == 's') {
-        setPercent(
-            std::stoi(*static_cast<std::wstring*>(percentValue.getValue())));
+    if (percentEntry.getType() == 'c' || percentEntry.getType() == 'i') {
+        setPercent(percentEntry.getValue<int32_t>());
+    } else if (percentEntry.getType() == 's') {
+        setPercent(std::stoi(percentEntry.getValue<std::wstring>()));
     }
 }
