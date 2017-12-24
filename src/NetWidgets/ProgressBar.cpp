@@ -36,11 +36,11 @@ void ProgressBar::setString(const std::wstring& text) {
 std::wstring ProgressBar::getString() { return m_text->getString(); }
 
 void ProgressBar::updateEntry() {
-    NetEntry& printEntry = getNetEntry(m_varIds[0]);
-    NetEntry& percentEntry = getNetEntry(m_varIds[1]);
+    NetEntry& printEntry = getEntry(m_varIds[0]);
+    NetEntry& percentEntry = getEntry(m_varIds[1]);
 
     if (printEntry.getType() != 0) {
-        setString(NetWidget::fill(printEntry));
+        setString(NetWidget::fillEntry(printEntry));
     }
 
     if (percentEntry.getType() == 'c' || percentEntry.getType() == 'i') {

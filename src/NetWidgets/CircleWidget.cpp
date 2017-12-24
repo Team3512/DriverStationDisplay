@@ -30,7 +30,7 @@ CircleWidget::Status CircleWidget::getActive() { return m_status; }
 QSize CircleWidget::sizeHint() const { return QSize(25, 25); }
 
 void CircleWidget::updateEntry() {
-    NetEntry& lightEntry = getNetEntry(m_varIds[0]);
+    NetEntry& lightEntry = getEntry(m_varIds[0]);
 
     if (lightEntry.getType() == 'c') {
         setActive(static_cast<Status>(lightEntry.getValue<int32_t>()));

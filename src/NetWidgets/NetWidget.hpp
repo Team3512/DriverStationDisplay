@@ -3,7 +3,6 @@
 #pragma once
 
 #include <cstdlib>  // For std::memcpy(3)
-#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -20,9 +19,6 @@
  * packet is constructed wrong, an object may receive data intended for another
  * object.)
  */
-
-std::wstring replaceUnicodeChars(std::wstring text);
-
 class NetWidget {
 public:
     /**
@@ -51,7 +47,7 @@ public:
     /**
      * Returns the corresponding network value of a keyword
      */
-    static NetEntry& getNetEntry(const std::string& key);
+    static NetEntry& getEntry(const std::string& key);
 
     /**
      * All elements' values are updated from the table of network values
@@ -66,7 +62,7 @@ public:
     /**
      * Insert value into update text and return the result
      */
-    std::wstring fill(NetEntry& entry);
+    std::wstring fillEntry(NetEntry& entry);
 
     /**
      * Updates custom values of object to display

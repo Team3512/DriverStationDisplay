@@ -12,7 +12,7 @@
  */
 class NetEntry {
 public:
-    explicit NetEntry(uint8_t type = 0);
+    NetEntry() = default;
 
     NetEntry& operator=(const NetEntry& rhs);
 

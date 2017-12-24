@@ -19,6 +19,31 @@
 #include "NetWidgets/Text.hpp"
 #include "Util.hpp"
 
+std::wstring replaceUnicodeChars(std::wstring text) {
+    size_t uPos = 0;
+
+    /* Replace all "\uXXXX" strings with the unicode character corresponding
+     * to the 32 bit code XXXX
+     */
+    while (uPos < text.length()) {
+        if (uPos == 0) {
+            uPos = text.find(L"\\u", uPos);
+        } else {
+            uPos = text.find(L"\\u", uPos + 1);
+        }
+
+        if (uPos < text.length() - 5) {
+            wchar_t num[2];
+            num[0] = std::stoi(text.substr(uPos + 2, 4), nullptr, 16);
+            num[1] = '\0';
+
+            text = text.replace(uPos, 6, num);
+        }
+    }
+
+    return text;
+}
+
 MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
     setMinimumSize(width, height);
 

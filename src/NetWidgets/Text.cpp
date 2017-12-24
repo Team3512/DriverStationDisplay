@@ -13,9 +13,9 @@ void Text::setString(const std::wstring& text) {
 std::wstring Text::getString() const { return text().toStdWString(); }
 
 void Text::updateEntry() {
-    NetEntry& printValue = getNetEntry(m_varIds[0]);
+    NetEntry& printEntry = getEntry(m_varIds[0]);
 
-    if (printValue.getType() == 's') {
-        setString(NetWidget::fill(printValue));
+    if (printEntry.getType() == 's') {
+        setString(NetWidget::fillEntry(printEntry));
     }
 }
