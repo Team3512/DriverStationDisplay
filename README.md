@@ -2,9 +2,21 @@
 
 The DriverStationDisplay is a program we wrote and a protocol we invented to provide a means for us to create custom GUIs on a Driver Station dashboard while making it extremely easy to support multiple FRC robots at once.
 
-## Build Dependencies
+## Dependencies
 
-GCC 7 or newer is required for some C++17 features.
+If one is building on Windows, we recommend using the [MSYS2 compiler](https://msys2.github.io/). The following libraries are required as dependencies and should be installed using either your package manager of choice or MSYS2's pacman:
+
+* GCC 7 or newer for some C++17 features
+* Qt 5
+
+For MSYS2, use the MINGW64 terminal for building and install the following packages:
+
+* mingw-w64-x86_64-gcc
+* mingw-w64-x86_64-qt5
+
+## Building DriverStationDisplay
+
+To build the project, first run `qmake dir` within a terminal from the desired build directory, where "dir" is the relative location of the DriverStationDisplay.pro file. This will generate three makefiles. If a debug build is desired, run `make -f Makefile.Debug`. The default behavior when simply running `make` is to perform a release build.
 
 ## Robot Setup
 
