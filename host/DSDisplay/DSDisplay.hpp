@@ -12,7 +12,8 @@
 #include "Packet.hpp"
 #include "UdpSocket.hpp"
 
-/* This class allows you to pack data into an SFML packet and send it to an
+/**
+ * This class allows you to pack data into an SFML packet and send it to an
  * application on the DriverStation that displays it in a GUI.
  *
  * USAGE:
@@ -43,7 +44,6 @@
  *
  * The packets are always sent to 10.35.12.42 for testing purposes
  */
-
 class DSDisplay {
 public:
     enum StatusLight : int8_t { active, standby, inactive };

@@ -2,18 +2,15 @@
 
 The DriverStationDisplay is a program we wrote and a protocol we invented to provide a means for us to create custom GUIs on a Driver Station dashboard while making it extremely easy to support multiple FRC robots at once.
 
+## Build Dependencies
 
-## Dependencies
-
-The robot module which runs in cooperation with this program requires SFML for VxWorks for its easy networking functionality. One can get it at our repository [here](https://github.com/Team3512/VxWorksSFML).
-
+GCC 7 or newer is required for some C++17 features.
 
 ## Robot Setup
 
-To use this program with a new robot, copy the contents of the DSDisplay folder in our [modules repository](https://github.com/Team3512/RobotModules) into the source tree and include DriverStationDisplay.hpp.
+To use this program with a new robot, copy the DSDisplay folder in the [host folder](host) into the source tree and #include DSDisplay.hpp.
 
-A GUISettings.txt file should be placed in /c on the cRIO. Its contents inform the DriverStationDisplay what GUI elements it should create. The format of this file will be described later.
-
+A GUISettings.txt file should be placed in `/home/lvuser` on the roboRIO. Its contents inform the DriverStationDisplay what GUI elements it should create. The format of this file will be described later.
 
 ## DriverStation Client Setup
 
@@ -58,6 +55,7 @@ Robot's IP address
 Port to which to send connection packets and autonomous mode selections
 
 ###### Example IPSettings.txt
+
     streamHost        = 10.35.12.11
     streamPort        = 80
     streamRequestPath = /mjpg/video.mjpg
@@ -71,18 +69,17 @@ Port to which to send connection packets and autonomous mode selections
     robotIP           = 10.35.12.2
     robotDataPort     = 1130
 
-
 ## Usage
 
 #### Sending HUD Data
 
-1. Call DriverStationDisplay::getInstance() to create an instance of this class
-    * The argument to getInstance() should be the port specified as "dsDataPort" in IPSettings.txt
-2. Call clear() to empty the internal packet
-    * If clear() isn't called first, undefined behavior may result.
+1. Call DriverStationDisplay::GetInstance() to create an instance of this class
+    * The argument to GetInstance() should be the port specified as "dsDataPort" in IPSettings.txt
+2. Call Clear() to empty the internal packet
+    * If Clear() isn't called first, undefined behavior may result.
       (The header "display\r\n" isn't inserted when the packet isn't empty.)
-3. Call addElementData() as many times as necessary to add HUD data.
-4. Call sendToDS() to send the data to the DriverStationDisplay.
+3. Call AddData() as many times as necessary to add HUD data.
+4. Call SendToDS() to send the data to the DriverStationDisplay.
 
 ##### Notes:
 * It doesn't matter in which order the data is packed before sending the data.
@@ -90,24 +87,23 @@ Port to which to send connection packets and autonomous mode selections
 
 ### Autonomous Routines
 
-The DriverStationDisplay supports selection of an autonomous mode without needing to rebuild code or reboot the cRIO. To leverage this functionality, the appropriate autonomous functions must be made available to the DriverStationDisplay.
+The DriverStationDisplay supports selection of an autonomous mode without needing to rebuild code or reboot the roboRIO. To leverage this functionality, the appropriate autonomous functions must be made available to the DriverStationDisplay.
 
 #### Interface
 
-##### `void addAutonMethod( const std::string& methodName , void (T::*function)() , T* object)`
+##### `void AddAutonMethod(const std::string& methodName, std::function<void()> func)`
 
 Add the appropriate autonomous functions to the list available on the DriverStationDisplay
 
-##### `void deleteAllMethods()`
+##### `void DeleteAllMethods()`
 
 Erases the current list of autonomous functions stored
 
-##### `void execAutonomous()`
+##### `void ExecAutonomous()`
 
 Executes the currently selected autonomous routine
 
 * Call this in the Autonomous() function of the Simple Robot Template
-
 
 ## GUISettings.txt Format
 
@@ -122,7 +118,6 @@ This represents the name of the GUI element to create on the display. The possib
 1. TEXT
 2. STATUSLIGHT
 3. PBAR
-
 
 #### `[ID String 1]`
 
@@ -144,7 +139,7 @@ This will be the text intially used by the GUI element from its creation until i
 
 #### `["Replacement Text"]`
 
-After new data has arrived for the GUI element, this string will be used to update the element's text. When updating, the first instance of "%s" will be replaced with the received data as a string. "%i" and others may be passed since this line essentially acts like printf. "%%" escapes percent signs.
+After new data has arrived for the GUI element, this string will be used to update the element's text. When updating, the first instance of `%s` will be replaced with the received data as a string. All other instances of `%` are ignored.
 
 ### Unicode Literals
 
@@ -160,7 +155,6 @@ The start text and replacement text both support Unicode character insertions wh
 
 Warning: The identifiers must belong to UTF-16 because Windows wide strings use UTF-16.
 
-
 ## Type Formats
 
 #### `TEXT [ID String] [Column] ["Initial Text"] ["Replacement Text"]`
@@ -172,6 +166,7 @@ This element displays a line of text.
 This element displays a line of text next to an indicator light. The indicator will be green, yellow, or red depending on the value sent in association with "ID String".
 
 ###### Color Codes
+
     Green   0
     Yellow  1
     Red     2
@@ -184,7 +179,8 @@ This element displays a progress bar with a line of text below it.
 * [Value ID] refers to the value which replaces %s in "Initial Text" and "Replacement Text"
 * [Bar Fill ID] refers to the value which determines the percentage from 0 to 100
 
-###### GUISettings.txt from https://github.com/Team3512/Cynisca
+###### GUISettings.txt from https://github.com/Team3512/Robot-2013
+
     TEXT MODE left "Mode: Unknown" "Mode: %s"
     TEXT GYRO_VAL left "Gyro: 0\u00b0" "Gyro: %s\u00b0"
     STATUSLIGHT GYRO_ON left "Gyro Enabled" "Gyro Enabled"
@@ -197,16 +193,3 @@ This element displays a progress bar with a line of text below it.
     STATUSLIGHT SHOOT_ON right "Shooter On" "Shooter On"
     STATUSLIGHT SHOOT_MAN right "Shooter Manual" "Shooter Manual"
     STATUSLIGHT ARMS_DOWN right "Arms Down" "Arms Down"
-
-
-## Keyboard Shortcuts
-
-This program registers several keyboard shortcuts with Windows to make certain actions easier for drivers.
-
-#### Ctrl + S
-
-Saves the currently running robot code kernel module using ALF
-
-#### Ctrl + F
-
-Loads the robot code kernel module previously saved by ALF
