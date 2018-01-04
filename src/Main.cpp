@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017 FRC Team 3512, Spartatroniks. All Rights Reserved.
+// Copyright (c) 2012-2018 FRC Team 3512, Spartatroniks. All Rights Reserved.
 
 #include <QApplication>
 #include <QDesktopWidget>
