@@ -8,9 +8,9 @@
 #include <functional>
 #include <string>
 
-#include "AutonContainer.hpp"
-#include "Packet.hpp"
-#include "UdpSocket.hpp"
+#include "DSDisplay/AutonContainer.hpp"
+#include "DSDisplay/Packet.hpp"
+#include "DSDisplay/UdpSocket.hpp"
 
 /**
  * This class allows you to pack data into an SFML packet and send it to an

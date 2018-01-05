@@ -1,6 +1,6 @@
 // Copyright (c) 2016-2018 FRC Team 3512. All Rights Reserved.
 
-#include "DSDisplay.hpp"
+#include "DSDisplay/DSDisplay.hpp"
 
 #include <cstring>
 #include <fstream>

@@ -1,6 +1,6 @@
 // Copyright (c) 2017-2018 FRC Team 3512. All Rights Reserved.
 
-#include "Packet.hpp"
+#include "DSDisplay/Packet.hpp"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
