@@ -18,7 +18,7 @@ public:
 };
 
 int main() {
-    DSDisplay& dsDisplay{DSDisplay::GetInstance(5800)};
+    DSDisplay dsDisplay(5800);
     Robot robot;
 
     dsDisplay.AddAutoMethod("Auto 1", std::bind(&Robot::func1, &robot));
@@ -29,8 +29,6 @@ int main() {
     auto currentTime = lastTime;
 
     while (1) {
-        dsDisplay.ReceiveFromDS();
-
         currentTime = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime -
                                                                   lastTime)
