@@ -19,32 +19,11 @@
  * application on the DriverStation that displays it in a GUI.
  *
  * USAGE:
- * 1) Call DSDisplay::GetInstance() to create an instance of this
- *    class. The port number passed in should be the port on which
- *    communications will be received (probably 1130).
- * 2) Call Clear() on the pointer to empty the packet before adding new data.
- * 3) Add new data with the << operator (e.g. dsDisplay << 4.0; dsDisplay <<
- *    myVar;).
- * 4) After all data is packed, call sendToDS() to send the data to the Driver
+ * 1) Instantiate DSDisplay with the port on which communications will be
+ *    received (probably 1130).
+ * 2) Call several variations of AddData().
+ * 3) After all data is packed, call SendToDS() to send the data to the Driver
  *    Station.
- *
- * Extract the received packet on the DriverStation with the >> operator like
- * any other SFML packet.
- *
- * receiveFromDS() requires that the file GUISettings.txt exist in
- * "/c", which follows the convention described in the
- * DSDisplay's readme. This class creates a file "autonMode.txt"
- * internally to store the currently selected autonomous routine.
- *
- * Before sending HUD data to the DriverStation, call clear() followed by
- * calls to addElementData() and a call to sendToDS(). If clear() isn't
- * called first, undefined behavior may result. (The header "display\r\n" isn't
- * inserted when the packet isn't empty.)
- *
- * Note: It doesn't matter in which order the data in the received packet is
- *       extracted in the application on the Driver Station.
- *
- * The packets are always sent to 10.35.12.42 for testing purposes
  */
 class DSDisplay {
 public:
