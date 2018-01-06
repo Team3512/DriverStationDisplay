@@ -29,7 +29,7 @@ class DSDisplay {
 public:
     enum StatusLight : int8_t { active, standby, inactive };
 
-    explicit DSDisplay(uint16_t portNumber);
+    explicit DSDisplay(int port);
 
     DSDisplay(const DSDisplay&) = delete;
     DSDisplay& operator=(const DSDisplay&) = delete;
@@ -74,7 +74,7 @@ private:
 
     UdpSocket m_socket;  // socket for sending data to Driver Station
     uint32_t m_dsIP;     // IP address of Driver Station
-    uint16_t m_dsPort;   // port to which to send data
+    int m_dsPort;        // port to which to send data
 
     // Rate-limits keepalive
     steady_clock::time_point m_prevTime = steady_clock::now();

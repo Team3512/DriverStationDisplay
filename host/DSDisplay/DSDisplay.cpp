@@ -9,8 +9,8 @@
 
 using namespace std::chrono_literals;
 
-DSDisplay::DSDisplay(uint16_t portNumber) : m_dsPort(portNumber) {
-    m_socket.bind(portNumber);
+DSDisplay::DSDisplay(int port) : m_dsPort(port) {
+    m_socket.bind(port);
     m_socket.setBlocking(false);
 
     // Retrieve stored autonomous index
