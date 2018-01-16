@@ -9,8 +9,9 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
-#include "DSDisplay/AutonContainer.hpp"
 #include "DSDisplay/Packet.hpp"
 #include "DSDisplay/UdpSocket.hpp"
 
@@ -91,7 +92,7 @@ private:
     // Holds number of bytes received from Driver Station
     size_t m_recvAmount = 0;
 
-    AutonContainer m_autonModes;
+    std::vector<std::pair<std::string, std::function<void()>>> m_autonModes;
     char m_curAutonMode;
 
     std::thread m_recvThread;
