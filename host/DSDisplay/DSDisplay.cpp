@@ -34,12 +34,18 @@ DSDisplay::DSDisplay(int port) : m_dsPort(port) {
         m_curAutonMode = 0;
     }
 
+    m_recvRunning = true;
     m_recvThread = std::thread([this] {
-        while (true) {
+        while (m_recvRunning) {
             ReceiveFromDS();
             std::this_thread::sleep_for(10ms);
         }
     });
+}
+
+DSDisplay::~DSDisplay() {
+    m_recvRunning = false;
+    m_recvThread.join();
 }
 
 void DSDisplay::Clear() { m_packet.clear(); }
