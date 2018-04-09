@@ -139,16 +139,26 @@ void DSDisplay::SendToDS() {
     }
 }
 
-void DSDisplay::AddAutoMethod(const std::string& methodName,
-                              std::function<void()> func) {
-    m_autonModes.emplace_back(methodName, func);
+void DSDisplay::AddAutoMethod(std::string methodName,
+                              std::function<void()> initFunc,
+                              std::function<void()> periodicFunc) {
+    m_autonModes.emplace_back(methodName, initFunc, periodicFunc);
 }
 
 void DSDisplay::DeleteAllMethods() { m_autonModes.clear(); }
 
-void DSDisplay::ExecAutonomous() {
+std::string DSDisplay::GetAutonomousMode() const {
+    return std::get<0>(m_autonModes[m_curAutonMode]);
+}
+
+void DSDisplay::ExecAutonomousInit() {
     // Retrieves correct autonomous routine and runs it
-    (m_autonModes[m_curAutonMode].second)();
+    std::get<1>(m_autonModes[m_curAutonMode])();
+}
+
+void DSDisplay::ExecAutonomousPeriodic() {
+    // Retrieves correct autonomous routine and runs it
+    std::get<2>(m_autonModes[m_curAutonMode])();
 }
 
 void DSDisplay::SendToDS(Packet& packet) {
