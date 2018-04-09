@@ -10,20 +10,29 @@ using namespace std::chrono_literals;
 
 class Robot {
 public:
-    void func1() { std::cout << "Auto 1" << std::endl; }
+    void initFunc1() { std::cout << "Auto Init 1" << std::endl; }
 
-    void func2() { std::cout << "Auto 2" << std::endl; }
+    void initFunc2() { std::cout << "Auto Init 2" << std::endl; }
 
-    void func3() { std::cout << "Auto 3" << std::endl; }
+    void initFunc3() { std::cout << "Auto Init 3" << std::endl; }
+
+    void periodicFunc1() { std::cout << "Auto Periodic 1" << std::endl; }
+
+    void periodicFunc2() { std::cout << "Auto Periodic 2" << std::endl; }
+
+    void periodicFunc3() { std::cout << "Auto Periodic 3" << std::endl; }
 };
 
 int main() {
     DSDisplay dsDisplay(5800);
     Robot robot;
 
-    dsDisplay.AddAutoMethod("Auto 1", std::bind(&Robot::func1, &robot));
-    dsDisplay.AddAutoMethod("Auto 2", std::bind(&Robot::func2, &robot));
-    dsDisplay.AddAutoMethod("Auto 3", std::bind(&Robot::func3, &robot));
+    dsDisplay.AddAutoMethod("Auto 1", std::bind(&Robot::initFunc1, &robot),
+                            std::bind(&Robot::periodicFunc1, &robot));
+    dsDisplay.AddAutoMethod("Auto 2", std::bind(&Robot::initFunc2, &robot),
+                            std::bind(&Robot::periodicFunc2, &robot));
+    dsDisplay.AddAutoMethod("Auto 3", std::bind(&Robot::initFunc3, &robot),
+                            std::bind(&Robot::periodicFunc3, &robot));
 
     auto lastTime = std::chrono::steady_clock::now();
     auto currentTime = lastTime;
