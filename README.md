@@ -18,11 +18,11 @@ For MSYS2, use the MINGW64 terminal for building and install the following packa
 
 To build the project, first run `qmake dir` within a terminal from the desired build directory, where "dir" is the relative location of the DriverStationDisplay.pro file. This will generate three makefiles. If a debug build is desired, run `make -f Makefile.Debug`. The default behavior when simply running `make` is to perform a release build.
 
+To cross-compile from Linux to Windows, install the MinGW-w64 toolchain (`mingw-w64-gcc` and a MinGW-w64 build of Qt 5 (`mingw-w64-qt5-base`), then run `publish-win32.sh` to build LiveGrapher and create a .zip of the application binary and necessary files.
+
 ## Robot Setup
 
 To use this program with a new robot, copy the DSDisplay folder in the [host folder](host) into the source tree and #include DSDisplay.hpp.
-
-To cross-compile from Linux to Windows, install the MinGW-w64 toolchain (`mingw-w64-gcc` and a MinGW-w64 build of Qt 5 (`mingw-w64-qt5-base`), then run `publish-win32.sh` to build LiveGrapher and create a .zip of the application binary and necessary files.
 
 A GUISettings.txt file should be placed in `/home/lvuser` on the roboRIO. Its contents inform the DriverStationDisplay what GUI elements it should create. The format of this file will be described later.
 
