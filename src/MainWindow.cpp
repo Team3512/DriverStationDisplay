@@ -122,7 +122,8 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
     connect(m_dataSocket.get(), SIGNAL(readyRead()), this,
             SLOT(handleSocketData()));
 
-    m_remoteIP = QString::fromUtf8(m_settings->getString("robotIP").c_str());
+    m_remoteIP = QHostAddress{
+        QString::fromUtf8(m_settings->getString("robotIP").c_str())};
     m_dataPort = m_settings->getInt("robotDataPort");
 
     m_connectTimer = std::make_unique<QTimer>();

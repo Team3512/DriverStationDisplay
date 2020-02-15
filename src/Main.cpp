@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QIcon>
+#include <QScreen>
 
 #include "MainWindow.hpp"
 
@@ -13,7 +14,7 @@ int main(int argc, char* argv[]) {
     app.setOrganizationName("FRC Team 3512");
     app.setApplicationName("DriverStationDisplay");
 
-    QRect screenDims = QApplication::desktop()->screenGeometry();
+    QRect screenDims = QApplication::screens()[0]->geometry();
 
     MainWindow mainWin(screenDims.width(), screenDims.height() - 240);
     mainWin.setWindowIcon(QIcon(":/images/Spartatroniks.ico"));
