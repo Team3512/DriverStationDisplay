@@ -4,8 +4,9 @@
 *.exe
 *.o
 *.swp
+build/
 DSDisplayTest
-DriverStationDisplay
+DriverStationDisplay-*
 
 # Qt-generated files
 .qmake.stash

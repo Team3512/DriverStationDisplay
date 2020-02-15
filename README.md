@@ -18,7 +18,19 @@ For MSYS2, use the MINGW64 terminal for building and install the following packa
 
 To build the project, first run `qmake dir` within a terminal from the desired build directory, where "dir" is the relative location of the DriverStationDisplay.pro file. This will generate three makefiles. If a debug build is desired, run `make -f Makefile.Debug`. The default behavior when simply running `make` is to perform a release build.
 
-To cross-compile from Linux to Windows, install the MinGW-w64 toolchain (`mingw-w64-gcc` and a MinGW-w64 build of Qt 5 (`mingw-w64-qt5-base`), then run `publish-win32.sh` to build LiveGrapher and create a .zip of the application binary and necessary files.
+To cross-compile from Linux to Windows:
+
+1. Install the MinGW-w64 toolchain (`mingw-w64-gcc`)
+2. Install a MinGW-w64 build of Qt 5 (`mingw-w64-qt5-base`)
+3. Run `publish-linux2win32.sh` to create a .zip of the application binary
+   and necessary files
+
+To compile natively on windows:
+
+1. Open MSYS64 terminal provided by MSYS2
+2. Install `mingw-w64-x86_64-gcc`, `mingw-w64-x86_64-qt5`, and `zip`
+3. Run `publish-msys2win32.sh` to create a .zip of the application binary
+   and necessary files
 
 ## Robot Setup
 
