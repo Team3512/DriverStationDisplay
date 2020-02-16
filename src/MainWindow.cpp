@@ -229,7 +229,11 @@ void MainWindow::handleSocketData() {
             connectDlg->setAttribute(Qt::WA_DeleteOnClose);
             connectDlg->setWindowTitle("Autonomous Change");
             connectDlg->setText(autoName.c_str());
-            connectDlg->open();
+
+            m_connectDlgOpen = true;
+            connectDlg->open([&] {
+                m_connectDlgOpen = false;
+            });
         }
     }
 }
