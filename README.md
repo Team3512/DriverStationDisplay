@@ -110,6 +110,7 @@ Port to which to send connection packets and autonomous mode selections
 ##### Notes:
 * It doesn't matter in which order the data is packed before sending the data.
 * The packets are always sent to 10.35.12.42 for testing purposes.
+* Besides the test IP, only one client can be connected to the host at a time.
 
 ### Autonomous routines
 
