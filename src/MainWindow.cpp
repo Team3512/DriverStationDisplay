@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 FRC Team 3512. All Rights Reserved.
+// Copyright (c) 2012-2020 FRC Team 3512. All Rights Reserved.
 
 #include "MainWindow.hpp"
 
@@ -59,10 +59,10 @@ MainWindow::MainWindow(int width, int height) : m_buffer(0xffff - 28) {
     constexpr int32_t videoX = 640;
     constexpr int32_t videoY = 480;
 
-    m_stream =
-        new VideoStream(m_client, this, videoX, videoY, &m_streamCallback,
-                        [this] {}, [this] { m_button->setText("Stop Stream"); },
-                        [this] { m_button->setText("Start Stream"); });
+    m_stream = new VideoStream(
+        m_client, this, videoX, videoY, &m_streamCallback, [this] {},
+        [this] { m_button->setText("Stop Stream"); },
+        [this] { m_button->setText("Start Stream"); });
     m_stream->setMaximumSize(videoX, videoY);
 
     m_button = new QPushButton("Start Stream");
